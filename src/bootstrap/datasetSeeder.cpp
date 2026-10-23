@@ -25,10 +25,10 @@ struct SeedUser
     Role        role;
 };
 
-const SeedUser SEED_USERS[] {{"admin@hubflow.local", "Administrador", Role::Admin},
-                             {OPERATOR_EMAIL, "Operador", Role::Operador},
-                             {"pum1@hubflow.local", "Repartidor Uno", Role::Pum},
-                             {"pum2@hubflow.local", "Repartidor Dos", Role::Pum}};
+const SeedUser SEED_USERS[] {{"admin@hubflow.local", "Marta Ibáñez", Role::Admin},
+                             {OPERATOR_EMAIL, "Laura Gómez", Role::Operador},
+                             {"pum1@hubflow.local", "Carlos Medina", Role::Pum},
+                             {"pum2@hubflow.local", "Diego Ferreyra", Role::Pum}};
 
 std::vector<ShipmentDraft> initialShipments()
 {
