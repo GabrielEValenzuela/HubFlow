@@ -63,8 +63,8 @@ void RouteController::registerRoutes(platform::ApiRouter& router)
     router.get("/routes/:id",
                [this](const RequestContext& context)
                {
-                   return platform::HttpResponse::ok(RoutingJsonPresenter::route(
-                       m_useCases.get.execute(context.user(), routeId(context)), m_useCases.roadMap.execute()));
+                   return platform::HttpResponse::ok(RoutingJsonPresenter::courierSheet(
+                       m_useCases.sheet.execute(context.user(), routeId(context)), m_useCases.roadMap.execute()));
                });
     router.patch("/routes/:id/stops/:order",
                  [this](const RequestContext& context)
@@ -111,8 +111,9 @@ platform::HttpResponse RouteController::resolveStop(const RequestContext& contex
     request.outcome = input.requiredTerm<domain::StopOutcome>("outcome", resolvedOutcome, OUTCOMES);
     request.note    = input.optionalText("note", MAX_NOTE).value_or("");
     input.validate();
-    const auto& route = m_useCases.resolveStop.execute(context.user(), request);
-    return platform::HttpResponse::ok(RoutingJsonPresenter::route(route, m_useCases.roadMap.execute()));
+    m_useCases.resolveStop.execute(context.user(), request);
+    return platform::HttpResponse::ok(
+        RoutingJsonPresenter::courierSheet(m_useCases.sheet.execute(context.user(), id), m_useCases.roadMap.execute()));
 }
 
 platform::HttpResponse RouteController::download(const RequestContext& context, const bool initialState) const

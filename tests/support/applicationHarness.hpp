@@ -67,8 +67,10 @@
 #include "hubflow/logistics/application/usecases/queries/listPendingShipments.hpp"
 #include "hubflow/logistics/application/usecases/queries/listShipments.hpp"
 #include "hubflow/logistics/application/usecases/queries/summarizeZone.hpp"
+#include "hubflow/routing/adapters/out/logistics/logisticsStopShipments.hpp"
 #include "hubflow/routing/application/hydration/routingHydrator.hpp"
 #include "hubflow/routing/application/ports/in/assignDeliveryRouteUseCase.hpp"
+#include "hubflow/routing/application/ports/in/getCourierRouteSheetUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getRoadMapUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getRouteUseCase.hpp"
 #include "hubflow/routing/application/ports/in/listRoutesUseCase.hpp"
@@ -77,6 +79,7 @@
 #include "hubflow/routing/application/subscribers/routePersistenceSubscriber.hpp"
 #include "hubflow/routing/application/usecases/commands/assignDeliveryRoute.hpp"
 #include "hubflow/routing/application/usecases/commands/resolveRouteStop.hpp"
+#include "hubflow/routing/application/usecases/queries/getCourierRouteSheet.hpp"
 #include "hubflow/routing/application/usecases/queries/getRoadMap.hpp"
 #include "hubflow/routing/application/usecases/queries/getRoute.hpp"
 #include "hubflow/routing/application/usecases/queries/listRoutes.hpp"
@@ -187,7 +190,9 @@ private:
     routing::application::GetRoadMap                      m_getRoadMap;
     routing::application::PreviewRoute                    m_previewRoute;
     routing::application::ListRoutes                      m_listRoutes;
+    routing::adapters::LogisticsStopShipments             m_stopShipments;
     routing::application::GetRoute                        m_getRoute;
+    routing::application::GetCourierRouteSheet            m_getCourierRouteSheet;
     insights::application::LookupInBst                    m_lookupInBst;
     insights::application::GetBst                         m_getBst;
     insights::application::LookupInBPlusTree              m_lookupInBPlusTree;
@@ -235,6 +240,7 @@ public:
     routing::application::PreviewRouteUseCase&                previewRoute;
     routing::application::ListRoutesUseCase&                  listRoutes;
     routing::application::GetRouteUseCase&                    getRoute;
+    routing::application::GetCourierRouteSheetUseCase&        getCourierRouteSheet;
     insights::application::LookupInBstUseCase&                lookupInBst;
     insights::application::GetBstUseCase&                     getBst;
     insights::application::LookupInBPlusTreeUseCase&          lookupInBPlusTree;

@@ -144,6 +144,7 @@
 .driver-next.done { flex-direction: row; align-items: center; gap: var(--s-4); border-color: var(--ok); background: var(--ok-soft); color: var(--ok); }
 .driver-kicker { font-weight: 650; color: var(--ink-2); }
 .driver-place { font-size: clamp(1.6rem, 6vw, 2.2rem); font-weight: 700; line-height: 1.15; letter-spacing: -.02em; color: var(--ink); }
+.driver-recipient { font-size: 1.15rem; color: var(--ink); margin-top: 4px; }
 .driver-meta { display: flex; flex-wrap: wrap; gap: 4px 18px; color: var(--ink-2); font-size: 1.05rem; }
 .driver-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-3); margin-top: var(--s-2); }
 @media (max-width: 560px) { .driver-actions { grid-template-columns: 1fr; } .driver-next { padding: var(--s-4); } }

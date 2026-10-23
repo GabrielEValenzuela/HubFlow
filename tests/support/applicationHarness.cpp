@@ -49,7 +49,9 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , m_getRoadMap {routing}
     , m_previewRoute {routing}
     , m_listRoutes {routing}
+    , m_stopShipments {logistics}
     , m_getRoute {routing}
+    , m_getCourierRouteSheet {m_getRoute, m_stopShipments}
     , m_lookupInBst {logistics}
     , m_getBst {logistics}
     , m_lookupInBPlusTree {logistics}
@@ -95,6 +97,7 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , previewRoute {m_previewRoute}
     , listRoutes {m_listRoutes}
     , getRoute {m_getRoute}
+    , getCourierRouteSheet {m_getCourierRouteSheet}
     , lookupInBst {m_lookupInBst}
     , getBst {m_getBst}
     , lookupInBPlusTree {m_lookupInBPlusTree}

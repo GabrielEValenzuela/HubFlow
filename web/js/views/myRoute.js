@@ -71,7 +71,9 @@ export default async function myRoute(root) {
       ? h("section", { class: "driver-next", "aria-labelledby": "next-title" },
         h("p", { class: "driver-kicker", id: "next-title" }, `Próxima parada (${next.order} de ${route.stopCount})`),
         h("p", { class: "driver-place" }, labels.get(next.nodeId) ?? "Parada"),
-        h("p", { class: "driver-meta" }, h("span", {}, "Paquete ", h("strong", { class: "code" }, next.shipmentCode)), h("span", {}, `${fmtKm(legKm(next))} desde la parada anterior`)),
+        next.recipient ? h("p", { class: "driver-recipient" }, "Entregar a ", h("strong", {}, next.recipient)) : null,
+        h("p", { class: "driver-meta" }, h("span", {}, "Paquete ", h("strong", { class: "code" }, next.shipmentCode)),
+          next.service ? h("span", {}, `${next.service === "EXPRESS" ? "Express" : "Estándar"} · ${next.weightKg} kg`) : null, h("span", {}, `${fmtKm(legKm(next))} desde la parada anterior`)),
         h("div", { class: "driver-actions" },
           h("button", { class: "btn big ok", onClick: (e) => deliver(e.currentTarget, next) }, icon("check", 24), "Entregado"),
           h("button", { class: "btn big", onClick: () => notDelivered(next) }, "No se pudo entregar")))
@@ -82,7 +84,7 @@ export default async function myRoute(root) {
       const [text, cls] = OUTCOME[s.outcome] ?? [s.outcome, ""];
       return h("li", { class: "stop " + s.outcome + (next && next.order === s.order ? " is-next" : "") },
         h("span", { class: "n", "aria-hidden": "true" }, s.outcome === "ENTREGADO" ? "✓" : s.outcome === "REPROGRAMADO" ? "!" : String(s.order)),
-        h("div", {}, h("strong", {}, labels.get(s.nodeId) ?? "Parada"), h("div", { class: "small muted" }, h("span", { class: "code" }, s.shipmentCode), ` · ${fmtKm(legKm(s))}`)),
+        h("div", {}, h("strong", {}, labels.get(s.nodeId) ?? "Parada"), s.recipient ? h("div", {}, s.recipient) : null, h("div", { class: "small muted" }, h("span", { class: "code" }, s.shipmentCode), ` · ${fmtKm(legKm(s))}`)),
         h("span", { class: "badge " + cls }, text));
     }));
 

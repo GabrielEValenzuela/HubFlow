@@ -87,10 +87,12 @@
 #include "hubflow/routing/adapters/in/http/routeController.hpp"
 #include "hubflow/routing/adapters/out/export/failureTolerantRoutePlanExporter.hpp"
 #include "hubflow/routing/adapters/out/export/jsonFileRoutePlanExporter.hpp"
+#include "hubflow/routing/adapters/out/logistics/logisticsStopShipments.hpp"
 #include "hubflow/routing/adapters/out/mysql/mySqlRoadMapRepository.hpp"
 #include "hubflow/routing/adapters/out/mysql/mySqlRouteRepository.hpp"
 #include "hubflow/routing/application/hydration/routingHydrator.hpp"
 #include "hubflow/routing/application/ports/in/assignDeliveryRouteUseCase.hpp"
+#include "hubflow/routing/application/ports/in/getCourierRouteSheetUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getRoadMapUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getRouteUseCase.hpp"
 #include "hubflow/routing/application/ports/in/listRoutesUseCase.hpp"
@@ -100,6 +102,7 @@
 #include "hubflow/routing/application/subscribers/routePlanExportSubscriber.hpp"
 #include "hubflow/routing/application/usecases/commands/assignDeliveryRoute.hpp"
 #include "hubflow/routing/application/usecases/commands/resolveRouteStop.hpp"
+#include "hubflow/routing/application/usecases/queries/getCourierRouteSheet.hpp"
 #include "hubflow/routing/application/usecases/queries/getRoadMap.hpp"
 #include "hubflow/routing/application/usecases/queries/getRoute.hpp"
 #include "hubflow/routing/application/usecases/queries/listRoutes.hpp"
@@ -201,7 +204,9 @@ struct Application::Parts
         , m_getRoadMap {routing}
         , m_previewRoute {routing}
         , m_listRoutes {routing}
+        , m_stopShipments {logistics}
         , m_getRoute {routing}
+        , m_getCourierRouteSheet {m_getRoute, m_stopShipments}
         , m_lookupInBst {logistics}
         , m_getBst {logistics}
         , m_lookupInBPlusTree {logistics}
@@ -288,7 +293,9 @@ struct Application::Parts
     routing::application::GetRoadMap                      m_getRoadMap;
     routing::application::PreviewRoute                    m_previewRoute;
     routing::application::ListRoutes                      m_listRoutes;
+    routing::adapters::LogisticsStopShipments             m_stopShipments;
     routing::application::GetRoute                        m_getRoute;
+    routing::application::GetCourierRouteSheet            m_getCourierRouteSheet;
     insights::application::LookupInBst                    m_lookupInBst;
     insights::application::GetBst                         m_getBst;
     insights::application::LookupInBPlusTree              m_lookupInBPlusTree;
@@ -337,7 +344,7 @@ void Application::Parts::wire()
                                             m_binarySearchInSortingBatch,
                                             m_compareSortingBatchSearches}));
     controllers.push_back(std::make_unique<routing::adapters::RouteController>(routing::adapters::RouteUseCases {
-        m_assignDeliveryRoute, m_resolveRouteStop, m_listRoutes, m_getRoute, m_getRoadMap}));
+        m_assignDeliveryRoute, m_resolveRouteStop, m_listRoutes, m_getRoute, m_getRoadMap, m_getCourierRouteSheet}));
     controllers.push_back(std::make_unique<routing::adapters::RoadMapController>(m_getRoadMap, m_previewRoute));
     controllers.push_back(std::make_unique<insights::adapters::InsightController>(
         insights::adapters::InsightUseCases {m_getBst,

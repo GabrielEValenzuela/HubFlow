@@ -65,6 +65,23 @@ Json RoutingJsonPresenter::route(const domain::DeliveryRoute& route, const domai
     return body;
 }
 
+Json RoutingJsonPresenter::courierSheet(const application::CourierRouteSheet& sheet, const domain::RoadMap& map)
+{
+    Json body = route(sheet.route, map);
+    for (std::size_t i = 0; i < sheet.stopDetails.size(); ++i)
+    {
+        if (sheet.stopDetails[i].has_value())
+        {
+            const auto& details           = *sheet.stopDetails[i];
+            body["stops"][i]["recipient"] = details.recipient;
+            body["stops"][i]["service"]   = details.service;
+            body["stops"][i]["zone"]      = details.zone;
+            body["stops"][i]["weightKg"]  = details.weightKg;
+        }
+    }
+    return body;
+}
+
 Json RoutingJsonPresenter::initialState(const domain::DeliveryRoute& route, const domain::RoadMap& map)
 {
     return RoutePlanJson::initialState(map, route);

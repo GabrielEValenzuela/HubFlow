@@ -64,8 +64,13 @@ HttpHarness::HttpHarness()
                                             app.linearSearchInSortingBatch,
                                             app.binarySearchInSortingBatch,
                                             app.compareSortingBatchSearches}));
-    m_controllers.push_back(std::make_unique<routing::adapters::RouteController>(routing::adapters::RouteUseCases {
-        app.assignDeliveryRoute, app.resolveRouteStop, app.listRoutes, app.getRoute, app.getRoadMap}));
+    m_controllers.push_back(std::make_unique<routing::adapters::RouteController>(
+        routing::adapters::RouteUseCases {app.assignDeliveryRoute,
+                                          app.resolveRouteStop,
+                                          app.listRoutes,
+                                          app.getRoute,
+                                          app.getRoadMap,
+                                          app.getCourierRouteSheet}));
     m_controllers.push_back(std::make_unique<routing::adapters::RoadMapController>(app.getRoadMap, app.previewRoute));
     m_controllers.push_back(std::make_unique<insights::adapters::InsightController>(
         insights::adapters::InsightUseCases {app.getBst,

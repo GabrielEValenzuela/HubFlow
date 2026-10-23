@@ -252,6 +252,38 @@ TEST(RestApi, RouteSequenceIsAnAttachmentWithSegments)
     EXPECT_EQ(HttpHarness::bodyOf(initial).at("start"), "HUB");
 }
 
+TEST(RestApi, CourierSeesRecipientsOnOwnRouteAndOthersAreForbidden)
+{
+    HttpHarness http;
+    http.app.seedDataset();
+    const auto batchId = openPreparedNorthBatch(http);
+    http.app.processSortingBatchItem.execute(http.app.operador(), batchId);
+    const auto routeId = http.app.assignDeliveryRoute
+                             .execute(http.app.operador(),
+                                      routing::application::AssignRouteRequest {
+                                          batchId, http.pumId, routing::domain::SearchAlgorithm::AStar})
+                             .id();
+    const auto path = url("/routes/" + std::to_string(routeId));
+
+    const auto own   = http.client().Get(path, http.as("pum1@hubflow.local"));
+    const auto other = http.client().Get(path, http.as("pum2@hubflow.local"));
+
+    ASSERT_TRUE(own && other);
+    EXPECT_EQ(own->status, 200);
+    const auto stop = HttpHarness::bodyOf(own).at("stops")[0];
+    EXPECT_FALSE(stop.at("recipient").get<std::string>().empty());
+    EXPECT_TRUE(stop.contains("service") && stop.contains("zone") && stop.contains("weightKg"));
+    EXPECT_EQ(other->status, 403);
+
+    const auto resolved = http.client().Patch(
+        path + "/stops/1", http.as("pum1@hubflow.local"), json {{"outcome", "ENTREGADO"}}.dump(), JSON_TYPE);
+    ASSERT_TRUE(resolved);
+    EXPECT_EQ(resolved->status, 200);
+    const auto resolvedStop = HttpHarness::bodyOf(resolved).at("stops")[0];
+    EXPECT_EQ(resolvedStop.at("recipient"), stop.at("recipient"));
+    EXPECT_TRUE(resolvedStop.contains("weightKg"));
+}
+
 TEST(RestApi, AnotherPumCannotReadTheRoute)
 {
     HttpHarness http;
@@ -269,6 +301,27 @@ TEST(RestApi, AnotherPumCannotReadTheRoute)
 
     ASSERT_TRUE(result);
     EXPECT_EQ(result->status, 403);
+}
+
+TEST(RestApi, PreparingTwiceAfterLoadingDoesNotQueueLoadedPackagesAgain)
+{
+    HttpHarness http;
+    http.app.seedDataset();
+    const auto batchId = openPreparedNorthBatch(http);
+    http.app.processSortingBatchItem.execute(http.app.operador(), batchId);
+    const auto headers = http.as("operador@hubflow.local");
+    const auto path    = url("/sorting-batches/" + std::to_string(batchId) + "/preparation-queue");
+
+    const auto first  = http.client().Put(path, headers, "", JSON_TYPE);
+    const auto second = http.client().Put(path, headers, "", JSON_TYPE);
+
+    ASSERT_TRUE(first && second);
+    EXPECT_EQ(first->status, 200);
+    EXPECT_EQ(second->status, 200);
+    const auto body = HttpHarness::bodyOf(second);
+    EXPECT_EQ(body.at("processedStack").size(), 1U);
+    EXPECT_EQ(body.at("preparationQueue").size() + 1U, body.at("size").get<std::size_t>());
+    EXPECT_EQ(HttpHarness::bodyOf(first).at("preparationQueue"), body.at("preparationQueue"));
 }
 
 TEST(RestApi, DeletingProcessedItemTwiceIsNotFoundTheSecondTime)

@@ -2,6 +2,7 @@
 #define HUBFLOW_ROUTING_ADAPTERS_IN_HTTP_ROUTING_JSON_PRESENTER_HPP
 
 #include "hubflow/platform/http/httpTypes.hpp"
+#include "hubflow/routing/application/ports/in/getCourierRouteSheetUseCase.hpp"
 #include "hubflow/routing/domain/entities/deliveryRoute.hpp"
 #include "hubflow/routing/domain/entities/roadMap.hpp"
 
@@ -28,6 +29,9 @@ public:
 
     /// @brief Hoja de ruta con sus paradas y la secuencia completa de búsqueda.
     static platform::Json route(const domain::DeliveryRoute& route, const domain::RoadMap& map);
+
+    /// @brief Hoja de ruta como la ve el repartidor: cada parada suma destinatario, servicio, peso y zona.
+    static platform::Json courierSheet(const application::CourierRouteSheet& sheet, const domain::RoadMap& map);
 
     /// @brief Problema que resolvió el agente, listo para descargar.
     static platform::Json initialState(const domain::DeliveryRoute& route, const domain::RoadMap& map);

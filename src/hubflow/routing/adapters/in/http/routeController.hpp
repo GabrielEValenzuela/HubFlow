@@ -3,6 +3,7 @@
 
 #include "hubflow/platform/http/controller.hpp"
 #include "hubflow/routing/application/ports/in/assignDeliveryRouteUseCase.hpp"
+#include "hubflow/routing/application/ports/in/getCourierRouteSheetUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getRoadMapUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getRouteUseCase.hpp"
 #include "hubflow/routing/application/ports/in/listRoutesUseCase.hpp"
@@ -14,17 +15,19 @@ namespace hubflow::routing::adapters
 /// @brief Casos de uso de hojas de ruta que expone el controlador.
 struct RouteUseCases
 {
-    application::AssignDeliveryRouteUseCase& assign;
-    application::ResolveRouteStopUseCase&    resolveStop;
-    const application::ListRoutesUseCase&    list;
-    const application::GetRouteUseCase&      get;
-    const application::GetRoadMapUseCase&    roadMap;
+    application::AssignDeliveryRouteUseCase&        assign;
+    application::ResolveRouteStopUseCase&           resolveStop;
+    const application::ListRoutesUseCase&           list;
+    const application::GetRouteUseCase&             get;
+    const application::GetRoadMapUseCase&           roadMap;
+    const application::GetCourierRouteSheetUseCase& sheet;
 };
 
 /**
  * @brief Hojas de ruta de los repartidores (PUM).
  *
  * - @c GET /routes, @c GET /routes/:id: consulta; un PUM sólo ve las propias.
+ *   El detalle de la ruta incluye, por parada, el destinatario, el servicio, el peso y la zona del paquete.
  * - @c POST /routes {batchId, courierId, algorithm}: el agente calcula el recorrido del lote y se asigna al
  *   repartidor (acepta @c Idempotency-Key). Responde 201 con @c Location.
  * - @c PATCH /routes/:id/stops/:order {outcome, note}: el repartidor informa el resultado de una parada.
