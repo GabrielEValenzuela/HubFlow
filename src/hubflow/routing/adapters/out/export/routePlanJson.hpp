@@ -28,6 +28,12 @@ public:
      * HUB) con pasos, camino y métricas, más el camino completo y las métricas totales.
      */
     static nlohmann::json sequence(const domain::RoadMap& map, const domain::DeliveryRoute& route);
+
+    /// @brief Nodos y aristas del mapa vial, tal como aparecen en el estado inicial.
+    static nlohmann::json roadMap(const domain::RoadMap& map);
+
+    /// @brief Una búsqueda individual: algoritmo, origen, destino, pasos, camino y métricas.
+    static nlohmann::json searchTrace(const domain::RoadMap& map, const domain::SearchTrace& trace);
 };
 
 } // namespace hubflow::routing::adapters

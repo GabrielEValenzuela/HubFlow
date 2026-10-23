@@ -120,4 +120,16 @@ json RoutePlanJson::sequence(const domain::RoadMap& map, const domain::DeliveryR
             {"metrics", {{"cost_total", route.totalCostKm()}, {"nodes_explored", route.totalNodesExplored()}}}};
 }
 
+json RoutePlanJson::roadMap(const domain::RoadMap& map)
+{
+    return {{"nodes", nodesOf(map)}, {"edges", edgesOf(map)}};
+}
+
+json RoutePlanJson::searchTrace(const domain::RoadMap& map, const domain::SearchTrace& trace)
+{
+    json body         = segmentOf(map, trace);
+    body["algorithm"] = Vocabulary::name(trace.algorithm);
+    return body;
+}
+
 } // namespace hubflow::routing::adapters

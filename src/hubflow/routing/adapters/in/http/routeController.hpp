@@ -1,0 +1,51 @@
+#ifndef HUBFLOW_ROUTING_ADAPTERS_IN_HTTP_ROUTE_CONTROLLER_HPP
+#define HUBFLOW_ROUTING_ADAPTERS_IN_HTTP_ROUTE_CONTROLLER_HPP
+
+#include "hubflow/platform/http/controller.hpp"
+#include "hubflow/routing/application/ports/in/assignDeliveryRouteUseCase.hpp"
+#include "hubflow/routing/application/ports/in/getRoadMapUseCase.hpp"
+#include "hubflow/routing/application/ports/in/getRouteUseCase.hpp"
+#include "hubflow/routing/application/ports/in/listRoutesUseCase.hpp"
+#include "hubflow/routing/application/ports/in/resolveRouteStopUseCase.hpp"
+
+namespace hubflow::routing::adapters
+{
+
+/// @brief Casos de uso de hojas de ruta que expone el controlador.
+struct RouteUseCases
+{
+    application::AssignDeliveryRouteUseCase& assign;
+    application::ResolveRouteStopUseCase&    resolveStop;
+    const application::ListRoutesUseCase&    list;
+    const application::GetRouteUseCase&      get;
+    const application::GetRoadMapUseCase&    roadMap;
+};
+
+/**
+ * @brief Hojas de ruta de los repartidores (PUM).
+ *
+ * - @c GET /routes, @c GET /routes/:id: consulta; un PUM sólo ve las propias.
+ * - @c POST /routes {batchId, courierId, algorithm}: el agente calcula el recorrido del lote y se asigna al
+ *   repartidor (acepta @c Idempotency-Key). Responde 201 con @c Location.
+ * - @c PATCH /routes/:id/stops/:order {outcome, note}: el repartidor informa el resultado de una parada.
+ *   Repetir el mismo resultado responde 200 sin cambios; informar otro distinto responde 409.
+ * - @c GET /routes/:id/initial-state y @c GET /routes/:id/sequence: documentos para el simulador, como descarga.
+ */
+class RouteController final : public platform::Controller
+{
+public:
+    explicit RouteController(RouteUseCases useCases);
+
+private:
+    void registerRoutes(platform::ApiRouter& router) override;
+
+    platform::HttpResponse assign(const platform::RequestContext& context) const;
+    platform::HttpResponse resolveStop(const platform::RequestContext& context) const;
+    platform::HttpResponse download(const platform::RequestContext& context, bool initialState) const;
+
+    RouteUseCases m_useCases;
+};
+
+} // namespace hubflow::routing::adapters
+
+#endif // HUBFLOW_ROUTING_ADAPTERS_IN_HTTP_ROUTE_CONTROLLER_HPP
