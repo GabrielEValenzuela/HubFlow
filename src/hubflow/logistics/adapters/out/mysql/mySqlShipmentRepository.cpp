@@ -1,15 +1,16 @@
-#include "infrastructure/persistence/mysql/mySqlShipmentRepository.hpp"
+#include "hubflow/logistics/adapters/out/mysql/mySqlShipmentRepository.hpp"
 
-#include "application/shared/vocabulary.hpp"
-#include "infrastructure/persistence/mysql/sqlConversions.hpp"
+#include "hubflow/platform/mysql/sqlColumns.hpp"
+#include "hubflow/shared/application/vocabulary.hpp"
 
-namespace hubflow::infrastructure
+namespace hubflow::logistics::adapters
 {
 namespace
 {
-using application::Vocabulary;
-using domain::logistics::Movement;
-using domain::logistics::ShipmentState;
+using domain::Movement;
+using domain::ShipmentState;
+using platform::SqlColumns;
+using shared::application::Vocabulary;
 
 constexpr const char* INSERT_SHIPMENT {R"SQL(
     INSERT INTO shipments (code, recipient, zone, weight_kg, service, delivery_point, status, attempts, state_bits, queue_ticket)
@@ -34,7 +35,7 @@ constexpr const char* SELECT_MOVEMENTS {R"SQL(
 )SQL"};
 } // namespace
 
-MySqlShipmentRepository::MySqlShipmentRepository(MySqlConnection& connection)
+MySqlShipmentRepository::MySqlShipmentRepository(platform::MySqlConnection& connection)
     : m_connection {connection}
 {
 }
@@ -75,7 +76,7 @@ void MySqlShipmentRepository::appendMovement(const std::string& code, const Move
                           std::int64_t {movement.occurredAt}});
 }
 
-void MySqlShipmentRepository::loadAll(domain::logistics::ShipmentRestorer& restorer) const
+void MySqlShipmentRepository::loadAll(application::ShipmentRestorer& restorer) const
 {
     for (const auto& row : m_connection.query(SELECT_SHIPMENTS))
     {
@@ -104,4 +105,4 @@ void MySqlShipmentRepository::loadAll(domain::logistics::ShipmentRestorer& resto
     }
 }
 
-} // namespace hubflow::infrastructure
+} // namespace hubflow::logistics::adapters
