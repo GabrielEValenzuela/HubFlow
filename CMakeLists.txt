@@ -30,17 +30,35 @@ file(GLOB_RECURSE HUBFLOW_APPLICATION_SOURCES CONFIGURE_DEPENDS
 add_library(hubflow_application STATIC ${HUBFLOW_APPLICATION_SOURCES})
 target_link_libraries(hubflow_application PUBLIC hubflow_domain)
 
+if(HUBFLOW_BUILD_TESTS OR HUBFLOW_BUILD_SERVER)
+    file(GLOB_RECURSE HUBFLOW_EXPORT_SOURCES CONFIGURE_DEPENDS
+        src/hubflow/routing/adapters/out/export/*.cpp)
+    add_library(hubflow_export STATIC ${HUBFLOW_EXPORT_SOURCES})
+    target_link_libraries(hubflow_export PUBLIC hubflow_application nlohmann_json::nlohmann_json)
+endif()
+
 if(HUBFLOW_BUILD_SERVER)
     hubflow_require_server_dependencies()
-    file(GLOB_RECURSE HUBFLOW_INFRASTRUCTURE_SOURCES CONFIGURE_DEPENDS src/legacyInfrastructure/*.cpp)
-    add_library(hubflow_infrastructure STATIC ${HUBFLOW_INFRASTRUCTURE_SOURCES})
-    target_link_libraries(hubflow_infrastructure
-        PUBLIC hubflow_application httplib::httplib nlohmann_json::nlohmann_json
+    file(GLOB_RECURSE HUBFLOW_ADAPTER_SOURCES CONFIGURE_DEPENDS
+        src/hubflow/platform/*.cpp
+        src/hubflow/*/adapters/out/mysql/*.cpp
+        src/hubflow/*/adapters/out/security/*.cpp
+        src/hubflow/*/adapters/out/system/*.cpp)
+    add_library(hubflow_adapters STATIC ${HUBFLOW_ADAPTER_SOURCES})
+    target_link_libraries(hubflow_adapters
+        PUBLIC hubflow_application hubflow_export nlohmann_json::nlohmann_json
         PRIVATE hubflow_mysql hubflow_sodium OpenSSL::Crypto)
 
-    add_executable(hubflow src/main.cpp)
-    target_link_libraries(hubflow PRIVATE hubflow_infrastructure)
-    install(TARGETS hubflow RUNTIME DESTINATION bin)
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
+        file(GLOB_RECURSE HUBFLOW_INFRASTRUCTURE_SOURCES CONFIGURE_DEPENDS src/legacyInfrastructure/*.cpp)
+        add_library(hubflow_infrastructure STATIC ${HUBFLOW_INFRASTRUCTURE_SOURCES})
+        target_link_libraries(hubflow_infrastructure
+            PUBLIC hubflow_adapters httplib::httplib nlohmann_json::nlohmann_json)
+
+        add_executable(hubflow src/main.cpp)
+        target_link_libraries(hubflow PRIVATE hubflow_infrastructure)
+        install(TARGETS hubflow RUNTIME DESTINATION bin)
+    endif()
 endif()
 
 if(HUBFLOW_BUILD_TESTS)

@@ -13,18 +13,22 @@ if(HUBFLOW_BUILD_TESTS)
     FetchContent_MakeAvailable(googletest)
 endif()
 
-function(hubflow_require_server_dependencies)
+if(HUBFLOW_BUILD_TESTS OR HUBFLOW_BUILD_SERVER)
     FetchContent_Declare(nlohmann_json
         URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
         URL_HASH SHA256=d6c65aca6b1ed68e7a182f4757257b107ae403032760ed6ef121c9d55e81757d
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+    FetchContent_MakeAvailable(nlohmann_json)
+endif()
+
+function(hubflow_require_server_dependencies)
     FetchContent_Declare(httplib
         URL https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.15.3.tar.gz
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
     set(HTTPLIB_USE_OPENSSL_IF_AVAILABLE OFF CACHE BOOL "" FORCE)
     set(HTTPLIB_USE_ZLIB_IF_AVAILABLE OFF CACHE BOOL "" FORCE)
     set(HTTPLIB_USE_BROTLI_IF_AVAILABLE OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(nlohmann_json httplib)
+    FetchContent_MakeAvailable(httplib)
 
     find_package(OpenSSL REQUIRED)
     find_package(PkgConfig REQUIRED)
