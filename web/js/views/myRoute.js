@@ -1,7 +1,7 @@
 import { api } from "../api.js";
 import { roadMap } from "../data.js";
 import { MapView } from "../lib/mapview.js";
-import { h, pageHead, loading, errorBox, empty, field, busy, toast, dialog, fmtKm } from "../ui.js";
+import { h, pageHead, loading, errorBox, empty, field, busy, toast, dialog, fmtKm, fmtKg, SERVICE } from "../ui.js";
 import { icon } from "../icons.js";
 
 const REASONS = ["No había nadie", "La dirección está cerrada o no existe", "No quisieron recibirlo", "Otro motivo"];
@@ -73,7 +73,7 @@ export default async function myRoute(root) {
         h("p", { class: "driver-place" }, labels.get(next.nodeId) ?? "Parada"),
         next.recipient ? h("p", { class: "driver-recipient" }, "Entregar a ", h("strong", {}, next.recipient)) : null,
         h("p", { class: "driver-meta" }, h("span", {}, "Paquete ", h("strong", { class: "code" }, next.shipmentCode)),
-          next.service ? h("span", {}, `${next.service === "EXPRESS" ? "Express" : "Estándar"} · ${next.weightKg} kg`) : null, h("span", {}, `${fmtKm(legKm(next))} desde la parada anterior`)),
+          next.service ? h("span", {}, `${SERVICE[next.service] ?? next.service} · ${fmtKg(next.weightKg)}`) : null, h("span", {}, `${fmtKm(legKm(next))} desde la parada anterior`)),
         h("div", { class: "driver-actions" },
           h("button", { class: "btn big ok", onClick: (e) => deliver(e.currentTarget, next) }, icon("check", 24), "Entregado"),
           h("button", { class: "btn big", onClick: () => notDelivered(next) }, "No se pudo entregar")))
