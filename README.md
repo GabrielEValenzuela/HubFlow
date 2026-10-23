@@ -65,6 +65,18 @@ borra, solo se desactiva, y el sistema rechaza desactivar algo que está en uso.
 > volumen nuevo: si ya tenías datos, ejecutá `make reset-db` y luego `make up` (se pierden los datos del
 > proyecto; el dataset inicial se vuelve a cargar solo).
 
+## Paquetes, bultos y paquetes que viajan juntos
+
+El operador **no escribe el código**: al ingresar un paquete el sistema le asigna una identidad interna (UUID
+versión 7) y un código de seguimiento que se muestra grande y se imprime en una etiqueta por bulto. Por defecto
+es `HF-` + 9 caracteres no adivinables con verificador; con `HUBFLOW_TRACKING_CODES=sequential` (en `.env`) los
+nuevos son correlativos `PKG-NNNN`. Los 8 paquetes de ejemplo siempre son `PKG-1001` a `PKG-1008`.
+
+Un paquete tiene de 1 a 20 bultos, cada uno con peso y medidas; se factura lo que más pese entre el peso y el
+volumen (largo × ancho × alto / 5000). El chofer confirma cada bulto o entrega todo; si entrega solo algunos, el
+paquete vuelve a la planta con los restantes. El jefe de planta puede unir paquetes del mismo destino para que
+**viajen juntos**: se cargan juntos, son una sola parada y se reprograman juntos (`/shipment-groups`).
+
 ## Pantallas
 
 La web (`web/`) tiene dos mundos separados.
@@ -73,8 +85,8 @@ La web (`web/`) tiene dos mundos separados.
 
 | Puesto (rol de la API) | Pantallas |
 |---|---|
-| Chofer (`PUM`) | **Mi ruta**: próxima parada, botones "Entregado" y "No se pudo entregar" (con motivo), lista de paradas y mapa |
-| Jefe de planta (`OPERADOR`) | **Paquetes en planta** (ingresar, ver, clasificar, despachar), **Armar carga** (zona, orden, "Por cargar" / "En el vehículo", buscar en la carga, asignar chofer), **Repartos en curso** (avance por chofer, paquetes que vuelven a la planta, "Pasar a otro chofer"), **Buscar paquete** (por código, por tramo de códigos, lista por zona y servicio) |
+| Chofer (`PUM`) | **Mi ruta**: próxima parada con sus bultos (confirmar uno por uno, "Entregar todo" o "Terminar con lo entregado"), "No se pudo entregar" (con motivo), lista de paradas y mapa |
+| Jefe de planta (`OPERADOR`) | **Paquetes en planta** (ingresar con sus bultos e imprimir etiquetas, ver, clasificar, despachar, hacer que varios paquetes viajen juntos), **Armar carga** (zona, orden, "Por cargar" / "En el vehículo", buscar en la carga, asignar chofer), **Repartos en curso** (avance por chofer, paquetes que vuelven a la planta, "Pasar a otro chofer"), **Buscar paquete** (por código, por tramo de códigos, lista por zona y servicio) |
 | Administrador (`ADMIN`) | **Resumen de la operación**, **Repartos** (con "Pasar a otro chofer"), **Personal** (altas, puesto, acceso), **Configuración** (zonas con sus lugares de entrega, servicios con su orden de prioridad y cuidados del paquete), **Actividad** (oraciones cortas) |
 
 **Material del curso** (`http://localhost:8480/lab/`, "Por dentro"): página aparte, sin enlaces desde el producto,

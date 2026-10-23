@@ -10,16 +10,19 @@ Cada puerto de entrada (`ports/in`) declara `static constexpr Idempotency IDEMPO
 | SignIn | `POST /sessions` | No (token nuevo) | sin `Idempotency-Key` |
 | RegisterUser | `POST /users` | No | clave natural `email` (repetir = 409) + `Idempotency-Key` |
 | UpdateUser | `PATCH /users/:id` | Sí | mismo cuerpo, mismo estado final |
-| RegisterShipment | `POST /shipments` | No | clave natural `code` (repetir = 409) + `Idempotency-Key` |
+| RegisterShipment | `POST /shipments` | No | el sistema genera identidad y código: repetir crea otro envío, por eso hay que usar `Idempotency-Key` para reintentar sin duplicar |
+| FormShipmentGroup | `POST /shipment-groups` | No | clave natural: el conjunto de paquetes (repetir = 409, ya están agrupados) + `Idempotency-Key` |
+| DissolveShipmentGroup | `DELETE /shipment-groups/:id` | Sí | el grupo deja de existir; repetir devuelve 404 sin efecto |
 | Classify / Reschedule / Deliver | `POST /shipments/:code/movements` | No (agrega un movimiento) | `Idempotency-Key` |
 | DispatchNextShipment | `POST /dispatches` | No | `Idempotency-Key` |
 | OpenSortingBatch | `POST /sorting-batches` | No | `Idempotency-Key` |
 | SortSortingBatch | `PATCH /sorting-batches/:id` | Sí | mismo criterio, mismo orden |
 | PrepareSortingBatch | `PUT /sorting-batches/:id/preparation-queue` | Sí | recarga la cola desde el lote |
-| ProcessSortingBatchItem | `POST /sorting-batches/:id/processed-items` | No | `Idempotency-Key` |
+| ProcessSortingBatchItem | `POST /sorting-batches/:id/processed-items` | No | `Idempotency-Key`; carga los paquetes indicados (o el siguiente) y su grupo completo |
 | ReturnProcessedItem | `DELETE /sorting-batches/:id/processed-items/:code` | Sí | solo si `code` es el tope; repetir devuelve 404 sin efecto |
 | AssignDeliveryRoute | `POST /routes` | No | `Idempotency-Key` |
-| ResolveRouteStop | `PATCH /routes/:id/stops/:order` | Sí | mismo resultado = 200 sin cambios; otro resultado = 409 |
+| ResolveRouteStop | `PATCH /routes/:id/stops/:order` | Sí | mismo resultado = 200 sin cambios; otro resultado = 409; dar la parada por entregada con bultos sin confirmar = 409 salvo `confirmAllParcels` |
+| ConfirmStopParcel | `PUT /routes/:id/stops/:order/shipments/:code/parcels/:ordinal` | Sí | confirmar un bulto ya confirmado = 200 sin eventos |
 | ReassignDeliveryRoute | `PUT /routes/:id/courier` | Sí | pasar la ruta al chofer que ya la tiene = 200 sin eventos |
 | CreateZone / CreateServiceLevel / CreateShipmentFeature | `POST /zones`, `/service-levels`, `/shipment-features` | No | clave natural `code` (repetir = 409) + `Idempotency-Key` |
 | UpdateZone / UpdateServiceLevel / UpdateShipmentFeature | `PATCH /zones/:code`, `/service-levels/:code`, `/shipment-features/:code` | Sí | estado final deseado; repetir = 200 sin eventos |

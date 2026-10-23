@@ -121,6 +121,43 @@ ESTANDAR, las características y los permisos, y reemplaza los `ENUM` de zona y 
 Docker solo corre las migraciones sobre un volumen nuevo: para aplicarla sobre una base existente usar
 `make reset-db` (borra los datos del proyecto) y luego `make up`.
 
+## Envío, bultos, grupos y códigos de seguimiento
+
+- **Identidad y código.** Un `Shipment` se identifica internamente por un `ShipmentId` (UUID versión 7, generado por
+  el puerto `IdentityGenerator`; adaptador `UuidV7IdentityGenerator`, RFC 9562: 48 bits de milisegundos, contador
+  de 12 bits que mantiene el orden dentro del mismo milisegundo, variante y 62 bits al azar). Hacia afuera se lo
+  reconoce por su `TrackingCode`, que asigna el puerto `TrackingCodeGenerator`: `PublicTrackingCodeGenerator`
+  (`HF-` + 8 símbolos Crockford + 1 verificador, módulo 37 con peso por posición; no es secuencial y se reintenta
+  ante colisión) o `SequentialPkgCodeGenerator` (`PKG-NNNN`, el del dataset del TP). Se elige con
+  `HUBFLOW_TRACKING_CODES=public|sequential` (por defecto `public`); los datos de ejemplo siempre llevan
+  `PKG-1001..1008`. El operador no informa el código: lo devuelve el alta. `TrackingCode` acepta ambos formatos,
+  valida el verificador del público y, al tener largo fijo dentro de cada formato, sigue sirviendo de clave del
+  BST, del B+ y de la búsqueda binaria (el orden es lexicográfico; el del formato público no coincide con el de
+  alta).
+- **Bultos.** Un envío tiene de 1 a 20 `Parcel` con etiqueta `<código>-<n>/<total>`, peso y `Dimensions`
+  (largo, ancho y alto en cm, de 0 a 300). Peso volumétrico = largo·ancho·alto / 5000; peso facturable =
+  mayor entre el real y el volumétrico; el peso del envío (`weightKg()`, el que usan las ordenaciones, los
+  resúmenes y las métricas) es la suma de los facturables. Los bultos están en una `ds::DynamicArray<Parcel*>`.
+- **Entrega con bultos.** El envío sólo pasa a ENTREGADO con todos sus bultos confirmados
+  (`Shipment::confirmParcel`, evento `ParcelDeliveryConfirmed`). El chofer puede confirmar bulto por bulto
+  (`ConfirmStopParcel`), "entregar todo" (`confirmAllParcels`) o terminar con lo entregado: la parada se
+  informa como no entregada, el envío vuelve a REPROGRAMADO con los bultos entregados registrados y al
+  volver a salir sólo faltan los restantes.
+- **Envíos que viajan juntos.** `ShipmentGroup` es un agregado de 2 a 20 envíos del mismo punto de entrega,
+  todos esperando despacho y sin otro grupo (`ShipmentGroupBook` verifica las reglas). La mesa de
+  clasificación no carga uno sin los demás: cargar "el siguiente" trae al grupo entero y cargar por código sin
+  los compañeros responde 409 (`sorting.group_incomplete`); al asignar la ruta el grupo es una única parada
+  (`RouteStop::companions`); reprogramar uno (o dar por no entregada la parada) reprograma a todos; despachar
+  el primero de la lista despacha a todo el grupo. Un grupo con un envío en reparto no se deshace.
+- **Persistencia.** Migración `005_shipments_parcels_groups.sql`: `shipments.id CHAR(36)` + `tracking_code`,
+  `parcels`, `shipment_groups`, `shipment_group_members` y `route_stop_companions`. Los movimientos, las paradas
+  y las características siguen referenciando al envío por su código de seguimiento. La hidratación restaura
+  bultos y grupos. Eventos nuevos: `ParcelDeliveryConfirmed`, `ShipmentGroupFormed`, `ShipmentGroupDissolved`
+  (persistencia y auditoría).
+- **Seguimiento del cliente (siguiente etapa).** El código público ya es el que se imprime en la etiqueta y no
+  se puede adivinar; el estado público de un envío y la verificación del destinatario se agregan encima de esta
+  base sin tocar el modelo.
+
 ## Arranque
 
 `Application` lee las variables de entorno (`Settings`), espera a MySQL, aplica la hidratación

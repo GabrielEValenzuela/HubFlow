@@ -88,6 +88,17 @@ Convenciones de rutas (todas bajo `src/hubflow/` salvo que se indique otra cosa)
 | Permisos por rol como dato | `identity/domain/services/accessPolicy`, `identity/application/hydration/accessPolicyHydrator`, tabla `role_permissions` | `AccessPolicy.GrantsComeFromData`, `Extensibility.RolePermissionsAreLoadedFromData` |
 | Chofer con ruta en curso y `ReassignDeliveryRoute` | `identity/domain/entities/user`, `routing/application/usecases/commands/reassignDeliveryRoute` | `Extensibility.ACourierWithARouteInProgressCannotBeDeactivatedUntilTheRouteIsReassigned`, `Extensibility.OnlyPlantStaffReassignsAndFinishedRoutesStay`, `RestApi.ACourierWithARouteInProgressIsDeactivatedOnlyAfterTheRouteIsReassigned` |
 
+## Envío, bultos, hermanados y tracking
+
+| Tema | Dónde | Tests |
+|---|---|---|
+| Identidad UUID v7 por puerto `IdentityGenerator` (formato y orden) | `shared/application/ports/out/identityGenerator`, `shared/adapters/out/generation/uuidV7IdentityGenerator`, `logistics/domain/valueobjects/{uuidText,shipmentId}` | `UuidV7IdentityGenerator.*`, `GroupFixture.ShipmentIdMustBeAUuidVersionSeven` |
+| Código público con verificador y código correlativo, elegidos por configuración | `logistics/application/ports/out/trackingCodeGenerator`, `logistics/adapters/out/generation/*`, `logistics/domain/valueobjects/{trackingCode,publicCodeCheck}`, `platform/config/settings` | `TrackingCode.*`, `PublicTrackingCodeGenerator.*`, `SequentialPkgCodeGenerator.*`, `ParcelsAndGroupsFlow.RegistrationAssignsIdentityAndTrackingCodeAndKeepsParcels` |
+| Bultos, medidas, peso volumétrico y facturable | `logistics/domain/entities/parcel`, `logistics/domain/valueobjects/dimensions`, `Shipment` | `Dimensions.*`, `Parcel.*`, `GroupFixture.ShipmentWeightIsTheSumOfBillableParcelWeights`, `RestApi.RegisteringShipmentRespondsCreatedWithLocation`, `RestApi.InvalidParcelsListTheOffendingPosition` |
+| Entrega completa o parcial | `Shipment::confirmParcel`, `ConfirmStopParcel`, `ResolveRouteStop` | `GroupFixture.DeliveryRequiresEveryParcelConfirmed`, `GroupFixture.PartialDeliveryKeepsDeliveredParcelsRecordedWhenRescheduled`, `ParcelsAndGroupsFlow.*Parcel*`, `RestApi.CourierConfirmsParcelsOneByOneAndClosesTheStop` |
+| Envíos que viajan juntos (carga, parada única, reprogramación) | `logistics/domain/entities/shipmentGroup`, `logistics/domain/services/shipmentGroupBook`, `SortingBatch`, `AssignDeliveryRoute` | `GroupFixture.*Group*`, `ParcelsAndGroupsFlow.*`, `RestApi.PlantStaffLinksPackagesThatTravelTogetherAndUnlinksThem`, `RestApi.TheDeskRefusesALoneGroupMemberOverHttp` |
+| Persistencia de bultos, grupos y paradas con compañeros | `logistics/adapters/out/mysql/*`, `routing/adapters/out/mysql/mySqlRouteRepository`, migración 005 | `MySqlRepositories.ParcelsAndTheirDeliveryFlagsSurviveReload`, `MySqlRepositories.ShipmentGroupsSurviveReloadAndCanBeRemoved`, `MySqlRepositories.RoutesAndStopOutcomesSurviveReload` |
+
 ## Idempotencia
 
 La tabla completa de casos de uso y su idempotencia está en la documentación de cada puerto de entrada
