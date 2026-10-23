@@ -74,9 +74,10 @@ Convenciones de rutas (todas bajo `src/hubflow/` salvo que se indique otra cosa)
 | Búsquedas BFS, DFS, Greedy y A* (Strategy + Template Method) y su frontera | `routing/domain/services/search/{searchStrategy,frontier,searchNodePool}`, `datastructures/minHeap.hpp` | `RoutingFixture.BreadthFirstFindsFewestHops`, `RoutingFixture.AStarIsOptimalAndNeverWorseThanOthers`, `RoutingFixture.DepthFirstAndGreedyReturnValidPaths`, `RoutingFixture.TraceRecordsFrontierAndExploredPerStep`, `RoutingFixture.StartEqualsGoalAndUnreachableGoal`, `MinHeap.PopsInPriorityOrder` |
 | Agente PUM y recorrido ida y vuelta al centro | `routing/domain/services/pumAgent` | `RoutingFixture.DeliveryRoutePlansRoundTripAndResolvesStops` |
 | Hoja de ruta, paradas y resolución idempotente | `routing/domain/entities/deliveryRoute`, `routing/application/usecases/commands/{assignDeliveryRoute,resolveRouteStop}` | `RoutingFixture.ResolvingAStopWithTheSameOutcomeIsANoOp`, `RoutingFlow.*` |
-| Estado inicial y secuencia exportables (formato del simulador) | `routing/domain/services/search/searchTrace.hpp` (traza completa); exportación a archivos JSON: etapa de adaptadores | (pendiente con los adaptadores) |
+| Estado inicial y secuencia exportables (formato del simulador) | `routing/domain/services/search/searchTrace.hpp` (traza completa); exportación a archivos JSON: `routing/application/subscribers/routePlanExportSubscriber`, `routing/adapters/out/export/*` (ver `docs/grafos-pum.md`) | `RoutePlanExport.*` |
 
 ## Idempotencia
 
 La tabla completa de casos de uso y su idempotencia está en la documentación de cada puerto de entrada
-(`@par Idempotencia`) y se verifica en `IdempotencyContract.*`.
+(`@par Idempotencia`) y se verifica en `IdempotencyContract.*`. La tabla de endpoints y la semántica de
+`Idempotency-Key` están en `docs/idempotencia.md`.

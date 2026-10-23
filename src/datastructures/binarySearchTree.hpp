@@ -97,6 +97,7 @@ public:
 
     /**
      * @brief Busca @p key notificando cada nodo visitado y la decisión tomada.
+     * @param key clave buscada.
      * @param onVisit callable (const Key&, BstStep).
      */
     template <typename Visitor>

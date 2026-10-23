@@ -11,7 +11,7 @@ namespace hubflow::routing::adapters
 /**
  * @brief Escribe el plan de cada ruta en archivos JSON para el simulador.
  *
- * Crea la carpeta @c route-<id> dentro del directorio de exportación con @c initial_state.json y
+ * Crea la carpeta @c route-&lt;id&gt; dentro del directorio de exportación con @c initial_state.json y
  * @c sequence.json. Exportar de nuevo la misma ruta reemplaza los archivos.
  */
 class JsonFileRoutePlanExporter final : public application::RoutePlanExporter

@@ -36,6 +36,8 @@ public:
 
     /**
      * @brief Valida que el campo sea uno de los valores admitidos por @p parse.
+     * @param field nombre del campo en el JSON.
+     * @param parse función que convierte el texto al valor del vocabulario.
      * @param allowed lista legible de valores (para el mensaje de error).
      */
     template <typename Enum, typename Parser>
