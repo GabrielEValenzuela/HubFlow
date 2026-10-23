@@ -1,0 +1,48 @@
+name: hubflow
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-hubflow}
+      MYSQL_USER: ${DB_USER:-hubflow}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-hubflow-dev-pass}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-hubflow-root-dev}
+    ports:
+      - "127.0.0.1:${HUBFLOW_DB_PORT:-3317}:3306"
+    volumes:
+      - hubflow-db:/var/lib/mysql
+      - ./db/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u\"$$MYSQL_USER\" -p\"$$MYSQL_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    image: hubflow-api:local
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: ${DB_NAME:-hubflow}
+      DB_USER: ${DB_USER:-hubflow}
+      DB_PASSWORD: ${DB_PASSWORD:-hubflow-dev-pass}
+      HUBFLOW_JWT_SECRET: ${HUBFLOW_JWT_SECRET:?defina HUBFLOW_JWT_SECRET en .env}
+      HUBFLOW_SEED_PASSWORD: ${HUBFLOW_SEED_PASSWORD:-hubflow123}
+    ports:
+      - "${HUBFLOW_HTTP_PORT:-8480}:8080"
+    volumes:
+      - ./exports:/app/exports
+
+volumes:
+  hubflow-db:
+    name: hubflow-db

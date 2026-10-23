@@ -3,3 +3,4 @@ exports/*.json
 .env
 .cache/
 compile_commands.json
+exports/route-*/
