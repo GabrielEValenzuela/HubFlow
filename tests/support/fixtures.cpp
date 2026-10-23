@@ -45,6 +45,8 @@ constexpr EdgeData CITY_EDGES[] {
 
 logistics::domain::ShipmentDraft packageOf(const std::string& code,
                                            const std::string& recipient,
+                                           const std::string& phone,
+                                           const std::string& postalCode,
                                            const std::string& zone,
                                            const double       weight,
                                            const std::string& service,
@@ -54,12 +56,14 @@ logistics::domain::ShipmentDraft packageOf(const std::string& code,
     char                 id[logistics::domain::UuidText::LENGTH + 1];
     std::snprintf(id, sizeof(id), "018f0000-0000-7000-8000-%012llx", static_cast<unsigned long long>(++sequence));
     logistics::domain::ShipmentDraft shipment;
-    shipment.id            = id;
-    shipment.code          = code;
-    shipment.recipient     = recipient;
-    shipment.zone          = zone;
-    shipment.service       = service;
-    shipment.deliveryPoint = deliveryPoint;
+    shipment.id                  = id;
+    shipment.code                = code;
+    shipment.recipient           = recipient;
+    shipment.recipientPhone      = phone;
+    shipment.recipientPostalCode = postalCode;
+    shipment.zone                = zone;
+    shipment.service             = service;
+    shipment.deliveryPoint       = deliveryPoint;
     shipment.parcels.pushBack(logistics::domain::ParcelData {weight, 10.0, 10.0, 10.0});
     return shipment;
 }
@@ -68,21 +72,21 @@ logistics::domain::ShipmentDraft packageOf(const std::string& code,
 std::vector<logistics::domain::ShipmentDraft> initialDataset()
 {
     return {
-        packageOf("PKG-1001", "Ana Torres", "CENTRO", 1.20, "ESTANDAR", "C1"),
-        packageOf("PKG-1002", "Bruno Díaz", "NORTE", 0.75, "EXPRESS", "N2"),
-        packageOf("PKG-1003", "Carla Ruiz", "SUR", 4.10, "PRIORITARIO", "S3"),
-        packageOf("PKG-1004", "Diego López", "CENTRO", 2.30, "ESTANDAR", "C2"),
-        packageOf("PKG-1005", "Elena Castro", "NORTE", 1.90, "PRIORITARIO", "N3"),
-        packageOf("PKG-1006", "Franco Gómez", "SUR", 0.50, "EXPRESS", "S5"),
-        packageOf("PKG-1007", "Gabriela Soto", "CENTRO", 6.20, "ESTANDAR", "C4"),
-        packageOf("PKG-1008", "Hugo Pérez", "NORTE", 3.40, "PRIORITARIO", "N5"),
+        packageOf("PKG-1001", "Ana Torres", "+54 11 4521-7788", "C1425ABC", "CENTRO", 1.20, "ESTANDAR", "C1"),
+        packageOf("PKG-1002", "Bruno Díaz", "11 5532-4410", "1640", "NORTE", 0.75, "EXPRESS", "N2"),
+        packageOf("PKG-1003", "Carla Ruiz", "(011) 4207-3391", "1870", "SUR", 4.10, "PRIORITARIO", "S3"),
+        packageOf("PKG-1004", "Diego López", "11 6048-2275", "C1043AAZ", "CENTRO", 2.30, "ESTANDAR", "C2"),
+        packageOf("PKG-1005", "Elena Castro", "+54 9 11 3345-9082", "B1642EJC", "NORTE", 1.90, "PRIORITARIO", "N3"),
+        packageOf("PKG-1006", "Franco Gómez", "11 4208-1166", "1824", "SUR", 0.50, "EXPRESS", "S5"),
+        packageOf("PKG-1007", "Gabriela Soto", "11 5239-6604", "1414", "CENTRO", 6.20, "ESTANDAR", "C4"),
+        packageOf("PKG-1008", "Hugo Pérez", "+54 11 4798-5521", "1650", "NORTE", 3.40, "PRIORITARIO", "N5"),
     };
 }
 
 logistics::domain::ShipmentDraft
 draft(const std::string& code, const std::string& service, const std::string& zone, const double weight)
 {
-    return packageOf(code, "Cliente de prueba", zone, weight, service, "N1");
+    return packageOf(code, "Cliente de prueba", "11 5555-0000", "1000", zone, weight, service, "N1");
 }
 
 void seedZones(logistics::domain::ZoneCatalog& zones)

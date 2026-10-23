@@ -13,6 +13,8 @@
 #include "hubflow/routing/application/ports/out/routeRepository.hpp"
 #include "hubflow/shared/application/ports/out/clock.hpp"
 #include "hubflow/shared/application/ports/out/idempotencyStore.hpp"
+#include "hubflow/tracking/application/ports/out/customerNoticeLog.hpp"
+#include "hubflow/tracking/application/ports/out/trackingTokenIssuer.hpp"
 
 #include <map>
 #include <string>
@@ -166,6 +168,29 @@ private:
     void
     forEachRecent(std::size_t limit, std::size_t offset, audit::application::AuditEntryVisitor& visitor) const override;
     std::size_t count() const override;
+};
+
+/// @brief Avisos a clientes en memoria.
+class InMemoryCustomerNoticeLog final : public tracking::application::CustomerNoticeLog
+{
+public:
+    std::vector<tracking::application::CustomerNotice> notices;
+
+private:
+    void        append(const tracking::application::CustomerNotice& notice) override;
+    void        forEachRecent(std::size_t                                   limit,
+                              std::size_t                                   offset,
+                              tracking::application::CustomerNoticeVisitor& visitor) const override;
+    std::size_t count() const override;
+};
+
+/// @brief Constancia de seguimiento de texto plano "código|vencimiento" para tests (sin firma, nunca en producción).
+class PlainTrackingTokenIssuer final : public tracking::application::TrackingTokenIssuer
+{
+private:
+    std::string issue(const tracking::application::TrackingGrant& grant) const override;
+    std::optional<tracking::application::TrackingGrant> verify(const std::string& token,
+                                                               std::int64_t       now) const override;
 };
 
 /// @brief Memoria de claves de idempotencia en memoria.

@@ -28,10 +28,12 @@ std::uint64_t createCourier(test::ApplicationHarness& app, const std::string& em
 std::string registerAt(test::ApplicationHarness& app, const std::string& point, const std::size_t parcels)
 {
     logistics::domain::ShipmentDraft shipment;
-    shipment.recipient     = "Cliente";
-    shipment.zone          = "NORTE";
-    shipment.service       = "ESTANDAR";
-    shipment.deliveryPoint = point;
+    shipment.recipient           = "Cliente";
+    shipment.recipientPhone      = "11 5555-0000";
+    shipment.recipientPostalCode = "1000";
+    shipment.zone                = "NORTE";
+    shipment.service             = "ESTANDAR";
+    shipment.deliveryPoint       = point;
     for (std::size_t i = 0; i < parcels; ++i)
     {
         shipment.parcels.pushBack(ParcelData {1.0 + static_cast<double>(i), 20.0, 20.0, 10.0});

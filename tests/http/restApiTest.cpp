@@ -20,6 +20,8 @@ std::string url(const std::string& path)
 json validShipment()
 {
     return json {{"recipient", "Marta Lopez"},
+                 {"recipientPhone", "11 5555-0000"},
+                 {"recipientPostalCode", "1640"},
                  {"zone", "NORTE"},
                  {"parcels",
                   json::array({json {{"weightKg", 2.5}, {"lengthCm", 30}, {"widthCm", 20}, {"heightCm", 10}},

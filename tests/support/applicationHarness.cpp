@@ -11,6 +11,10 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , occupancy {logistics, routing}
     , zoneDirectory {logistics}
     , courierWorkload {routing}
+    , verificationLimiter {5, 15 * 60}
+    , trackedShipments {logistics, routing}
+    , deliveryProgress {routing}
+    , noticeRecorder {storage.notices}
     , m_projector {logistics}
     , m_shipmentPersistence {storage.shipments}
     , m_shipmentGroupPersistence {storage.shipmentGroups}
@@ -18,6 +22,7 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , m_userPersistence {storage.users}
     , m_catalogPersistence {storage.catalogs}
     , m_roadMapPersistence {storage.maps}
+    , m_customerNotices {noticeRecorder, "http://localhost:8480/seguimiento/"}
     , m_auditLog {storage.audit}
     , m_signIn {storage.users, hasher, tokens, clock}
     , m_authenticate {storage.users, tokens, policy, clock}
@@ -84,6 +89,10 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , m_compareShipmentStates {logistics}
     , m_getCodeSet {logistics}
     , m_combineCodeSets {logistics}
+    , m_getPublicTracking {trackedShipments}
+    , m_verifyTracking {trackedShipments, verificationLimiter, trackingTokens, clock}
+    , m_getVerifiedTracking {trackedShipments, deliveryProgress, trackingTokens, clock}
+    , m_listCustomerNotices {storage.notices}
     , signIn {m_signIn}
     , authenticate {m_authenticate}
     , registerUser {m_registerUser}
@@ -148,6 +157,10 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , compareShipmentStates {m_compareShipmentStates}
     , getCodeSet {m_getCodeSet}
     , combineCodeSets {m_combineCodeSets}
+    , getPublicTracking {m_getPublicTracking}
+    , verifyTracking {m_verifyTracking}
+    , getVerifiedTracking {m_getVerifiedTracking}
+    , listCustomerNotices {m_listCustomerNotices}
 {
     bus.subscribe(m_projector);
     bus.subscribe(m_shipmentPersistence);
@@ -156,6 +169,7 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     bus.subscribe(m_userPersistence);
     bus.subscribe(m_catalogPersistence);
     bus.subscribe(m_roadMapPersistence);
+    bus.subscribe(m_customerNotices);
     bus.subscribe(m_auditLog);
     identity::application::AccessPolicyHydrator {policy}.hydrate(storage.rolePermissions);
     logistics::application::LogisticsHydrator {logistics}.hydrate(

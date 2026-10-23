@@ -9,6 +9,8 @@
 #include "hubflow/routing/adapters/out/mysql/mySqlRoadMapRepository.hpp"
 #include "hubflow/routing/adapters/out/mysql/mySqlRouteRepository.hpp"
 #include "hubflow/shared/adapters/out/mysql/mySqlIdempotencyStore.hpp"
+#include "hubflow/tracking/adapters/out/mysql/mySqlCustomerNoticeLog.hpp"
+#include "hubflow/tracking/adapters/out/security/hmacTrackingTokenIssuer.hpp"
 
 #include <cstdlib>
 #include <fstream>
@@ -26,8 +28,10 @@ constexpr const char* MIGRATIONS[] {"001_schema.sql",
                                     "002_road_map.sql",
                                     "003_idempotency.sql",
                                     "004_catalogs.sql",
-                                    "005_shipments_parcels_groups.sql"};
-constexpr const char* TABLES[] {"route_stop_companions",
+                                    "005_shipments_parcels_groups.sql",
+                                    "006_customer_tracking.sql"};
+constexpr const char* TABLES[] {"notifications",
+                                "route_stop_companions",
                                 "shipment_group_members",
                                 "shipment_groups",
                                 "parcels",
@@ -93,12 +97,14 @@ private:
 logistics::domain::ShipmentDraft draftOf(const std::string& code, const std::string& id)
 {
     logistics::domain::ShipmentDraft draft;
-    draft.id            = id;
-    draft.code          = code;
-    draft.recipient     = "Marta Lopez";
-    draft.zone          = "NORTE";
-    draft.service       = "EXPRESS";
-    draft.deliveryPoint = "N2";
+    draft.id                  = id;
+    draft.code                = code;
+    draft.recipient           = "Marta Lopez";
+    draft.recipientPhone      = "1155550000";
+    draft.recipientPostalCode = "1640";
+    draft.zone                = "NORTE";
+    draft.service             = "EXPRESS";
+    draft.deliveryPoint       = "N2";
     draft.parcels.pushBack(logistics::domain::ParcelData {2.5, 30.0, 20.0, 10.0});
     return draft;
 }
@@ -262,6 +268,8 @@ TEST_F(MySqlRepositories, ShipmentsAndMovementsSurviveReload)
     ASSERT_EQ(collector.states.size(), 1U);
     EXPECT_EQ(collector.states[0].draft.code, "PKG-9001");
     EXPECT_EQ(collector.states[0].draft.id, "018f0000-0000-7000-8000-000000009001");
+    EXPECT_EQ(collector.states[0].draft.recipientPhone, "1155550000");
+    EXPECT_EQ(collector.states[0].draft.recipientPostalCode, "1640");
     EXPECT_EQ(collector.states[0].status, logistics::domain::ShipmentStatus::Clasificado);
     EXPECT_EQ(collector.states[0].attempts, 1U);
     EXPECT_EQ(collector.states[0].ticket, 7U);
@@ -380,6 +388,56 @@ TEST_F(MySqlRepositories, AuditEntriesAreListedNewestFirst)
     EXPECT_EQ(log.count(), 2U);
     ASSERT_EQ(collector.entries.size(), 2U);
     EXPECT_EQ(collector.entries[0].detail, "segundo");
+}
+
+class NoticeCollector final : public tracking::application::CustomerNoticeVisitor
+{
+public:
+    std::vector<tracking::application::StoredCustomerNotice> notices;
+
+private:
+    void visit(const tracking::application::StoredCustomerNotice& stored) override
+    {
+        notices.push_back(stored);
+    }
+};
+
+TEST_F(MySqlRepositories, CustomerNoticesAreStoredMaskedAndListedNewestFirst)
+{
+    tracking::adapters::MySqlCustomerNoticeLog logAdapter {connection()};
+    tracking::application::CustomerNoticeLog&  log = logAdapter;
+    log.append(
+        tracking::application::CustomerNotice {"PKG-9001", "SMS", "****4410", "Paquete PKG-9001: Está en camino", 100});
+    log.append(
+        tracking::application::CustomerNotice {"PKG-9001", "SMS", "****4410", "Paquete PKG-9001: Entregado", 200});
+
+    NoticeCollector collector;
+    log.forEachRecent(1, 0, collector);
+
+    EXPECT_EQ(log.count(), 2U);
+    ASSERT_EQ(collector.notices.size(), 1U);
+    EXPECT_EQ(collector.notices[0].notice.message, "Paquete PKG-9001: Entregado");
+    EXPECT_EQ(collector.notices[0].notice.recipient, "****4410");
+    EXPECT_EQ(collector.notices[0].notice.sentAt, 200);
+}
+
+TEST_F(MySqlRepositories, TheTrackingTokenIsSignedScopedAndExpires)
+{
+    const tracking::adapters::HmacTrackingTokenIssuer issuerAdapter {"un-secreto-de-prueba-de-al-menos-32-caracteres"};
+    const tracking::application::TrackingTokenIssuer& issuer = issuerAdapter;
+    const std::string token = issuer.issue(tracking::application::TrackingGrant {"PKG-9001", 2000});
+
+    const auto valid = issuer.verify(token, 1000);
+    EXPECT_TRUE(valid.has_value());
+    EXPECT_EQ(valid->code, "PKG-9001");
+    EXPECT_FALSE(issuer.verify(token, 2000).has_value());
+    EXPECT_FALSE(issuer.verify(token + "x", 1000).has_value());
+    EXPECT_FALSE(issuer.verify("garbage", 1000).has_value());
+    std::string forged {token};
+    forged[0] = forged[0] == 'A' ? 'B' : 'A';
+    EXPECT_FALSE(issuer.verify(forged, 1000).has_value());
+    const tracking::adapters::HmacTrackingTokenIssuer other {"otro-secreto-distinto-de-al-menos-32-caracteres"};
+    EXPECT_FALSE(static_cast<const tracking::application::TrackingTokenIssuer&>(other).verify(token, 1000).has_value());
 }
 
 TEST_F(MySqlRepositories, IdempotencyStoreKeepsTheFirstResponse)

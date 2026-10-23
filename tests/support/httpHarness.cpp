@@ -14,6 +14,8 @@
 #include "hubflow/routing/adapters/in/http/roadMapController.hpp"
 #include "hubflow/routing/adapters/in/http/routeController.hpp"
 #include "hubflow/sorting/adapters/in/http/sortingBatchController.hpp"
+#include "hubflow/tracking/adapters/in/http/customerNoticeController.hpp"
+#include "hubflow/tracking/adapters/in/http/trackingController.hpp"
 
 namespace hubflow::test
 {
@@ -102,6 +104,10 @@ HttpHarness::HttpHarness()
                                              app.compareShipmentStates,
                                              app.getCodeSet,
                                              app.combineCodeSets}));
+    m_controllers.push_back(std::make_unique<tracking::adapters::TrackingController>(
+        tracking::adapters::TrackingUseCases {app.getPublicTracking, app.verifyTracking, app.getVerifiedTracking},
+        "http://localhost:8480/seguimiento/"));
+    m_controllers.push_back(std::make_unique<tracking::adapters::CustomerNoticeController>(app.listCustomerNotices));
     for (auto& spController : m_controllers)
     {
         spController->registerRoutes(*m_spRouter);

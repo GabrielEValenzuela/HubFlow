@@ -129,6 +129,7 @@
 #include "hubflow/routing/application/usecases/queries/listRoutes.hpp"
 #include "hubflow/routing/application/usecases/queries/previewRoute.hpp"
 #include "hubflow/shared/adapters/out/generation/uuidV7IdentityGenerator.hpp"
+#include "hubflow/shared/adapters/out/memory/slidingWindowRateLimiter.hpp"
 #include "hubflow/sorting/application/ports/in/binarySearchInSortingBatchUseCase.hpp"
 #include "hubflow/sorting/application/ports/in/compareSortingBatchSearchesUseCase.hpp"
 #include "hubflow/sorting/application/ports/in/getActiveSortingBatchUseCase.hpp"
@@ -149,6 +150,18 @@
 #include "hubflow/sorting/application/usecases/queries/getActiveSortingBatch.hpp"
 #include "hubflow/sorting/application/usecases/queries/getSortingBatch.hpp"
 #include "hubflow/sorting/application/usecases/queries/linearSearchInSortingBatch.hpp"
+#include "hubflow/tracking/adapters/out/logistics/plantTrackedShipments.hpp"
+#include "hubflow/tracking/adapters/out/notification/recordingCustomerNotifier.hpp"
+#include "hubflow/tracking/adapters/out/routing/routingDeliveryProgress.hpp"
+#include "hubflow/tracking/application/ports/in/getPublicTrackingUseCase.hpp"
+#include "hubflow/tracking/application/ports/in/getVerifiedTrackingUseCase.hpp"
+#include "hubflow/tracking/application/ports/in/listCustomerNoticesUseCase.hpp"
+#include "hubflow/tracking/application/ports/in/verifyTrackingUseCase.hpp"
+#include "hubflow/tracking/application/subscribers/customerNoticeSubscriber.hpp"
+#include "hubflow/tracking/application/usecases/commands/verifyTracking.hpp"
+#include "hubflow/tracking/application/usecases/queries/getPublicTracking.hpp"
+#include "hubflow/tracking/application/usecases/queries/getVerifiedTracking.hpp"
+#include "hubflow/tracking/application/usecases/queries/listCustomerNotices.hpp"
 
 namespace hubflow::test
 {
@@ -163,6 +176,7 @@ struct Storage
     InMemoryUserRepository           users;
     InMemoryRolePermissionRepository rolePermissions;
     InMemoryAuditLog                 audit;
+    InMemoryCustomerNoticeLog        notices;
     FixtureRoadMapRepository         maps;
 };
 
@@ -201,6 +215,11 @@ public:
     routing::adapters::LogisticsZoneDirectory       zoneDirectory;
     identity::adapters::RoutingCourierWorkload      courierWorkload;
     identity::domain::AccessPolicy                  policy;
+    PlainTrackingTokenIssuer                        trackingTokens;
+    shared::adapters::SlidingWindowRateLimiter      verificationLimiter;
+    tracking::adapters::PlantTrackedShipments       trackedShipments;
+    tracking::adapters::RoutingDeliveryProgress     deliveryProgress;
+    tracking::adapters::RecordingCustomerNotifier   noticeRecorder;
 
 private:
     logistics::application::PendingShipmentsProjector          m_projector;
@@ -210,6 +229,7 @@ private:
     identity::application::UserPersistenceSubscriber           m_userPersistence;
     logistics::application::CatalogPersistenceSubscriber       m_catalogPersistence;
     routing::application::RoadMapPersistenceSubscriber         m_roadMapPersistence;
+    tracking::application::CustomerNoticeSubscriber            m_customerNotices;
     audit::application::AuditLogSubscriber                     m_auditLog;
     identity::application::SignIn                              m_signIn;
     identity::application::Authenticate                        m_authenticate;
@@ -276,6 +296,10 @@ private:
     insights::application::CompareShipmentStates               m_compareShipmentStates;
     insights::application::GetCodeSet                          m_getCodeSet;
     insights::application::CombineCodeSets                     m_combineCodeSets;
+    tracking::application::GetPublicTracking                   m_getPublicTracking;
+    tracking::application::VerifyTracking                      m_verifyTracking;
+    tracking::application::GetVerifiedTracking                 m_getVerifiedTracking;
+    tracking::application::ListCustomerNotices                 m_listCustomerNotices;
 
 public:
     identity::application::SignInUseCase&                       signIn;
@@ -342,6 +366,10 @@ public:
     insights::application::CompareShipmentStatesUseCase&        compareShipmentStates;
     insights::application::GetCodeSetUseCase&                   getCodeSet;
     insights::application::CombineCodeSetsUseCase&              combineCodeSets;
+    tracking::application::GetPublicTrackingUseCase&            getPublicTracking;
+    tracking::application::VerifyTrackingUseCase&               verifyTracking;
+    tracking::application::GetVerifiedTrackingUseCase&          getVerifiedTracking;
+    tracking::application::ListCustomerNoticesUseCase&          listCustomerNotices;
 };
 
 } // namespace hubflow::test

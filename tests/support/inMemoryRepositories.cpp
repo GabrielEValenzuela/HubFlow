@@ -309,6 +309,49 @@ std::size_t InMemoryAuditLog::count() const
     return entries.size();
 }
 
+void InMemoryCustomerNoticeLog::append(const tracking::application::CustomerNotice& notice)
+{
+    notices.push_back(notice);
+}
+
+void InMemoryCustomerNoticeLog::forEachRecent(const std::size_t                             limit,
+                                              const std::size_t                             offset,
+                                              tracking::application::CustomerNoticeVisitor& visitor) const
+{
+    for (std::size_t i = offset; i < notices.size() && i < offset + limit; ++i)
+    {
+        visitor.visit(
+            tracking::application::StoredCustomerNotice {notices.size() - i, notices[notices.size() - 1 - i]});
+    }
+}
+
+std::size_t InMemoryCustomerNoticeLog::count() const
+{
+    return notices.size();
+}
+
+std::string PlainTrackingTokenIssuer::issue(const tracking::application::TrackingGrant& grant) const
+{
+    return grant.code + "|" + std::to_string(grant.expiresAt);
+}
+
+std::optional<tracking::application::TrackingGrant> PlainTrackingTokenIssuer::verify(const std::string& token,
+                                                                                     const std::int64_t now) const
+{
+    std::optional<tracking::application::TrackingGrant> grant;
+    const auto                                          separator = token.find('|');
+    if (separator != std::string::npos && token.find_first_not_of("0123456789", separator + 1) == std::string::npos &&
+        separator + 1 < token.size())
+    {
+        const std::int64_t expiresAt {std::stoll(token.substr(separator + 1))};
+        if (expiresAt > now)
+        {
+            grant = tracking::application::TrackingGrant {token.substr(0, separator), expiresAt};
+        }
+    }
+    return grant;
+}
+
 std::optional<shared::application::StoredResponse> InMemoryIdempotencyStore::find(const std::uint64_t userId,
                                                                                   const std::string&  key) const
 {
