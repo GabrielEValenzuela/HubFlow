@@ -1,6 +1,6 @@
 import { api } from "../api.js";
 import { navigate } from "../router.js";
-import { h, pageHead, loading, errorBox, field, busy, toast, statusBadge, zoneTag, serviceBadge, fmtKg, ZONE, fmtKm, setFieldError } from "../ui.js";
+import { h, pageHead, loading, errorBox, field, busy, toast, statusBadge, zoneTag, serviceBadge, fmtKg, ZONE, zoneChoices, fmtKm, setFieldError } from "../ui.js";
 import { ROUTE_OPTIONS, DEFAULT_OPTION, TRAVEL_ESTIMATE, compareOptions, fmtDuration } from "../lib/routeOptions.js";
 import { icon } from "../icons.js";
 
@@ -25,7 +25,7 @@ export default async function loadPlan(root) {
   const draw = () => slot.replaceChildren(load ? board() : opener());
 
   function opener() {
-    const zone = h("select", { class: "input" }, h("option", { value: "" }, "Elegí una zona"), ...Object.entries(ZONE).map(([v, l]) => h("option", { value: v }, l)));
+    const zone = h("select", { class: "input" }, h("option", { value: "" }, "Elegí una zona"), ...zoneChoices().map(([v, l]) => h("option", { value: v }, l)));
     const btn = h("button", { class: "btn primary", type: "submit" }, "Armar carga de esta zona");
     const form = h("form", { novalidate: true, class: "card", style: "max-width:520px" },
       h("h2", {}, "No hay una carga en preparación"),

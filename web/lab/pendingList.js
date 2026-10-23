@@ -1,14 +1,14 @@
 import { api } from "../js/api.js";
-import { h, subHead, loading, errorBox, empty, serviceBadge, zoneTag, fmtKg, ZONE } from "../js/ui.js";
+import { h, subHead, loading, errorBox, empty, serviceBadge, zoneTag, fmtKg, ZONE, CATALOG, topServiceName } from "../js/ui.js";
 
-const RANK = { EXPRESS: 0, PRIORITARIO: 1, ESTANDAR: 2 };
+const rankOf = (code) => CATALOG.services.findIndex((sv) => sv.code === code);
 
 /** Resumen de una zona por recursión sobre la cadena de nodos; réplica en el cliente de summarizeZone. */
 function summarize(items, i, zone) {
   if (i >= items.length) return { count: 0, express: 0, kg: 0 };
   const rest = summarize(items, i + 1, zone);
   if (items[i].zone !== zone) return rest;
-  return { count: rest.count + 1, express: rest.express + (items[i].service === "EXPRESS" ? 1 : 0), kg: rest.kg + items[i].weightKg };
+  return { count: rest.count + 1, express: rest.express + (rankOf(items[i].service) === 0 ? 1 : 0), kg: rest.kg + items[i].weightKg };
 }
 
 export default async function pendingList(root) {
@@ -29,7 +29,7 @@ export default async function pendingList(root) {
 
   function view(items, zones, server) {
     let stable = true;
-    for (let i = 1; i < items.length; i++) if (RANK[items[i - 1].service] > RANK[items[i].service]) stable = false;
+    for (let i = 1; i < items.length; i++) if (rankOf(items[i - 1].service) > rankOf(items[i].service)) stable = false;
     const chain = items.length
       ? h("ol", { class: "chain", "aria-label": "Nodos de la lista, de la cabeza a la cola" },
         ...items.map((s, i) => h("li", { class: "node-card" },
@@ -38,7 +38,7 @@ export default async function pendingList(root) {
       : empty("La lista está vacía", "No hay nodos: la cabeza y la cola son null.");
     return h("div", { class: "flow" },
       h("section", { class: "card" },
-        h("div", { class: "card-head" }, h("div", {}, h("h3", {}, "Cadena de nodos"), h("p", {}, `${items.length} nodos. Orden de la cadena: prioridad (Express, Prioritario, Estándar) y, dentro de la misma prioridad, orden de alta.`))),
+        h("div", { class: "card-head" }, h("div", {}, h("h3", {}, "Cadena de nodos"), h("p", {}, `${items.length} nodos. Orden de la cadena: prioridad (según el catálogo de servicios, hoy primero ${topServiceName()}) y, dentro de la misma prioridad, orden de alta.`))),
         chain,
         h("div", { class: stable ? "alert info" : "alert warn", style: "margin-top:12px" }, h("div", {}, stable
           ? "Verificación en el cliente: la prioridad no decrece a lo largo de la cadena."
@@ -50,11 +50,11 @@ export default async function pendingList(root) {
       h("section", { class: "card" },
         h("div", { class: "card-head" }, h("div", {}, h("h3", {}, "Resumen recursivo por zona"), h("p", {}, "summarizeZone(nodo): caso base, nodo nulo, devuelve (0, 0, 0). Paso recursivo: resume el resto de la cadena y suma el nodo actual si es de la zona. O(n) en tiempo y O(n) de pila de llamadas."))),
         h("div", { class: "table-wrap" }, h("table", {},
-          h("thead", {}, h("tr", {}, ...["Zona", "Cantidad (API)", "Express (API)", "Peso (API)", "Recursión en el cliente", "Coincide"].map((t) => h("th", {}, t)))),
+          h("thead", {}, h("tr", {}, ...["Zona", "Cantidad (API)", "Urgentes (API)", "Peso (API)", "Recursión en el cliente", "Coincide"].map((t) => h("th", {}, t)))),
           h("tbody", {}, ...zones.map((z, i) => {
             const r = summarize(items, 0, z), s = server[i];
-            const ok = r.count === s.count && r.express === s.expressCount && Math.abs(r.kg - s.totalWeightKg) < 0.01;
-            return h("tr", {}, h("td", {}, zoneTag(z)), h("td", { class: "code" }, String(s.count)), h("td", { class: "code" }, String(s.expressCount)), h("td", { class: "code" }, fmtKg(s.totalWeightKg)),
+            const ok = r.count === s.count && r.express === s.urgentCount && Math.abs(r.kg - s.totalWeightKg) < 0.01;
+            return h("tr", {}, h("td", {}, zoneTag(z)), h("td", { class: "code" }, String(s.count)), h("td", { class: "code" }, String(s.urgentCount)), h("td", { class: "code" }, fmtKg(s.totalWeightKg)),
               h("td", { class: "code" }, `${r.count} · ${r.express} · ${fmtKg(Math.round(r.kg * 100) / 100)}`), h("td", {}, h("span", { class: "badge " + (ok ? "s-ENTREGADO" : "s-REPROGRAMADO") }, ok ? "Sí" : "No")));
           })))),
         h("p", { class: "muted small", style: "margin-top:8px" }, "El envío más pesado de cada zona usa la misma recursión (heaviestInZone): compara el nodo actual con el máximo del resto.")));

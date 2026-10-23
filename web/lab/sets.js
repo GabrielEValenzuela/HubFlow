@@ -1,5 +1,5 @@
 import { api } from "../js/api.js";
-import { h, svg, subHead, loading, errorBox, field, busy, setFieldError, shipmentTable, ZONE, SERVICE, toast, tabs, empty } from "../js/ui.js";
+import { h, svg, subHead, loading, errorBox, field, busy, setFieldError, shipmentTable, zoneChoices, serviceChoices, toast, tabs, empty } from "../js/ui.js";
 import { icon } from "../js/icons.js";
 import { bitChips } from "./bits.js";
 
@@ -16,8 +16,8 @@ export default async function queries(root) {
     const type = h("select", { class: "input", "aria-label": `${label}: criterio` }, h("option", { value: "zone" }, "Zona"), h("option", { value: "service" }, "Servicio"));
     const val = h("select", { class: "input", "aria-label": `${label}: valor` });
     const fill = () => {
-      const src = type.value === "zone" ? ZONE : SERVICE;
-      val.replaceChildren(...Object.entries(src).map(([v, l]) => h("option", { value: v }, l)));
+      const src = type.value === "zone" ? zoneChoices({ all: true }) : serviceChoices({ all: true });
+      val.replaceChildren(...src.map(([v, l]) => h("option", { value: v }, l)));
     };
     type.value = defType;
     fill();
@@ -27,8 +27,8 @@ export default async function queries(root) {
   }
 
   function sets() {
-    const a = criterion("a", "Grupo A", "zone", "NORTE");
-    const b = criterion("b", "Grupo B", "service", "EXPRESS");
+    const a = criterion("a", "Grupo A", "zone", zoneChoices({ all: true })[0]?.[0]);
+    const b = criterion("b", "Grupo B", "service", serviceChoices({ all: true })[0]?.[0]);
     const op = h("select", { class: "input" }, ...Object.entries(OPS).map(([v, l]) => h("option", { value: v }, l)));
     const btn = h("button", { class: "btn primary", type: "submit" }, "Calcular");
     const out = h("div", { style: "margin-top:20px" });

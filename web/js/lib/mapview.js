@@ -1,4 +1,4 @@
-import { svg } from "../ui.js";
+import { svg, zoneColor } from "../ui.js";
 
 const K = 52;
 
@@ -28,7 +28,7 @@ export class MapView {
     const stopMap = new Map(stops.map((s) => [s.nodeId, s]));
     this.stopEls = new Map();
     for (const n of map.nodes) {
-      const g = svg("g", { class: "mnode zone-" + n.zone + (n.isHub ? " hub" : "") });
+      const g = svg("g", { class: "mnode" + (n.isHub ? " hub" : "") + (n.active === false ? " off" : ""), style: n.isHub ? null : `--zc:${zoneColor(n.zone)}` });
       g.append(svg("title", {}, `${n.id} · ${n.label}`));
       const r = compact ? 12 : 15;
       g.append(n.isHub ? svg("rect", { x: n.x * K - r, y: n.y * K - r, width: r * 2, height: r * 2, rx: 6, class: "shape" }) : svg("circle", { cx: n.x * K, cy: n.y * K, r, class: "shape" }));

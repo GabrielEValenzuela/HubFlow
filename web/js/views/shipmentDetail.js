@@ -1,6 +1,6 @@
 import { api } from "../api.js";
 import { roadMap } from "../data.js";
-import { h, dialog, loading, errorBox, statusBadge, serviceBadge, zoneTag, journeyChips, fmtDate, fmtKg, STATUS, promptNote, toast } from "../ui.js";
+import { h, dialog, loading, errorBox, statusBadge, serviceBadge, zoneTag, journeyChips, fmtDate, fmtKg, STATUS, FEATURE, promptNote, toast } from "../ui.js";
 
 const ACTIONS = [
   ["CLASIFICADO", "Clasificar", "Anotá en qué lugar de la planta quedó el paquete.", "Clasificar paquete"],
@@ -25,6 +25,7 @@ export function openShipment(code, onChange) {
             h("dt", {}, "Zona"), h("dd", {}, zoneTag(s.zone)),
             h("dt", {}, "Lugar de entrega"), h("dd", {}, deliveryLabel(s.deliveryPoint)),
             h("dt", {}, "Peso"), h("dd", {}, fmtKg(s.weightKg)),
+            s.features?.length ? h("dt", {}, "Cuidados") : null, s.features?.length ? h("dd", {}, s.features.map((f) => FEATURE[f] ?? f).join(", ")) : null,
             h("dt", {}, "Intentos"), h("dd", {}, String(s.attempts))),
           h("section", {}, h("h3", {}, "Recorrido del paquete"),
             journeyChips(s.stateHistory),

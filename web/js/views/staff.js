@@ -28,7 +28,7 @@ export default async function staff(root) {
         await api.patch("/users/" + u.id, { role: e.target.value });
         toast(`${u.name} ahora es ${ROLE[e.target.value]}.`);
       } catch (err) {
-        toast(err.message, "error");
+        toast(err.code === "user.has_route_in_progress" ? `${u.name} tiene un reparto en curso. Pasalo a otro chofer desde Repartos antes de cambiarle el puesto.` : err.message, "error");
         e.target.value = u.role;
       }
     } }, ...Object.entries(ROLE).map(([v, l]) => h("option", { value: v, selected: v === u.role }, l)));
@@ -39,7 +39,9 @@ export default async function staff(root) {
         toast(u.active ? `${u.name} ya no tiene acceso.` : `${u.name} volvió a tener acceso.`);
         load();
       } catch (err) {
-        toast(err.message, "error");
+        if (err.code === "user.has_route_in_progress") {
+          toast(`${u.name} tiene un reparto en curso. Pasalo a otro chofer desde Repartos y después quitale el acceso.`, "error");
+        } else toast(err.message, "error");
       }
     } }, u.active ? "Quitar acceso" : "Dar acceso");
     return h("tr", {}, h("td", {}, h("strong", {}, u.name), self ? h("span", { class: "muted small" }, " (vos)") : null), h("td", {}, u.email), h("td", {}, role),

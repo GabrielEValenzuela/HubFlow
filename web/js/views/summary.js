@@ -1,5 +1,5 @@
 import { api } from "../api.js";
-import { h, pageHead, loading, errorBox, STATUS, STATE_ORDER, zoneTag, serviceBadge, statusBadge, fmtKg, ZONE } from "../ui.js";
+import { h, pageHead, loading, errorBox, STATUS, STATE_ORDER, zoneTag, zoneColor, serviceBadge, statusBadge, fmtKg, ZONE, topServiceName } from "../ui.js";
 import { icon } from "../icons.js";
 
 /** Resumen de la operación para el administrador: números grandes y barras simples. */
@@ -11,14 +11,13 @@ export default async function summary(root) {
   async function load() {
     try {
       const m = await api.get("/metrics");
-      const zones = Object.keys(ZONE);
-      const [sums, heavy] = await Promise.all([
-        Promise.all(zones.map((z) => api.get(`/zones/${z}/summary`))),
-        Promise.all(zones.map((z) => api.get(`/zones/${z}/heaviest-shipment`).catch(() => null))),
-      ]);
+      const shown = m.pendingByZone.filter((z) => z.active || z.count > 0);
+      const zones = shown.map((z) => z.zone);
+      const sums = shown;
+      const heavy = await Promise.all(zones.map((z) => api.get(`/zones/${z}/heaviest-shipment`).catch(() => null)));
       const inPlant = m.pendingByZone.reduce((n, z) => n + z.count, 0);
       const maxKg = Math.max(0.01, ...sums.map((s) => s.totalWeightKg));
-      const busiest = sums.map((s, i) => ({ z: zones[i], kg: s.totalWeightKg })).sort((a, b) => b.kg - a.kg)[0];
+      const busiest = sums.map((s, i) => ({ z: zones[i], kg: s.totalWeightKg })).sort((a, b) => b.kg - a.kg)[0] ?? { z: "", kg: 0 };
       const maxState = Math.max(1, ...Object.values(m.byStatus));
       slot.replaceChildren(h("div", { class: "flow" },
         h("div", { class: "big-tiles" },
@@ -29,7 +28,7 @@ export default async function summary(root) {
         h("section", { class: "card" }, h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "Kilos en planta por zona"),
           h("p", {}, busiest.kg > 0 ? `La zona más cargada es ${ZONE[busiest.z]}, con ${fmtKg(busiest.kg)}.` : "No hay paquetes esperando en la planta."))),
           h("div", { class: "bars" }, ...zones.map((z, i) => h("div", { class: "bar-row" }, zoneTag(z),
-            h("div", { class: "bar-track", role: "img", "aria-label": `${ZONE[z]}: ${fmtKg(sums[i].totalWeightKg)}` }, h("span", { class: "z-fill z-" + z, style: `width:${(sums[i].totalWeightKg / maxKg) * 100}%` })),
+            h("div", { class: "bar-track", role: "img", "aria-label": `${ZONE[z]}: ${fmtKg(sums[i].totalWeightKg)}` }, h("span", { class: "z-fill", style: `--zc:${zoneColor(z)};width:${(sums[i].totalWeightKg / maxKg) * 100}%` })),
             h("strong", { class: "code" }, fmtKg(sums[i].totalWeightKg)))))),
         h("section", { class: "card" }, h("div", { class: "card-head" }, h("h2", {}, "Paquetes según su situación")),
           h("div", { class: "bars" }, ...STATE_ORDER.map((s) => h("div", { class: "bar-row" }, statusBadge(s),
@@ -39,7 +38,7 @@ export default async function summary(root) {
           h("div", { class: "grid-3" }, ...zones.map((z, i) => {
             const s = sums[i], hv = heavy[i];
             return h("div", { class: "card" }, h("div", { class: "card-head" }, h("h3", {}, zoneTag(z))),
-              h("dl", { class: "kv" }, h("dt", {}, "Paquetes en planta"), h("dd", {}, String(s.count)), h("dt", {}, "Express"), h("dd", {}, String(s.expressCount)), h("dt", {}, "Peso"), h("dd", {}, fmtKg(s.totalWeightKg))),
+              h("dl", { class: "kv" }, h("dt", {}, "Paquetes en planta"), h("dd", {}, String(s.count)), h("dt", {}, topServiceName() || "Urgentes"), h("dd", {}, String(s.urgentCount)), h("dt", {}, "Peso"), h("dd", {}, fmtKg(s.totalWeightKg))),
               h("div", { style: "margin-top:12px;padding-top:12px;border-top:1px solid var(--line)" }, h("div", { class: "muted small" }, "Paquete más pesado"),
                 hv ? h("div", {}, h("span", { class: "code" }, hv.code), " · ", fmtKg(hv.weightKg), h("div", { class: "muted small" }, `${hv.recipient} · `, serviceBadge(hv.service))) : h("div", { class: "muted" }, "No hay paquetes esperando")));
           })))));

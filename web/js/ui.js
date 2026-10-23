@@ -49,14 +49,58 @@ export const STATUS = {
   EN_CURSO: "En curso",
   COMPLETADA: "Completada",
 };
-export const SERVICE = { EXPRESS: "Express", PRIORITARIO: "Prioritario", ESTANDAR: "Estándar" };
-export const ZONE = { CENTRO: "Centro", NORTE: "Norte", SUR: "Sur" };
+
+/** Zonas, servicios y características vienen de la API (se cargan al iniciar sesión); estos objetos se rellenan en el lugar. */
+export const ZONE = {};
+export const SERVICE = {};
+export const FEATURE = {};
+export const CATALOG = { zones: [], services: [], features: [] };
+const SERVICE_RANK = new Map();
+const ZONE_POSITION = new Map();
+const ZONE_SHAPES = 3;
+const ZONE_COLORS = 6;
+
+function refill(target, items) {
+  for (const k of Object.keys(target)) delete target[k];
+  for (const it of items) target[it.code] = it.name;
+}
+
+export function setCatalogs({ zones = [], services = [], features = [] }) {
+  CATALOG.zones = zones;
+  CATALOG.services = [...services].sort((a, b) => b.priority - a.priority);
+  CATALOG.features = features;
+  refill(ZONE, zones);
+  refill(SERVICE, CATALOG.services);
+  refill(FEATURE, features);
+  ZONE_POSITION.clear();
+  zones.forEach((z, i) => ZONE_POSITION.set(z.code, i));
+  SERVICE_RANK.clear();
+  CATALOG.services.forEach((sv, i) => SERVICE_RANK.set(sv.code, i));
+}
+
+/** Opciones [código, nombre] para elegir; por defecto solo las habilitadas. */
+export const zoneChoices = ({ all = false } = {}) => CATALOG.zones.filter((z) => all || z.active).map((z) => [z.code, z.name]);
+export const serviceChoices = ({ all = false } = {}) => CATALOG.services.filter((sv) => all || sv.active).map((sv) => [sv.code, sv.name]);
+export const featureChoices = ({ all = false } = {}) => CATALOG.features.filter((f) => all || f.active).map((f) => [f.code, f.name]);
+
+/** Servicios habilitados en el orden en que salen de la planta: "Express, Prioritario y Estándar". */
+export const serviceOrderSentence = () => {
+  const names = CATALOG.services.filter((sv) => sv.active).map((sv) => sv.name);
+  return names.length > 1 ? `${names.slice(0, -1).join(", ")} y ${names[names.length - 1]}` : names.join("");
+};
+export const topServiceName = () => CATALOG.services.find((sv) => sv.active)?.name ?? "";
+export const zoneColor = (code) => `var(--zone-${((ZONE_POSITION.get(code) ?? 0) % ZONE_COLORS) + 1})`;
+export const zoneShape = (code) => (ZONE_POSITION.get(code) ?? 0) % ZONE_SHAPES;
+export const serviceTone = (code) => {
+  const rank = SERVICE_RANK.get(code) ?? 2;
+  return rank === 0 ? "tone-top" : rank === 1 ? "tone-mid" : "tone-low";
+};
 export const ROLE = { ADMIN: "Administrador", OPERADOR: "Jefe de planta", PUM: "Chofer" };
 export const STATE_ORDER = ["RECIBIDO", "CLASIFICADO", "EN_REPARTO", "REPROGRAMADO", "ENTREGADO"];
 
 export const statusBadge = (s) => h("span", { class: "badge s-" + s }, STATUS[s] ?? s);
-export const serviceBadge = (s) => h("span", { class: "badge plain svc-" + s }, SERVICE[s] ?? s);
-export const zoneTag = (z) => h("span", { class: "zone-tag z-" + z }, ZONE[z] ?? z);
+export const serviceBadge = (s) => h("span", { class: "badge plain " + serviceTone(s) }, SERVICE[s] ?? s);
+export const zoneTag = (z) => h("span", { class: "zone-tag zs-" + zoneShape(z), style: `--zc:${zoneColor(z)}` }, ZONE[z] ?? z);
 
 /** Estados por los que pasó un paquete, en el orden del ciclo de vida. */
 export function journeyChips(state) {

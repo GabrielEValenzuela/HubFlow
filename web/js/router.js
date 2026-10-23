@@ -4,6 +4,7 @@ const routes = [];
 let cleanup = null;
 let outlet = null;
 let onChange = () => {};
+let prepare = null;
 
 export function define(pattern, { roles, load, nav }) {
   const keys = [];
@@ -17,9 +18,10 @@ export const navigate = (path) => {
 };
 export const routeList = () => routes;
 
-export function start(getOutlet, changed) {
+export function start(getOutlet, changed, beforeRender) {
   outlet = getOutlet;
   onChange = changed;
+  prepare = beforeRender ?? null;
   window.addEventListener("hashchange", render);
   render();
 }
@@ -50,6 +52,7 @@ export async function render() {
   onChange(route, path);
   const root = outlet();
   root.replaceChildren();
+  if (prepare && route.pattern !== "/login") await prepare();
   const view = await route.load();
   const token = (render.token = (render.token ?? 0) + 1);
   const result = await view.default(root, params);

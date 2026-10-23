@@ -101,14 +101,13 @@ tr.is-hit td { background: var(--signal-soft); }
 .badge.s-EN_CURSO { background: var(--signal-soft); color: var(--signal); }
 .badge.s-COMPLETADA { background: var(--ok-soft); color: var(--ok); }
 .badge.plain::before { display: none; }
-.badge.svc-EXPRESS { background: var(--danger-soft); color: var(--danger); }
-.badge.svc-PRIORITARIO { background: var(--signal-soft); color: var(--signal); }
-.badge.svc-ESTANDAR { background: var(--surface-2); color: var(--ink-2); }
+.badge.tone-top { background: var(--danger-soft); color: var(--danger); }
+.badge.tone-mid { background: var(--signal-soft); color: var(--signal); }
+.badge.tone-low { background: var(--surface-2); color: var(--ink-2); }
 .zone-tag { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
-.zone-tag::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--ink-3); }
-.zone-tag.z-CENTRO::before { background: var(--zone-centro); }
-.zone-tag.z-NORTE::before { background: var(--zone-norte); border-radius: 50%; }
-.zone-tag.z-SUR::before { background: var(--zone-sur); transform: rotate(45deg); }
+.zone-tag::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--zc, var(--ink-3)); }
+.zone-tag.zs-1::before { border-radius: 50%; }
+.zone-tag.zs-2::before { transform: rotate(45deg); }
 
 /* chips de estado */
 

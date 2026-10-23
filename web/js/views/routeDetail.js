@@ -4,6 +4,7 @@ import { MapView } from "../lib/mapview.js";
 import { optionLabel, estimatedMinutes, fmtDuration, TRAVEL_ESTIMATE } from "../lib/routeOptions.js";
 import { h, pageHead, loading, errorBox, statusBadge, fmtKm, STATUS, toast, promptNote, busy } from "../ui.js";
 import { icon } from "../icons.js";
+import { reassignRoute } from "./reassign.js";
 
 export default async function routeDetail(root, { id }) {
   const slot = h("div", {}, loading());
@@ -64,7 +65,8 @@ export default async function routeDetail(root, { id }) {
     const finished = route.status !== "EN_CURSO";
     slot.replaceChildren(...[
       h("p", { class: "small", style: "margin-bottom:8px" }, h("a", { href: "#/repartos" }, "← Repartos")),
-      pageHead(`Reparto #${route.id}`, `${route.courier.name} · ${optionLabel(route.algorithm)}`, statusBadge(route.status)),
+      pageHead(`Reparto #${route.id}`, `${route.courier.name} · ${optionLabel(route.algorithm)}`, statusBadge(route.status),
+        finished ? null : h("button", { class: "btn", onClick: () => reassignRoute(route, load) }, "Pasar a otro chofer")),
       h("div", { class: "tiles", style: "margin-bottom:var(--s-4)" },
         tile("Prioridad", optionLabel(route.algorithm)),
         tile("Distancia", fmtKm(route.totalCostKm)),

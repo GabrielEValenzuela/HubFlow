@@ -2,13 +2,14 @@ import { api } from "../api.js";
 import * as session from "../session.js";
 import { h, pageHead, loading, empty, errorBox, statusBadge, fmtDate, fmtKm } from "../ui.js";
 import { optionLabel } from "../lib/routeOptions.js";
+import { reassignRoute } from "./reassign.js";
 
-/** Repartos: avance de cada chofer (jefe de planta: en curso; administrador: todos). Solo lectura. */
+/** Repartos: avance de cada chofer, con la posibilidad de pasar un reparto en curso a otro chofer. */
 export default async function deliveries(root) {
   const admin = session.role() === "ADMIN";
   const slot = h("div", {}, loading());
   root.append(pageHead(admin ? "Repartos" : "Repartos en curso",
-    admin ? "Todos los repartos, con su avance y los paquetes que volvieron a la planta." : "Qué está haciendo cada chofer ahora: paradas hechas, no entregadas y paquetes que vuelven a la planta."), slot);
+    "Qué está haciendo cada chofer ahora: paradas hechas, no entregadas y paquetes que vuelven a la planta. Si un chofer no puede seguir, pasá su reparto a otro."), slot);
 
   async function load() {
     try {
@@ -44,7 +45,8 @@ export default async function deliveries(root) {
         h("dt", {}, "Faltan"), h("dd", {}, String(waiting)),
         h("dt", {}, "Salió"), h("dd", {}, fmtDate(r.createdAt))),
       back.length ? h("div", { class: "alert warn", style: "margin-top:10px" }, h("div", {}, h("strong", {}, "Vuelven a la planta: "), back.map((s) => s.shipmentCode).join(", "))) : null,
-      h("div", { style: "margin-top:12px" }, h("a", { class: "btn small", href: "#/repartos/" + r.id }, "Ver detalle")));
+      h("div", { class: "actions", style: "margin-top:12px" }, h("a", { class: "btn small", href: "#/repartos/" + r.id }, "Ver detalle"),
+        r.status === "EN_CURSO" ? h("button", { class: "btn small", onClick: () => reassignRoute(r, load) }, "Pasar a otro chofer") : null));
   }
   load();
 }

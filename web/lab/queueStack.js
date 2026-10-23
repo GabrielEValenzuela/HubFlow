@@ -1,5 +1,5 @@
 import { api } from "../js/api.js";
-import { h, svg, subHead, loading, empty, errorBox, field, busy, toast, statusBadge, zoneTag, serviceBadge, fmtKg, ZONE, fmtKm, setFieldError } from "../js/ui.js";
+import { h, svg, subHead, loading, empty, errorBox, field, busy, toast, statusBadge, zoneTag, serviceBadge, fmtKg, ZONE, zoneChoices, fmtKm, setFieldError } from "../js/ui.js";
 import { icon } from "../js/icons.js";
 
 const ORDER_LABEL = { NONE: "Sin ordenar", CODE_ASC: "Por código (A→Z)", WEIGHT_DESC: "Por peso (mayor primero)" };
@@ -26,7 +26,7 @@ export default async function queueStack(root) {
   }
 
   function opener() {
-    const zone = h("select", { class: "input" }, h("option", { value: "" }, "Elegí una zona"), ...Object.entries(ZONE).map(([v, l]) => h("option", { value: v }, l)));
+    const zone = h("select", { class: "input" }, h("option", { value: "" }, "Elegí una zona"), ...zoneChoices().map(([v, l]) => h("option", { value: v }, l)));
     const btn = h("button", { class: "btn primary", type: "submit" }, "Abrir lote");
     const form = h("form", { novalidate: true, class: "card", style: "max-width:520px" },
       h("h2", {}, "No hay un lote abierto"),

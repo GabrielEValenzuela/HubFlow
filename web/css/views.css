@@ -54,9 +54,8 @@
 .citymap .edge { stroke: var(--line-strong); stroke-width: 2.2; }
 .citymap .ecost { font: 500 9px var(--font-mono); fill: var(--ink-3); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
 .citymap .mnode .shape { fill: var(--surface); stroke: var(--ink-3); stroke-width: 2; transition: fill .25s var(--ease), stroke .25s var(--ease); }
-.citymap .mnode.zone-NORTE .shape { stroke: var(--zone-norte); }
-.citymap .mnode.zone-SUR .shape { stroke: var(--zone-sur); }
-.citymap .mnode.zone-CENTRO .shape { stroke: var(--zone-centro); }
+.citymap .mnode .shape { stroke: var(--zc, var(--ink-3)); }
+.citymap .mnode.off { opacity: .45; }
 .citymap .mnode.hub .shape { fill: var(--ink); stroke: var(--ink); }
 .citymap .mnode.hub .nid { fill: var(--bg); }
 .citymap .nid { font: 600 10.5px var(--font-mono); fill: var(--ink); pointer-events: none; }
@@ -167,7 +166,7 @@
 .big-tile .k { font-weight: 650; color: var(--ink-2); }
 .big-tile .v { font-size: 2.8rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; margin: 4px 0; }
 .big-tile .sub { font-size: .88rem; color: var(--ink-3); }
-.bar-track .z-fill.z-NORTE { background: var(--zone-norte); } .bar-track .z-fill.z-SUR { background: var(--zone-sur); } .bar-track .z-fill.z-CENTRO { background: var(--zone-centro); }
+.bar-track .z-fill { background: var(--zc, var(--ink-3)); }
 .delivery .progress { margin-top: var(--s-2); }
 
 /* buscar paquete: resultados a todo el ancho, celdas que no se parten */
@@ -175,3 +174,10 @@
 .results:empty { display: none; }
 .grid-2 + .results { margin-top: var(--s-4); }
 .crit .form-grid { grid-template-columns: 1fr 1fr; }
+
+/* configuración */
+.places { list-style: none; margin: var(--s-3) 0 0; padding: 0; display: grid; gap: var(--s-2); }
+.places li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-2); padding: var(--s-2) var(--s-3); background: var(--surface-2); border-radius: var(--r-s); }
+.checks { display: flex; flex-wrap: wrap; gap: var(--s-3); }
+.check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--accent); }

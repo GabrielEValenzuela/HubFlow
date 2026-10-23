@@ -2,7 +2,7 @@ import * as session from "./session.js";
 import * as router from "./router.js";
 import { h, toast, ROLE } from "./ui.js";
 import { icon } from "./icons.js";
-import { resetCaches } from "./data.js";
+import { resetCaches, loadCatalogs } from "./data.js";
 
 const PLANT = ["OPERADOR"];
 const ADMIN = ["ADMIN"];
@@ -19,6 +19,7 @@ router.define("/repartos", { roles: MANAGEMENT, load: () => import("./views/deli
 router.define("/repartos/:id", { roles: MANAGEMENT, load: () => import("./views/routeDetail.js") });
 router.define("/buscar", { roles: PLANT, load: () => import("./views/findShipments.js"), nav: () => ["Planta", "Buscar paquete", "search"] });
 router.define("/personal", { roles: ADMIN, load: () => import("./views/staff.js"), nav: () => ["Administración", "Personal", "users"] });
+router.define("/configuracion", { roles: ADMIN, load: () => import("./views/settings.js"), nav: () => ["Administración", "Configuración", "settings"] });
 router.define("/actividad", { roles: ADMIN, load: () => import("./views/activity.js"), nav: () => ["Administración", "Actividad", "shield"] });
 
 const app = document.getElementById("app");
@@ -82,4 +83,4 @@ function changed(route, path) {
   document.title = "HubFlow";
 }
 
-router.start(() => main, changed);
+router.start(() => main, changed, () => loadCatalogs().catch(() => toast("No se pudieron cargar las zonas y los servicios. Actualizá la página.", "error")));

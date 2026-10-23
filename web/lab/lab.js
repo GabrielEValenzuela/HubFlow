@@ -1,5 +1,6 @@
 import * as session from "../js/session.js";
 import { api } from "../js/api.js";
+import { loadCatalogs } from "../js/data.js";
 import { h, tabs, errorBox, field, busy, showApiErrors, clearFieldErrors, setFieldError } from "../js/ui.js";
 import { icon } from "../js/icons.js";
 
@@ -72,6 +73,7 @@ function shell() {
     cleanup = null;
     panel.replaceChildren();
     try {
+      await loadCatalogs();
       const mod = await TABS.find(([k]) => k === key)[2]();
       if (mine !== token) return;
       const id = key === "decide" ? parts()[1] : undefined;

@@ -1,5 +1,5 @@
 import { api } from "../api.js";
-import { h, subHead, loading, errorBox, field, busy, shipmentTable, ZONE, SERVICE, empty } from "../ui.js";
+import { h, subHead, loading, errorBox, field, busy, shipmentTable, zoneChoices, serviceChoices, empty } from "../ui.js";
 import { openShipment } from "./shipmentDetail.js";
 
 const JOIN = {
@@ -12,7 +12,7 @@ export default function filters(root) {
   function condition(label, defType, defVal) {
     const type = h("select", { class: "input", "aria-label": `${label}: tipo` }, h("option", { value: "zone" }, "Zona"), h("option", { value: "service" }, "Servicio"));
     const val = h("select", { class: "input", "aria-label": `${label}: valor` });
-    const fill = () => val.replaceChildren(...Object.entries(type.value === "zone" ? ZONE : SERVICE).map(([v, l]) => h("option", { value: v }, l)));
+    const fill = () => val.replaceChildren(...(type.value === "zone" ? zoneChoices({ all: true }) : serviceChoices({ all: true })).map(([v, l]) => h("option", { value: v }, l)));
     type.value = defType;
     fill();
     val.value = defVal;
@@ -24,8 +24,8 @@ export default function filters(root) {
     };
   }
 
-  const a = condition("Primera condición", "zone", "NORTE");
-  const b = condition("Segunda condición", "service", "EXPRESS");
+  const a = condition("Primera condición", "zone", zoneChoices({ all: true })[0]?.[0]);
+  const b = condition("Segunda condición", "service", serviceChoices({ all: true })[0]?.[0]);
   const join = h("select", { class: "input" }, ...Object.entries(JOIN).map(([v, [, l]]) => h("option", { value: v }, l)));
   const joinHint = h("span", {}, JOIN.INTERSECTION[2]);
   join.addEventListener("change", () => { joinHint.textContent = JOIN[join.value][2]; });
