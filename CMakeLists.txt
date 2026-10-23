@@ -27,7 +27,8 @@ target_link_libraries(hubflow_domain PUBLIC hubflow_options)
 file(GLOB_RECURSE HUBFLOW_APPLICATION_SOURCES CONFIGURE_DEPENDS
     src/hubflow/*/application/*.cpp
     src/hubflow/logistics/adapters/out/routing/*.cpp
-    src/hubflow/routing/adapters/out/logistics/*.cpp)
+    src/hubflow/routing/adapters/out/logistics/*.cpp
+    src/hubflow/identity/adapters/out/routing/*.cpp)
 add_library(hubflow_application STATIC ${HUBFLOW_APPLICATION_SOURCES})
 target_link_libraries(hubflow_application PUBLIC hubflow_domain)
 

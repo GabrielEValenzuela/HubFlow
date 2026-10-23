@@ -19,6 +19,9 @@ namespace hubflow::bootstrap
  * - Si el catálogo de envíos está vacío registra ocho paquetes de ejemplo, uno para cada punto de entrega
  *   C1, N2, S3, C2, N3, S5, C4 y N5, de modo que se pueda armar un lote y una ruta enseguida.
  *
+ * Las zonas, niveles de servicio, características y permisos por rol iniciales no se cargan acá: los siembra la
+ * migración del esquema, porque son datos de configuración y no del dataset de ejemplo.
+ *
  * Si ya hay datos no toca nada, por lo que reiniciar el servicio nunca duplica ni pisa información.
  */
 class DatasetSeeder final
@@ -28,6 +31,7 @@ public:
                   const identity::application::UserRepository&     users,
                   logistics::application::RegisterShipmentUseCase& registerShipment,
                   const logistics::application::LogisticsModel&    logistics,
+                  const identity::domain::AccessPolicy&            policy,
                   const shared::application::Clock&                clock,
                   std::string                                      seedPassword);
 
@@ -42,6 +46,7 @@ private:
     const identity::application::UserRepository&     m_users;
     logistics::application::RegisterShipmentUseCase& m_registerShipment;
     const logistics::application::LogisticsModel&    m_logistics;
+    const identity::domain::AccessPolicy&            m_policy;
     const shared::application::Clock&                m_clock;
     std::string                                      m_seedPassword;
 };
