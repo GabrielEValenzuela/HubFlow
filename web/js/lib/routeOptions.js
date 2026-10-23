@@ -2,26 +2,26 @@
 import { api } from "../api.js";
 
 // Supuestos de la estimación de tiempo (un solo lugar). Son una estimación, no una medición.
-export const ETA = { avgKmh: 25, minutesPerStop: 4, note: "Estimación: 25 km/h promedio urbano + 4 min por parada." };
+export const TRAVEL_ESTIMATE = { avgKmh: 25, minutesPerStop: 4, note: "Estimación: 25 km/h promedio urbano + 4 min por parada." };
 
 export const ROUTE_OPTIONS = [
   { algorithm: "ASTAR", label: "Menos kilómetros", short: "La ruta más corta, garantizada", recommended: true },
-  { algorithm: "BFS", label: "Menos cruces", short: "Pasa por menos intersecciones; puede sumar algunos km" },
+  { algorithm: "BFS", label: "Menos cruces", short: "Cruza menos calles; puede sumar algunos km" },
   { algorithm: "GREEDY", label: "Salida inmediata", short: "Prioriza el punto más cercano al destino en línea recta; calcula rápido y puede sumar km" },
 ];
 export const DEFAULT_OPTION = "ASTAR";
 
-/** Nombre de la opción elegida; DFS no se ofrece, pero una ruta antigua puede traerlo. */
+/** Nombre de la opción elegida; una ruta antigua puede traer una opción que ya no se ofrece. */
 export const optionLabel = (algorithm) => ROUTE_OPTIONS.find((o) => o.algorithm === algorithm)?.label ?? "Recorrido de prueba";
 
-export const etaMinutes = (km, stops) => Math.round((km / ETA.avgKmh) * 60 + stops * ETA.minutesPerStop);
+export const estimatedMinutes = (km, stops) => Math.round((km / TRAVEL_ESTIMATE.avgKmh) * 60 + stops * TRAVEL_ESTIMATE.minutesPerStop);
 
 export function fmtDuration(min) {
   if (min < 60) return `${min} min`;
   return `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, "0")} min`;
 }
 
-/** Tramos HUB -> paradas -> HUB, en el orden de descarga (el de la pila del lote). Omite tramos de largo cero. */
+/** Tramos HUB -> paradas -> HUB, en el orden de descarga (el inverso al de carga). Omite tramos de largo cero. */
 export function legsFor(stopNodes) {
   const nodes = ["HUB", ...stopNodes, "HUB"];
   const legs = [];
@@ -36,7 +36,7 @@ export async function compareOptions(stopNodes) {
     const parts = await Promise.all(legs.map(([from, to]) => api.get("/route-previews", { from, to, algorithm: o.algorithm })));
     const km = parts.reduce((s, p) => s + p.metrics.cost_total, 0);
     const crossings = parts.reduce((s, p) => s + Math.max(0, p.path.length - 2), 0);
-    return { ...o, km, crossings, stops: stopNodes.length, minutes: etaMinutes(km, stopNodes.length) };
+    return { ...o, km, crossings, stops: stopNodes.length, minutes: estimatedMinutes(km, stopNodes.length) };
   }));
   const best = Math.min(...results.map((r) => r.km));
   const most = results.reduce((a, b) => (b.km > a.km ? b : a));

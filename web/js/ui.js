@@ -51,26 +51,21 @@ export const STATUS = {
 };
 export const SERVICE = { EXPRESS: "Express", PRIORITARIO: "Prioritario", ESTANDAR: "Estándar" };
 export const ZONE = { CENTRO: "Centro", NORTE: "Norte", SUR: "Sur" };
-export const ROLE = { ADMIN: "Administrador", OPERADOR: "Operador", PUM: "Repartidor (PUM)" };
-export const BIT_ORDER = ["RECIBIDO", "CLASIFICADO", "EN_REPARTO", "REPROGRAMADO", "ENTREGADO"];
+export const ROLE = { ADMIN: "Administrador", OPERADOR: "Jefe de planta", PUM: "Chofer" };
+export const STATE_ORDER = ["RECIBIDO", "CLASIFICADO", "EN_REPARTO", "REPROGRAMADO", "ENTREGADO"];
 
 export const statusBadge = (s) => h("span", { class: "badge s-" + s }, STATUS[s] ?? s);
 export const serviceBadge = (s) => h("span", { class: "badge plain svc-" + s }, SERVICE[s] ?? s);
 export const zoneTag = (z) => h("span", { class: "zone-tag z-" + z }, ZONE[z] ?? z);
 
-export function bitChips(state) {
-  const bits = state?.bits ?? "00000";
-  const padded = bits.padStart(5, "0");
-  const wrap = h("span", { class: "bits", role: "list", "aria-label": "Estados por los que pasó el envío" });
-  for (let pos = 4; pos >= 0; pos--) {
-    const on = padded[4 - pos] === "1";
-    const name = BIT_ORDER[pos];
-    wrap.append(
-      h("span", { class: "bit" + (on ? " on" : ""), role: "listitem", title: `${STATUS[name]}: ${on ? "sí" : "no"}` },
-        h("b", {}, on ? "1" : "0"), STATUS[name]),
-    );
-  }
-  return wrap;
+/** Estados por los que pasó un paquete, en el orden del ciclo de vida. */
+export function journeyChips(state) {
+  const padded = (state?.bits ?? "00000").padStart(5, "0");
+  const passed = STATE_ORDER.filter((_, pos) => padded[4 - pos] === "1");
+  const wrap = h("ul", { class: "journey", "aria-label": "Pasó por" });
+  passed.forEach((name) => wrap.append(h("li", { class: "journey-step s-" + name }, STATUS[name])));
+  return h("div", { class: "journey-row" }, h("span", { class: "journey-label" }, "Pasó por:"),
+    passed.length ? wrap : h("span", { class: "muted" }, "todavía ningún estado"));
 }
 
 export function fmtDate(sec) {
@@ -219,6 +214,11 @@ export function tabs(items, active, onChange) {
     onChange(id);
   }
   return bar;
+}
+
+export function subHead(title, subtitle, ...actions) {
+  return h("div", { class: "page-head sub" }, h("div", {}, h("h2", {}, title), subtitle ? h("p", {}, subtitle) : null),
+    actions.length ? h("div", { class: "actions" }, ...actions) : null);
 }
 
 export function pageHead(title, subtitle, ...actions) {

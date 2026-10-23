@@ -10,7 +10,7 @@ export default function login(root) {
   const password = h("input", { class: "input", type: "password", autocomplete: "current-password", required: true });
   const submit = h("button", { class: "btn primary", type: "submit", style: "width:100%" }, "Ingresar");
   const form = h("form", { novalidate: true, class: "login-form" },
-    field("email", "Correo", email), field("password", "Contraseña", password),
+    field("email", "Correo", email), field("password", "Clave", password),
     h("div", { class: "form-error" }), h("div", { class: "form-actions" }, submit));
 
   form.addEventListener("submit", async (e) => {
@@ -18,7 +18,7 @@ export default function login(root) {
     clearFieldErrors(form);
     let bad = false;
     if (!/^\S+@\S+\.\S+$/.test(email.value.trim())) { setFieldError(form, "email", "Ingresá un correo válido."); bad = true; }
-    if (!password.value) { setFieldError(form, "password", "Ingresá tu contraseña."); bad = true; }
+    if (!password.value) { setFieldError(form, "password", "Escribí tu clave."); bad = true; }
     if (bad) return form.querySelector(".invalid .input").focus();
     try {
       const res = await busy(submit, () => api.signIn(email.value.trim(), password.value));
@@ -32,11 +32,11 @@ export default function login(root) {
   root.append(h("div", { class: "login" },
     h("section", { class: "login-hero", "aria-hidden": "true" },
       h("div", { class: "brand" }, h("span", { class: "brand-mark" }, icon("route", 18)), "HubFlow"),
-      h("p", { class: "login-claim" }, "Gestión de envíos desde el centro de distribución hasta la entrega."),
+      h("p", { class: "login-claim" }, "Gestión desde el centro de distribución hasta la entrega."),
       loginMap()),
     h("section", { class: "login-panel" },
       h("h1", {}, "Ingresar a HubFlow"),
-      h("p", { class: "muted" }, "Operadores, repartidores y administración usan la misma cuenta de HubFlow."),
+      h("p", { class: "muted" }, "Escribí tu correo y tu clave para empezar."),
       form)));
 }
 

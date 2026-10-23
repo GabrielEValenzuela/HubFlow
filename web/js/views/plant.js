@@ -4,21 +4,21 @@ import { h, pageHead, loading, empty, errorBox, field, setFieldError, clearField
 import { icon } from "../icons.js";
 import { openShipment } from "./shipmentDetail.js";
 
-export default async function pending(root) {
+export default async function plant(root) {
   const listSlot = h("div", {}, loading());
   const formSlot = h("div", {});
-  const dispatchBtn = h("button", { class: "btn primary", onClick: dispatchNext }, icon("send"), "Despachar próximo");
-  const registerBtn = h("button", { class: "btn", "aria-expanded": "false", onClick: toggleForm }, icon("plus"), "Registrar envío");
-  const lookup = h("input", { class: "input", placeholder: "PKG-1001", "aria-label": "Código a buscar", style: "width:150px" });
+  const dispatchBtn = h("button", { class: "btn primary", onClick: dispatchNext }, icon("send"), "Despachar el próximo");
+  const registerBtn = h("button", { class: "btn", "aria-expanded": "false", onClick: toggleForm }, icon("plus"), "Ingresar paquete");
+  const lookup = h("input", { class: "input", placeholder: "PKG-1001", "aria-label": "Código del paquete", style: "width:150px" });
   const lookupForm = h("form", { class: "actions", onSubmit: (e) => {
     e.preventDefault();
     const c = lookup.value.trim().toUpperCase();
     if (!/^PKG-\d{4}$/.test(c)) return toast("El código tiene el formato PKG-0000.", "error");
     openShipment(c, load);
-  } }, lookup, h("button", { class: "btn", type: "submit" }, icon("search"), "Ver envío"));
+  } }, lookup, h("button", { class: "btn", type: "submit" }, icon("search"), "Ver paquete"));
 
-  root.append(pageHead("Bandeja de pendientes",
-    "Envíos pendientes de salir, en orden de despacho: Express, luego Prioritario, luego Estándar; dentro de un mismo servicio, por orden de registro.",
+  root.append(pageHead("Paquetes en planta",
+    "Paquetes que esperan salir, en el orden en que van a salir: primero Express, luego Prioritario y luego Estándar. Dentro de cada servicio, sale primero el que llegó antes.",
     lookupForm, registerBtn, dispatchBtn), formSlot, listSlot);
 
   async function load() {
@@ -31,20 +31,20 @@ export default async function pending(root) {
   }
 
   function table(items) {
-    if (!items.length) return empty("No hay envíos pendientes", "Los envíos registrados aparecen acá hasta que se despachan.", h("button", { class: "btn primary", onClick: toggleForm }, "Registrar envío"));
+    if (!items.length) return empty("No hay paquetes en la planta", "Los paquetes que ingresen aparecen acá hasta que se despachan.", h("button", { class: "btn primary", onClick: toggleForm }, "Ingresar paquete"));
     return h("div", {}, h("div", { class: "table-wrap" }, h("table", {},
-      h("thead", {}, h("tr", {}, ...["Orden", "Código", "Destinatario", "Zona", "Servicio", "Peso", "Estado", ""].map((t) => h("th", { class: t === "Peso" ? "num" : "" }, t)))),
+      h("thead", {}, h("tr", {}, ...["Sale en", "Código", "Destinatario", "Zona", "Servicio", "Peso", "Estado", ""].map((t) => h("th", { class: t === "Peso" ? "num" : "" }, t)))),
       h("tbody", {}, ...items.map((s, i) => h("tr", {},
         h("td", { class: "code" }, String(i + 1)), h("td", { class: "code" }, s.code), h("td", {}, s.recipient), h("td", {}, zoneTag(s.zone)),
         h("td", {}, serviceBadge(s.service)), h("td", { class: "num" }, fmtKg(s.weightKg)), h("td", {}, statusBadge(s.status)),
-        h("td", {}, h("button", { class: "btn small", onClick: () => openShipment(s.code, load) }, "Ver detalle"))))))),
-      h("p", { class: "muted small", style: "margin-top:8px" }, `${items.length} envíos en espera.`));
+        h("td", {}, h("button", { class: "btn small", onClick: () => openShipment(s.code, load) }, "Ver paquete"))))))),
+      h("p", { class: "muted small", style: "margin-top:8px" }, `${items.length} ${items.length === 1 ? "paquete" : "paquetes"} en espera.`));
   }
 
   async function dispatchNext() {
     try {
       const s = await busy(dispatchBtn, () => api.post("/dispatches", {}));
-      toast(`Salió ${s.code} hacia ${s.recipient} (${ZONE[s.zone]}).`);
+      toast(`Salió el paquete ${s.code} hacia ${s.recipient} (${ZONE[s.zone]}).`);
       load();
     } catch (e) {
       toast(e.message, "error");
@@ -72,16 +72,16 @@ export default async function pending(root) {
     zone.addEventListener("change", () => {
       const opts = nodes.filter((n) => n.zone === zone.value);
       point.disabled = !opts.length;
-      point.replaceChildren(h("option", { value: "" }, opts.length ? "Elegí el punto de entrega" : "Primero elegí la zona"),
-        ...opts.map((n) => h("option", { value: n.id }, `${n.id} · ${n.label}`)));
+      point.replaceChildren(h("option", { value: "" }, opts.length ? "Elegí el lugar de entrega" : "Primero elegí la zona"),
+        ...opts.map((n) => h("option", { value: n.id }, n.label)));
     });
-    const submit = h("button", { class: "btn primary", type: "submit" }, "Registrar envío");
+    const submit = h("button", { class: "btn primary", type: "submit" }, "Ingresar paquete");
     const form = h("form", { class: "card", novalidate: true, style: "margin-bottom:16px" },
-      h("div", { class: "card-head" }, h("h2", {}, "Nuevo envío"), h("p", {}, "Los datos se validan también en el servidor.")),
+      h("div", { class: "card-head" }, h("h2", {}, "Paquete nuevo"), h("p", {}, "Completá todos los datos.")),
       h("div", { class: "form-grid" },
         field("code", "Código", code, { hint: "PKG- y cuatro dígitos" }), field("recipient", "Destinatario", recipient),
-        field("weightKg", "Peso (kg)", weight, { hint: "Entre 0,01 y 50" }), field("zone", "Zona", zone),
-        field("service", "Servicio", service), field("deliveryPoint", "Punto de entrega", point)),
+        field("weightKg", "Peso en kilos", weight, { hint: "Entre 0,01 y 50" }), field("zone", "Zona", zone),
+        field("service", "Servicio", service), field("deliveryPoint", "Lugar de entrega", point)),
       h("div", { class: "form-error" }), h("div", { class: "form-actions" }, submit, h("button", { class: "btn ghost", type: "button", onClick: toggleForm }, "Cancelar")));
 
     form.addEventListener("submit", async (e) => {
@@ -93,10 +93,10 @@ export default async function pending(root) {
       const r = recipient.value.trim();
       if (r.length < 2 || r.length > 80) errs.recipient = "Entre 2 y 80 caracteres.";
       const w = Number(weight.value);
-      if (weight.value === "" || !(w >= 0.01 && w <= 50)) errs.weightKg = "Ingresá un peso entre 0,01 y 50 kg.";
+      if (weight.value === "" || !(w >= 0.01 && w <= 50)) errs.weightKg = "Escribí un peso entre 0,01 y 50 kilos.";
       if (!zone.value) errs.zone = "Elegí una zona.";
       if (!service.value) errs.service = "Elegí un servicio.";
-      if (!point.value) errs.deliveryPoint = "Elegí un punto de entrega.";
+      if (!point.value) errs.deliveryPoint = "Elegí un lugar de entrega.";
       const keys = Object.keys(errs);
       if (keys.length) {
         keys.forEach((k) => setFieldError(form, k, errs[k]));
@@ -104,7 +104,7 @@ export default async function pending(root) {
       }
       try {
         const s = await busy(submit, () => api.post("/shipments", { code: c, recipient: r, zone: zone.value, weightKg: w, service: service.value, deliveryPoint: point.value }));
-        toast(`Registrado ${s.code}.`);
+        toast(`Ingresó el paquete ${s.code}.`);
         toggleForm();
         load();
       } catch (err) {

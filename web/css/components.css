@@ -70,7 +70,7 @@
 
 /* surfaces */
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-m); padding: var(--s-4) var(--s-5); }
-.card + .card, .stack > * + * { margin-top: var(--s-4); }
+.card + .card, .flow > * + * { margin-top: var(--s-4); }
 .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; margin-bottom: var(--s-3); }
 .card-head p { color: var(--ink-2); font-size: .9rem; }
 .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: var(--s-4); }
@@ -110,12 +110,7 @@ tr.is-hit td { background: var(--signal-soft); }
 .zone-tag.z-NORTE::before { background: var(--zone-norte); border-radius: 50%; }
 .zone-tag.z-SUR::before { background: var(--zone-sur); transform: rotate(45deg); }
 
-/* bit chips */
-.bits { display: inline-flex; gap: 6px; flex-wrap: wrap; }
-.bit { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; min-width: 56px; padding: 6px 8px; border-radius: var(--r-s); border: 1px solid var(--line-strong); background: var(--surface); font-size: .72rem; color: var(--ink-3); }
-.bit b { font-family: var(--font-mono); font-size: 1rem; color: var(--ink-3); }
-.bit.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-.bit.on b { color: var(--accent); }
+/* chips de estado */
 
 /* states */
 .empty { border: 1px dashed var(--line-strong); border-radius: var(--r-m); padding: var(--s-6) var(--s-5); text-align: center; color: var(--ink-2); display: flex; flex-direction: column; align-items: center; gap: var(--s-3); background: var(--surface); }

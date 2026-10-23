@@ -25,7 +25,7 @@ export function start(getOutlet, changed) {
 }
 
 export function home() {
-  return session.isOperator() ? "/pendientes" : "/rutas";
+  return { PUM: "/mi-ruta", OPERADOR: "/planta", ADMIN: "/resumen" }[session.role()] ?? "/login";
 }
 
 export async function render() {
