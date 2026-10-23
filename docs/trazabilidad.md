@@ -76,6 +76,18 @@ Convenciones de rutas (todas bajo `src/hubflow/` salvo que se indique otra cosa)
 | Hoja de ruta, paradas y resolución idempotente | `routing/domain/entities/deliveryRoute`, `routing/application/usecases/commands/{assignDeliveryRoute,resolveRouteStop}` | `RoutingFixture.ResolvingAStopWithTheSameOutcomeIsANoOp`, `RoutingFlow.*` |
 | Estado inicial y secuencia exportables (formato del simulador) | `routing/domain/services/search/searchTrace.hpp` (traza completa); exportación a archivos JSON: `routing/application/subscribers/routePlanExportSubscriber`, `routing/adapters/out/export/*` (ver `docs/grafos-pum.md`) | `RoutePlanExport.*` |
 
+## Extensibilidad: catálogos como datos y políticas
+
+| Tema | Dónde | Tests |
+|---|---|---|
+| Zonas, servicios y características como datos con alta, renombre y baja lógica | `logistics/domain/entities/{zone,serviceLevel,shipmentFeature}`, `logistics/domain/services/referenceCatalog`, casos de uso `Create*`/`Update*`/`List*` en `logistics/application`; `CatalogController` | `ZoneTest.*`, `ServiceLevelTest.*`, `ShipmentFeatureTest.*`, `ReferenceCatalogTest.*`, `RestApi.AdministratorConfiguresZonesAndOthersCannot`, `RestApi.PatchingAZoneIsIdempotentAndDeactivationRespectsTheRules` |
+| Prioridad de la lista de pendientes vía `PriorityPolicy` (el orden del dataset del TP no cambia) | `logistics/domain/services/{priorityPolicy,catalogPriorityPolicy,pendingShipments}` | `PendingShipmentsTest.OrdersByPriority`, `PendingShipmentsTest.KeepsArrivalOrderWithinSamePriority`, `PriorityPolicyTest.*`, `Extensibility.TheSeedDatasetKeepsItsOriginalPendingOrder`, `Extensibility.ANewServiceWithHigherPriorityGoesFirstAndSurvivesARestart` |
+| Zona nueva con puntos del mapa, paquetes, carga y ruta sin cambios de código | `routing/domain/entities/roadMap` (`declareNode`, `reviseNode`), `AddRoadNode`, `UpdateRoadNode` | `RoadMapGrowthTest.*`, `Extensibility.ANewZoneReceivesRoutesAndDeliversWithoutCodeChanges`, `Extensibility.ANewZoneAndItsMapSurviveARestart`, `RestApi.ANewZoneWithMapPointsReceivesPackagesWithFeatures` |
+| Reglas de baja de una zona | `Zone::revise`, `logistics/adapters/out/routing/routingPlantOccupancy` | `ZoneTest.DeactivationIsRefusedForEachReasonAndAppliedOnlyWhenFree`, `Extensibility.DeactivatingAZoneFollowsTheDomainRules` |
+| Características de envío | `logistics/domain/entities/shipment`, `ReceptionService`, tabla `shipment_feature_links` | `ShipmentFeaturesTest.*`, `Extensibility.FeaturesAttachToShipmentsAndArePersisted` |
+| Permisos por rol como dato | `identity/domain/services/accessPolicy`, `identity/application/hydration/accessPolicyHydrator`, tabla `role_permissions` | `AccessPolicy.GrantsComeFromData`, `Extensibility.RolePermissionsAreLoadedFromData` |
+| Chofer con ruta en curso y `ReassignDeliveryRoute` | `identity/domain/entities/user`, `routing/application/usecases/commands/reassignDeliveryRoute` | `Extensibility.ACourierWithARouteInProgressCannotBeDeactivatedUntilTheRouteIsReassigned`, `Extensibility.OnlyPlantStaffReassignsAndFinishedRoutesStay`, `RestApi.ACourierWithARouteInProgressIsDeactivatedOnlyAfterTheRouteIsReassigned` |
+
 ## Idempotencia
 
 La tabla completa de casos de uso y su idempotencia está en la documentación de cada puerto de entrada

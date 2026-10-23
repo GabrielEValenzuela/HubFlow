@@ -20,6 +20,11 @@ Cada puerto de entrada (`ports/in`) declara `static constexpr Idempotency IDEMPO
 | ReturnProcessedItem | `DELETE /sorting-batches/:id/processed-items/:code` | Sí | solo si `code` es el tope; repetir devuelve 404 sin efecto |
 | AssignDeliveryRoute | `POST /routes` | No | `Idempotency-Key` |
 | ResolveRouteStop | `PATCH /routes/:id/stops/:order` | Sí | mismo resultado = 200 sin cambios; otro resultado = 409 |
+| ReassignDeliveryRoute | `PUT /routes/:id/courier` | Sí | pasar la ruta al chofer que ya la tiene = 200 sin eventos |
+| CreateZone / CreateServiceLevel / CreateShipmentFeature | `POST /zones`, `/service-levels`, `/shipment-features` | No | clave natural `code` (repetir = 409) + `Idempotency-Key` |
+| UpdateZone / UpdateServiceLevel / UpdateShipmentFeature | `PATCH /zones/:code`, `/service-levels/:code`, `/shipment-features/:code` | Sí | estado final deseado; repetir = 200 sin eventos |
+| AddRoadNode | `POST /road-nodes` | No | clave natural `id` (repetir = 409) + `Idempotency-Key` |
+| UpdateRoadNode | `PATCH /road-nodes/:id` | Sí | estado final deseado; repetir = 200 sin eventos |
 
 ## Header `Idempotency-Key`
 

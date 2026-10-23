@@ -53,6 +53,18 @@ Al asignar una ruta el operador elige **Menos kilómetros** (A*, recomendada), *
 algoritmos y sus trazas (incluido DFS) se explican en la página de estudio `/lab/` (pestaña "Cómo decide el
 PUM"); el detalle está en [docs/grafos-pum.md](docs/grafos-pum.md).
 
+## Zonas, servicios y características como datos
+
+Las zonas, los niveles de servicio (con su prioridad de despacho), las características de los paquetes y
+los permisos de cada rol son datos de la base: se administran desde la pantalla **Configuración** o con la
+API (`/zones`, `/service-levels`, `/shipment-features`, `/road-nodes`), sin cambiar el programa. Nada se
+borra, solo se desactiva, y el sistema rechaza desactivar algo que está en uso. El detalle está en
+[docs/arquitectura.md](docs/arquitectura.md).
+
+> La migración `004_catalogs.sql` reemplaza columnas del esquema. Docker solo corre las migraciones sobre un
+> volumen nuevo: si ya tenías datos, ejecutá `make reset-db` y luego `make up` (se pierden los datos del
+> proyecto; el dataset inicial se vuelve a cargar solo).
+
 ## Pantallas
 
 La web (`web/`) tiene dos mundos separados.
@@ -62,8 +74,8 @@ La web (`web/`) tiene dos mundos separados.
 | Puesto (rol de la API) | Pantallas |
 |---|---|
 | Chofer (`PUM`) | **Mi ruta**: próxima parada, botones "Entregado" y "No se pudo entregar" (con motivo), lista de paradas y mapa |
-| Jefe de planta (`OPERADOR`) | **Paquetes en planta** (ingresar, ver, clasificar, despachar), **Armar carga** (zona, orden, "Por cargar" / "En el vehículo", buscar en la carga, asignar chofer), **Repartos en curso** (avance por chofer, paquetes que vuelven a la planta), **Buscar paquete** (por código, por tramo de códigos, lista por zona y servicio) |
-| Administrador (`ADMIN`) | **Resumen de la operación**, **Repartos** (solo lectura), **Personal** (altas, puesto, acceso), **Actividad** (oraciones cortas) |
+| Jefe de planta (`OPERADOR`) | **Paquetes en planta** (ingresar, ver, clasificar, despachar), **Armar carga** (zona, orden, "Por cargar" / "En el vehículo", buscar en la carga, asignar chofer), **Repartos en curso** (avance por chofer, paquetes que vuelven a la planta, "Pasar a otro chofer"), **Buscar paquete** (por código, por tramo de códigos, lista por zona y servicio) |
+| Administrador (`ADMIN`) | **Resumen de la operación**, **Repartos** (con "Pasar a otro chofer"), **Personal** (altas, puesto, acceso), **Configuración** (zonas con sus lugares de entrega, servicios con su orden de prioridad y cuidados del paquete), **Actividad** (oraciones cortas) |
 
 **Material del curso** (`http://localhost:8480/lab/`, "Por dentro"): página aparte, sin enlaces desde el producto,
 con su propio ingreso (solo jefe de planta o administrador). Reúne el contenido técnico: lista de pendientes
@@ -96,7 +108,7 @@ src/datastructures/   estructuras de datos propias (hubflow::ds)
 src/hubflow/          contextos (domain / application / adapters) y platform
 src/bootstrap/        composition root y datos iniciales
 tests/                unit, application, adapters, http, integration
-db/migrations/        esquema, mapa de la ciudad e idempotencia (se cargan al crear la base)
+db/migrations/        esquema, mapa de la ciudad, idempotencia y catálogos (se cargan al crear la base)
 docker/               Dockerfile de la API
 web/                  producto estático servido por la API; web/lab/ es la página de estudio del curso
 exports/              archivos initial_state.json / sequence.json por ruta
