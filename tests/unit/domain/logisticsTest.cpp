@@ -51,6 +51,11 @@ private:
     {
         events.emplace_back("delivered");
     }
+
+    void on(const ParcelDeliveryConfirmed&) override
+    {
+        events.emplace_back("parcel");
+    }
 };
 
 class LogisticsFixture : public ::testing::Test
@@ -157,6 +162,7 @@ TEST_F(ShipmentHistoryTest, ReadsForwardAndBackward)
     shipment.dispatch("Asignado al móvil 12", actor());
     shipment.reschedule("Destinatario ausente", tickets.next(), actor());
     shipment.dispatch("Segundo intento", actor());
+    shipment.confirmAllParcels(actor());
     shipment.deliver("Entrega confirmada", actor());
 
     std::vector<ShipmentStatus> forward;
@@ -223,6 +229,7 @@ TEST(Shipment, EnforcesStateMachineAndTracksStateBits)
     EXPECT_FALSE(pShipment->stateHistory().test(bitOf(ShipmentStatus::Clasificado)));
     EXPECT_EQ(pShipment->stateHistory().count(), 3U);
     pShipment->dispatch("segundo intento", actor());
+    pShipment->confirmAllParcels(actor());
     pShipment->deliver("ok", actor());
     EXPECT_THROW(pShipment->reschedule("otra vez", tickets.next(), actor()), business_error);
     delete pShipment;
@@ -236,11 +243,13 @@ TEST(Shipment, RaisesOneEventPerBehaviour)
     pShipment->dispatch("salida", actor());
     pShipment->reschedule("ausente", tickets.next(), actor());
     pShipment->dispatch("salida", actor());
+    pShipment->confirmAllParcels(actor());
     pShipment->deliver("ok", actor());
-    EXPECT_EQ(pShipment->pendingEvents(), 5U);
+    EXPECT_EQ(pShipment->pendingEvents(), 6U);
     pShipment->publishEvents(publisher);
-    EXPECT_EQ(publisher.events,
-              (std::vector<std::string> {"registered", "dispatched", "rescheduled", "dispatched", "delivered"}));
+    EXPECT_EQ(
+        publisher.events,
+        (std::vector<std::string> {"registered", "dispatched", "rescheduled", "dispatched", "parcel", "delivered"}));
     EXPECT_EQ(pShipment->pendingEvents(), 0U);
     delete pShipment;
 }

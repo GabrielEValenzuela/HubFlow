@@ -9,6 +9,7 @@
 #include "hubflow/logistics/adapters/in/http/movementController.hpp"
 #include "hubflow/logistics/adapters/in/http/operationsController.hpp"
 #include "hubflow/logistics/adapters/in/http/shipmentController.hpp"
+#include "hubflow/logistics/adapters/in/http/shipmentGroupController.hpp"
 #include "hubflow/platform/http/healthController.hpp"
 #include "hubflow/routing/adapters/in/http/roadMapController.hpp"
 #include "hubflow/routing/adapters/in/http/routeController.hpp"
@@ -43,9 +44,15 @@ HttpHarness::HttpHarness()
         app.registerUser, app.updateUser, app.listUsers, app.listCouriers, app.findUser}));
     m_controllers.push_back(
         std::make_unique<audit::adapters::AuditController>(app.listAuditEvents, app.countAuditEvents));
+    m_controllers.push_back(std::make_unique<logistics::adapters::ShipmentController>(
+        logistics::adapters::ShipmentUseCases {app.registerShipment,
+                                               app.listShipments,
+                                               app.findShipment,
+                                               app.getShipment,
+                                               app.findShipmentGroupOfShipment}));
     m_controllers.push_back(
-        std::make_unique<logistics::adapters::ShipmentController>(logistics::adapters::ShipmentUseCases {
-            app.registerShipment, app.listShipments, app.findShipment, app.getShipment}));
+        std::make_unique<logistics::adapters::ShipmentGroupController>(logistics::adapters::ShipmentGroupUseCases {
+            app.formShipmentGroup, app.dissolveShipmentGroup, app.listShipmentGroups, app.getShipmentGroup}));
     m_controllers.push_back(
         std::make_unique<logistics::adapters::MovementController>(logistics::adapters::MovementUseCases {
             app.classifyShipment, app.rescheduleShipment, app.deliverShipment, app.getShipment}));
@@ -78,6 +85,7 @@ HttpHarness::HttpHarness()
     m_controllers.push_back(std::make_unique<routing::adapters::RouteController>(
         routing::adapters::RouteUseCases {app.assignDeliveryRoute,
                                           app.resolveRouteStop,
+                                          app.confirmStopParcel,
                                           app.reassignDeliveryRoute,
                                           app.listRoutes,
                                           app.getRoute,

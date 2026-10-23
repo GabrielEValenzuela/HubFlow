@@ -13,6 +13,7 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , courierWorkload {routing}
     , m_projector {logistics}
     , m_shipmentPersistence {storage.shipments}
+    , m_shipmentGroupPersistence {storage.shipmentGroups}
     , m_routePersistence {storage.routes}
     , m_userPersistence {storage.users}
     , m_catalogPersistence {storage.catalogs}
@@ -27,12 +28,17 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , m_findUser {storage.users}
     , m_listAuditEvents {storage.audit}
     , m_countAuditEvents {storage.audit}
-    , m_registerShipment {logistics, deliveryPoints, bus, clock}
+    , m_registerShipment {logistics, deliveryPoints, identities, trackingCodes, bus, clock}
     , m_classifyShipment {logistics, bus, clock}
     , m_rescheduleShipment {logistics, bus, clock}
     , m_deliverShipment {logistics, bus, clock}
     , m_dispatchNextShipment {logistics, bus, clock}
     , m_listPendingShipments {logistics}
+    , m_formShipmentGroup {logistics, identities, bus, clock}
+    , m_dissolveShipmentGroup {logistics, bus, clock}
+    , m_listShipmentGroups {logistics}
+    , m_getShipmentGroup {logistics}
+    , m_findShipmentGroupOfShipment {logistics}
     , m_listShipments {logistics}
     , m_findShipment {logistics}
     , m_getShipment {logistics}
@@ -51,15 +57,16 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , m_openSortingBatch {logistics, desk}
     , m_sortSortingBatch {desk}
     , m_prepareSortingBatch {desk}
-    , m_processSortingBatchItem {desk}
-    , m_returnProcessedItem {desk}
+    , m_processSortingBatchItem {desk, logistics.groups}
+    , m_returnProcessedItem {desk, logistics.groups}
     , m_getActiveSortingBatch {desk}
     , m_getSortingBatch {desk}
     , m_linearSearchInSortingBatch {desk}
     , m_binarySearchInSortingBatch {desk}
     , m_compareSortingBatchSearches {desk}
-    , m_assignDeliveryRoute {routing, desk, storage.users, bus, clock}
+    , m_assignDeliveryRoute {routing, desk, logistics.groups, storage.users, bus, clock}
     , m_resolveRouteStop {logistics, routing, bus, clock}
+    , m_confirmStopParcel {logistics, routing, bus, clock}
     , m_reassignDeliveryRoute {routing, storage.users, bus, clock}
     , m_addRoadNode {routing, zoneDirectory, bus, clock}
     , m_updateRoadNode {routing, zoneDirectory, bus, clock}
@@ -92,6 +99,11 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , deliverShipment {m_deliverShipment}
     , dispatchNextShipment {m_dispatchNextShipment}
     , listPendingShipments {m_listPendingShipments}
+    , formShipmentGroup {m_formShipmentGroup}
+    , dissolveShipmentGroup {m_dissolveShipmentGroup}
+    , listShipmentGroups {m_listShipmentGroups}
+    , getShipmentGroup {m_getShipmentGroup}
+    , findShipmentGroupOfShipment {m_findShipmentGroupOfShipment}
     , listShipments {m_listShipments}
     , findShipment {m_findShipment}
     , getShipment {m_getShipment}
@@ -119,6 +131,7 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , compareSortingBatchSearches {m_compareSortingBatchSearches}
     , assignDeliveryRoute {m_assignDeliveryRoute}
     , resolveRouteStop {m_resolveRouteStop}
+    , confirmStopParcel {m_confirmStopParcel}
     , reassignDeliveryRoute {m_reassignDeliveryRoute}
     , addRoadNode {m_addRoadNode}
     , updateRoadNode {m_updateRoadNode}
@@ -138,13 +151,15 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
 {
     bus.subscribe(m_projector);
     bus.subscribe(m_shipmentPersistence);
+    bus.subscribe(m_shipmentGroupPersistence);
     bus.subscribe(m_routePersistence);
     bus.subscribe(m_userPersistence);
     bus.subscribe(m_catalogPersistence);
     bus.subscribe(m_roadMapPersistence);
     bus.subscribe(m_auditLog);
     identity::application::AccessPolicyHydrator {policy}.hydrate(storage.rolePermissions);
-    logistics::application::LogisticsHydrator {logistics}.hydrate(storage.catalogs, storage.shipments);
+    logistics::application::LogisticsHydrator {logistics}.hydrate(
+        storage.catalogs, storage.shipments, storage.shipmentGroups);
     routing::application::RoutingHydrator {routing}.hydrate(storage.maps, storage.routes);
 }
 

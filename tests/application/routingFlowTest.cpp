@@ -27,7 +27,7 @@ const routing::domain::DeliveryRoute& assignNorthRoute(test::ApplicationHarness&
     app.prepareSortingBatch.execute(app.operador(), batch.id());
     for (int i = 0; i < 3; ++i)
     {
-        app.processSortingBatchItem.execute(app.operador(), batch.id());
+        app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
     }
     return app.assignDeliveryRoute.execute(
         app.operador(),
@@ -65,11 +65,11 @@ TEST(RoutingFlow, CourierResolvesOnlyOwnStops)
 
     EXPECT_THROW(app.resolveRouteStop.execute(app.pum(otherId),
                                               routing::application::ResolveStopRequest {
-                                                  route.id(), 1, routing::domain::StopOutcome::Delivered, ""}),
+                                                  route.id(), 1, routing::domain::StopOutcome::Delivered, "", true}),
                  business_error);
     app.resolveRouteStop.execute(
         app.pum(courierId),
-        routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Delivered, ""});
+        routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Delivered, "", true});
     app.resolveRouteStop.execute(
         app.pum(courierId),
         routing::application::ResolveStopRequest {route.id(), 2, routing::domain::StopOutcome::Rescheduled, ""});
@@ -122,7 +122,7 @@ TEST(RoutingFlow, AssignmentRequiresProcessedLoadAndActiveCourier)
                                                  routing::application::AssignRouteRequest {batch.id(), courierId, {}}),
                  business_error);
     app.prepareSortingBatch.execute(app.operador(), batch.id());
-    app.processSortingBatchItem.execute(app.operador(), batch.id());
+    app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
     EXPECT_THROW(
         app.assignDeliveryRoute.execute(app.operador(), routing::application::AssignRouteRequest {batch.id(), 999, {}}),
         business_error);
@@ -136,7 +136,7 @@ TEST(RoutingFlow, ResolvingAStopWithTheSameOutcomeChangesNothing)
     const auto                                     courierId = createCourier(app, "pum1@hubflow.local");
     const auto&                                    route     = assignNorthRoute(app, courierId);
     const routing::application::ResolveStopRequest delivered {
-        route.id(), 1, routing::domain::StopOutcome::Delivered, ""};
+        route.id(), 1, routing::domain::StopOutcome::Delivered, "", true};
 
     app.resolveRouteStop.execute(app.pum(courierId), delivered);
     const auto auditedEvents = storage.audit.entries.size();
@@ -158,7 +158,7 @@ TEST(RoutingFlow, ResolvingAStopWithADifferentOutcomeIsAConflict)
     const auto& route     = assignNorthRoute(app, courierId);
     app.resolveRouteStop.execute(
         app.pum(courierId),
-        routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Delivered, ""});
+        routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Delivered, "", true});
 
     shared::domain::ErrorKind kind {shared::domain::ErrorKind::Validation};
     try

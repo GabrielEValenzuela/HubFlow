@@ -82,7 +82,7 @@ const routing::domain::DeliveryRoute& assignNorthRoute(test::ApplicationHarness&
 {
     const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
     app.prepareSortingBatch.execute(app.operador(), batch.id());
-    app.processSortingBatchItem.execute(app.operador(), batch.id());
+    app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
     return app.assignDeliveryRoute.execute(
         app.operador(),
         routing::application::AssignRouteRequest {batch.id(), courierId, routing::domain::SearchAlgorithm::AStar});
@@ -106,14 +106,14 @@ TEST(Extensibility, ANewZoneReceivesRoutesAndDeliversWithoutCodeChanges)
 
     const auto& batch = app.openSortingBatch.execute(app.operador(), "OESTE");
     app.prepareSortingBatch.execute(app.operador(), batch.id());
-    app.processSortingBatchItem.execute(app.operador(), batch.id());
+    app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
     const auto& route = app.assignDeliveryRoute.execute(
         app.operador(), routing::application::AssignRouteRequest {batch.id(), courierId, {}});
     EXPECT_EQ(route.stops()[0].nodeId, "O1");
 
     app.resolveRouteStop.execute(
         app.pum(courierId),
-        routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Delivered, ""});
+        routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Delivered, "", true});
     EXPECT_EQ(app.getShipment.execute(app.operador(), "PKG-3001").status(),
               logistics::domain::ShipmentStatus::Entregado);
 
@@ -206,7 +206,7 @@ TEST(Extensibility, DeactivatingAZoneFollowsTheDomainRules)
 
     const auto& batch = app.openSortingBatch.execute(app.operador(), "OESTE");
     app.prepareSortingBatch.execute(app.operador(), batch.id());
-    app.processSortingBatchItem.execute(app.operador(), batch.id());
+    app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
     const auto& route = app.assignDeliveryRoute.execute(
         app.operador(), routing::application::AssignRouteRequest {batch.id(), courierId, {}});
     EXPECT_EQ(codeOfFailure(
@@ -218,7 +218,7 @@ TEST(Extensibility, DeactivatingAZoneFollowsTheDomainRules)
 
     app.resolveRouteStop.execute(
         app.pum(courierId),
-        routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Delivered, ""});
+        routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Delivered, "", true});
     EXPECT_EQ(codeOfFailure(
                   [&]
                   {
@@ -466,7 +466,7 @@ TEST(Extensibility, OnlyPlantStaffReassignsAndFinishedRoutesStay)
               "route.not_found");
     app.resolveRouteStop.execute(
         app.pum(firstId),
-        routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Delivered, ""});
+        routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Delivered, "", true});
     EXPECT_EQ(codeOfFailure(
                   [&]
                   {

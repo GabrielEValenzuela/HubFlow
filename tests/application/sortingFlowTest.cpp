@@ -25,13 +25,13 @@ TEST(SortingFlow, ReturnProcessedItemGivesBackOnlyTheLastProcessedShipment)
     test::ApplicationHarness app {storage};
     app.seedDataset();
     const auto batchId = openPreparedNorthBatch(app);
-    app.processSortingBatchItem.execute(app.operador(), batchId);
-    const auto&       second = app.processSortingBatchItem.execute(app.operador(), batchId);
-    const std::string lastCode {second.code()};
+    app.processSortingBatchItem.execute(app.operador(), batchId, {});
+    const auto        second = app.processSortingBatchItem.execute(app.operador(), batchId, {});
+    const std::string lastCode {second[0]->code()};
 
-    const auto& returned = app.returnProcessedItem.execute(app.operador(), batchId, lastCode);
+    const auto returned = app.returnProcessedItem.execute(app.operador(), batchId, lastCode);
 
-    EXPECT_EQ(returned.code(), lastCode);
+    EXPECT_EQ(returned[0]->code(), lastCode);
     EXPECT_EQ(app.getSortingBatch.execute(app.operador(), batchId).processed().size(), 1U);
 }
 
@@ -41,7 +41,7 @@ TEST(SortingFlow, RepeatingReturnProcessedItemIsNotFoundAndChangesNothing)
     test::ApplicationHarness app {storage};
     app.seedDataset();
     const auto        batchId = openPreparedNorthBatch(app);
-    const std::string code {app.processSortingBatchItem.execute(app.operador(), batchId).code()};
+    const std::string code {app.processSortingBatchItem.execute(app.operador(), batchId, {})[0]->code()};
     app.returnProcessedItem.execute(app.operador(), batchId, code);
 
     ErrorKind kind {ErrorKind::Validation};

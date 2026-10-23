@@ -41,6 +41,7 @@
 #include "hubflow/insights/application/usecases/queries/lookupInBPlusTree.hpp"
 #include "hubflow/insights/application/usecases/queries/lookupInBst.hpp"
 #include "hubflow/insights/application/usecases/queries/rangeInBPlusTree.hpp"
+#include "hubflow/logistics/adapters/out/generation/sequentialPkgCodeGenerator.hpp"
 #include "hubflow/logistics/adapters/out/routing/roadMapDeliveryPoints.hpp"
 #include "hubflow/logistics/adapters/out/routing/routingPlantOccupancy.hpp"
 #include "hubflow/logistics/application/hydration/logisticsHydrator.hpp"
@@ -50,13 +51,18 @@
 #include "hubflow/logistics/application/ports/in/createZoneUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/deliverShipmentUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/dispatchNextShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/dissolveShipmentGroupUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/findHeaviestShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/findShipmentGroupOfShipmentUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/findShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/formShipmentGroupUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/getOperationsMetricsUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/getShipmentGroupUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/getShipmentUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/listPendingShipmentsUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/listServiceLevelsUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/listShipmentFeaturesUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/listShipmentGroupsUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/listShipmentsUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/listZonesUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/registerShipmentUseCase.hpp"
@@ -67,6 +73,7 @@
 #include "hubflow/logistics/application/ports/in/updateZoneUseCase.hpp"
 #include "hubflow/logistics/application/subscribers/catalogPersistenceSubscriber.hpp"
 #include "hubflow/logistics/application/subscribers/pendingShipmentsProjector.hpp"
+#include "hubflow/logistics/application/subscribers/shipmentGroupPersistenceSubscriber.hpp"
 #include "hubflow/logistics/application/subscribers/shipmentPersistenceSubscriber.hpp"
 #include "hubflow/logistics/application/usecases/commands/classifyShipment.hpp"
 #include "hubflow/logistics/application/usecases/commands/createServiceLevel.hpp"
@@ -74,6 +81,8 @@
 #include "hubflow/logistics/application/usecases/commands/createZone.hpp"
 #include "hubflow/logistics/application/usecases/commands/deliverShipment.hpp"
 #include "hubflow/logistics/application/usecases/commands/dispatchNextShipment.hpp"
+#include "hubflow/logistics/application/usecases/commands/dissolveShipmentGroup.hpp"
+#include "hubflow/logistics/application/usecases/commands/formShipmentGroup.hpp"
 #include "hubflow/logistics/application/usecases/commands/registerShipment.hpp"
 #include "hubflow/logistics/application/usecases/commands/rescheduleShipment.hpp"
 #include "hubflow/logistics/application/usecases/commands/updateServiceLevel.hpp"
@@ -81,11 +90,14 @@
 #include "hubflow/logistics/application/usecases/commands/updateZone.hpp"
 #include "hubflow/logistics/application/usecases/queries/findHeaviestShipment.hpp"
 #include "hubflow/logistics/application/usecases/queries/findShipment.hpp"
+#include "hubflow/logistics/application/usecases/queries/findShipmentGroupOfShipment.hpp"
 #include "hubflow/logistics/application/usecases/queries/getOperationsMetrics.hpp"
 #include "hubflow/logistics/application/usecases/queries/getShipment.hpp"
+#include "hubflow/logistics/application/usecases/queries/getShipmentGroup.hpp"
 #include "hubflow/logistics/application/usecases/queries/listPendingShipments.hpp"
 #include "hubflow/logistics/application/usecases/queries/listServiceLevels.hpp"
 #include "hubflow/logistics/application/usecases/queries/listShipmentFeatures.hpp"
+#include "hubflow/logistics/application/usecases/queries/listShipmentGroups.hpp"
 #include "hubflow/logistics/application/usecases/queries/listShipments.hpp"
 #include "hubflow/logistics/application/usecases/queries/listZones.hpp"
 #include "hubflow/logistics/application/usecases/queries/summarizeZone.hpp"
@@ -94,6 +106,7 @@
 #include "hubflow/routing/application/hydration/routingHydrator.hpp"
 #include "hubflow/routing/application/ports/in/addRoadNodeUseCase.hpp"
 #include "hubflow/routing/application/ports/in/assignDeliveryRouteUseCase.hpp"
+#include "hubflow/routing/application/ports/in/confirmStopParcelUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getCourierRouteSheetUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getRoadMapUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getRouteUseCase.hpp"
@@ -106,6 +119,7 @@
 #include "hubflow/routing/application/subscribers/routePersistenceSubscriber.hpp"
 #include "hubflow/routing/application/usecases/commands/addRoadNode.hpp"
 #include "hubflow/routing/application/usecases/commands/assignDeliveryRoute.hpp"
+#include "hubflow/routing/application/usecases/commands/confirmStopParcel.hpp"
 #include "hubflow/routing/application/usecases/commands/reassignDeliveryRoute.hpp"
 #include "hubflow/routing/application/usecases/commands/resolveRouteStop.hpp"
 #include "hubflow/routing/application/usecases/commands/updateRoadNode.hpp"
@@ -114,6 +128,7 @@
 #include "hubflow/routing/application/usecases/queries/getRoute.hpp"
 #include "hubflow/routing/application/usecases/queries/listRoutes.hpp"
 #include "hubflow/routing/application/usecases/queries/previewRoute.hpp"
+#include "hubflow/shared/adapters/out/generation/uuidV7IdentityGenerator.hpp"
 #include "hubflow/sorting/application/ports/in/binarySearchInSortingBatchUseCase.hpp"
 #include "hubflow/sorting/application/ports/in/compareSortingBatchSearchesUseCase.hpp"
 #include "hubflow/sorting/application/ports/in/getActiveSortingBatchUseCase.hpp"
@@ -142,6 +157,7 @@ namespace hubflow::test
 struct Storage
 {
     InMemoryShipmentRepository       shipments;
+    InMemoryShipmentGroupRepository  shipmentGroups;
     InMemoryCatalogRepository        catalogs;
     InMemoryRouteRepository          routes;
     InMemoryUserRepository           users;
@@ -170,147 +186,162 @@ public:
     /// @brief Alta de usuario sin control de permisos, como hace el arranque del sistema.
     identity::domain::UserState bootstrapUser(const identity::application::RegisterUserRequest& request);
 
-    Storage&                                   storage;
-    FixedClock                                 clock;
-    PlainHasher                                hasher;
-    PlainTokenIssuer                           tokens;
-    shared::application::EventBus              bus;
-    logistics::application::LogisticsModel     logistics;
-    routing::application::RoutingModel         routing;
-    sorting::domain::SortingDesk               desk;
-    logistics::adapters::RoadMapDeliveryPoints deliveryPoints;
-    logistics::adapters::RoutingPlantOccupancy occupancy;
-    routing::adapters::LogisticsZoneDirectory  zoneDirectory;
-    identity::adapters::RoutingCourierWorkload courierWorkload;
-    identity::domain::AccessPolicy             policy;
+    Storage&                                        storage;
+    FixedClock                                      clock;
+    PlainHasher                                     hasher;
+    PlainTokenIssuer                                tokens;
+    shared::application::EventBus                   bus;
+    shared::adapters::UuidV7IdentityGenerator       identities;
+    logistics::adapters::SequentialPkgCodeGenerator trackingCodes;
+    logistics::application::LogisticsModel          logistics;
+    routing::application::RoutingModel              routing;
+    sorting::domain::SortingDesk                    desk;
+    logistics::adapters::RoadMapDeliveryPoints      deliveryPoints;
+    logistics::adapters::RoutingPlantOccupancy      occupancy;
+    routing::adapters::LogisticsZoneDirectory       zoneDirectory;
+    identity::adapters::RoutingCourierWorkload      courierWorkload;
+    identity::domain::AccessPolicy                  policy;
 
 private:
-    logistics::application::PendingShipmentsProjector     m_projector;
-    logistics::application::ShipmentPersistenceSubscriber m_shipmentPersistence;
-    routing::application::RoutePersistenceSubscriber      m_routePersistence;
-    identity::application::UserPersistenceSubscriber      m_userPersistence;
-    logistics::application::CatalogPersistenceSubscriber  m_catalogPersistence;
-    routing::application::RoadMapPersistenceSubscriber    m_roadMapPersistence;
-    audit::application::AuditLogSubscriber                m_auditLog;
-    identity::application::SignIn                         m_signIn;
-    identity::application::Authenticate                   m_authenticate;
-    identity::application::RegisterUser                   m_registerUser;
-    identity::application::UpdateUser                     m_updateUser;
-    identity::application::ListUsers                      m_listUsers;
-    identity::application::ListCouriers                   m_listCouriers;
-    identity::application::FindUser                       m_findUser;
-    audit::application::ListAuditEvents                   m_listAuditEvents;
-    audit::application::CountAuditEvents                  m_countAuditEvents;
-    logistics::application::RegisterShipment              m_registerShipment;
-    logistics::application::ClassifyShipment              m_classifyShipment;
-    logistics::application::RescheduleShipment            m_rescheduleShipment;
-    logistics::application::DeliverShipment               m_deliverShipment;
-    logistics::application::DispatchNextShipment          m_dispatchNextShipment;
-    logistics::application::ListPendingShipments          m_listPendingShipments;
-    logistics::application::ListShipments                 m_listShipments;
-    logistics::application::FindShipment                  m_findShipment;
-    logistics::application::GetShipment                   m_getShipment;
-    logistics::application::SummarizeZone                 m_summarizeZone;
-    logistics::application::FindHeaviestShipment          m_findHeaviestShipment;
-    logistics::application::GetOperationsMetrics          m_getOperationsMetrics;
-    logistics::application::CreateZone                    m_createZone;
-    logistics::application::UpdateZone                    m_updateZone;
-    logistics::application::ListZones                     m_listZones;
-    logistics::application::CreateServiceLevel            m_createServiceLevel;
-    logistics::application::UpdateServiceLevel            m_updateServiceLevel;
-    logistics::application::ListServiceLevels             m_listServiceLevels;
-    logistics::application::CreateShipmentFeature         m_createShipmentFeature;
-    logistics::application::UpdateShipmentFeature         m_updateShipmentFeature;
-    logistics::application::ListShipmentFeatures          m_listShipmentFeatures;
-    sorting::application::OpenSortingBatch                m_openSortingBatch;
-    sorting::application::SortSortingBatch                m_sortSortingBatch;
-    sorting::application::PrepareSortingBatch             m_prepareSortingBatch;
-    sorting::application::ProcessSortingBatchItem         m_processSortingBatchItem;
-    sorting::application::ReturnProcessedItem             m_returnProcessedItem;
-    sorting::application::GetActiveSortingBatch           m_getActiveSortingBatch;
-    sorting::application::GetSortingBatch                 m_getSortingBatch;
-    sorting::application::LinearSearchInSortingBatch      m_linearSearchInSortingBatch;
-    sorting::application::BinarySearchInSortingBatch      m_binarySearchInSortingBatch;
-    sorting::application::CompareSortingBatchSearches     m_compareSortingBatchSearches;
-    routing::application::AssignDeliveryRoute             m_assignDeliveryRoute;
-    routing::application::ResolveRouteStop                m_resolveRouteStop;
-    routing::application::ReassignDeliveryRoute           m_reassignDeliveryRoute;
-    routing::application::AddRoadNode                     m_addRoadNode;
-    routing::application::UpdateRoadNode                  m_updateRoadNode;
-    routing::application::GetRoadMap                      m_getRoadMap;
-    routing::application::PreviewRoute                    m_previewRoute;
-    routing::application::ListRoutes                      m_listRoutes;
-    routing::adapters::LogisticsStopShipments             m_stopShipments;
-    routing::application::GetRoute                        m_getRoute;
-    routing::application::GetCourierRouteSheet            m_getCourierRouteSheet;
-    insights::application::LookupInBst                    m_lookupInBst;
-    insights::application::GetBst                         m_getBst;
-    insights::application::LookupInBPlusTree              m_lookupInBPlusTree;
-    insights::application::RangeInBPlusTree               m_rangeInBPlusTree;
-    insights::application::GetBPlusTree                   m_getBPlusTree;
-    insights::application::CompareShipmentStates          m_compareShipmentStates;
-    insights::application::GetCodeSet                     m_getCodeSet;
-    insights::application::CombineCodeSets                m_combineCodeSets;
+    logistics::application::PendingShipmentsProjector          m_projector;
+    logistics::application::ShipmentPersistenceSubscriber      m_shipmentPersistence;
+    logistics::application::ShipmentGroupPersistenceSubscriber m_shipmentGroupPersistence;
+    routing::application::RoutePersistenceSubscriber           m_routePersistence;
+    identity::application::UserPersistenceSubscriber           m_userPersistence;
+    logistics::application::CatalogPersistenceSubscriber       m_catalogPersistence;
+    routing::application::RoadMapPersistenceSubscriber         m_roadMapPersistence;
+    audit::application::AuditLogSubscriber                     m_auditLog;
+    identity::application::SignIn                              m_signIn;
+    identity::application::Authenticate                        m_authenticate;
+    identity::application::RegisterUser                        m_registerUser;
+    identity::application::UpdateUser                          m_updateUser;
+    identity::application::ListUsers                           m_listUsers;
+    identity::application::ListCouriers                        m_listCouriers;
+    identity::application::FindUser                            m_findUser;
+    audit::application::ListAuditEvents                        m_listAuditEvents;
+    audit::application::CountAuditEvents                       m_countAuditEvents;
+    logistics::application::RegisterShipment                   m_registerShipment;
+    logistics::application::ClassifyShipment                   m_classifyShipment;
+    logistics::application::RescheduleShipment                 m_rescheduleShipment;
+    logistics::application::DeliverShipment                    m_deliverShipment;
+    logistics::application::DispatchNextShipment               m_dispatchNextShipment;
+    logistics::application::ListPendingShipments               m_listPendingShipments;
+    logistics::application::FormShipmentGroup                  m_formShipmentGroup;
+    logistics::application::DissolveShipmentGroup              m_dissolveShipmentGroup;
+    logistics::application::ListShipmentGroups                 m_listShipmentGroups;
+    logistics::application::GetShipmentGroup                   m_getShipmentGroup;
+    logistics::application::FindShipmentGroupOfShipment        m_findShipmentGroupOfShipment;
+    logistics::application::ListShipments                      m_listShipments;
+    logistics::application::FindShipment                       m_findShipment;
+    logistics::application::GetShipment                        m_getShipment;
+    logistics::application::SummarizeZone                      m_summarizeZone;
+    logistics::application::FindHeaviestShipment               m_findHeaviestShipment;
+    logistics::application::GetOperationsMetrics               m_getOperationsMetrics;
+    logistics::application::CreateZone                         m_createZone;
+    logistics::application::UpdateZone                         m_updateZone;
+    logistics::application::ListZones                          m_listZones;
+    logistics::application::CreateServiceLevel                 m_createServiceLevel;
+    logistics::application::UpdateServiceLevel                 m_updateServiceLevel;
+    logistics::application::ListServiceLevels                  m_listServiceLevels;
+    logistics::application::CreateShipmentFeature              m_createShipmentFeature;
+    logistics::application::UpdateShipmentFeature              m_updateShipmentFeature;
+    logistics::application::ListShipmentFeatures               m_listShipmentFeatures;
+    sorting::application::OpenSortingBatch                     m_openSortingBatch;
+    sorting::application::SortSortingBatch                     m_sortSortingBatch;
+    sorting::application::PrepareSortingBatch                  m_prepareSortingBatch;
+    sorting::application::ProcessSortingBatchItem              m_processSortingBatchItem;
+    sorting::application::ReturnProcessedItem                  m_returnProcessedItem;
+    sorting::application::GetActiveSortingBatch                m_getActiveSortingBatch;
+    sorting::application::GetSortingBatch                      m_getSortingBatch;
+    sorting::application::LinearSearchInSortingBatch           m_linearSearchInSortingBatch;
+    sorting::application::BinarySearchInSortingBatch           m_binarySearchInSortingBatch;
+    sorting::application::CompareSortingBatchSearches          m_compareSortingBatchSearches;
+    routing::application::AssignDeliveryRoute                  m_assignDeliveryRoute;
+    routing::application::ResolveRouteStop                     m_resolveRouteStop;
+    routing::application::ConfirmStopParcel                    m_confirmStopParcel;
+    routing::application::ReassignDeliveryRoute                m_reassignDeliveryRoute;
+    routing::application::AddRoadNode                          m_addRoadNode;
+    routing::application::UpdateRoadNode                       m_updateRoadNode;
+    routing::application::GetRoadMap                           m_getRoadMap;
+    routing::application::PreviewRoute                         m_previewRoute;
+    routing::application::ListRoutes                           m_listRoutes;
+    routing::adapters::LogisticsStopShipments                  m_stopShipments;
+    routing::application::GetRoute                             m_getRoute;
+    routing::application::GetCourierRouteSheet                 m_getCourierRouteSheet;
+    insights::application::LookupInBst                         m_lookupInBst;
+    insights::application::GetBst                              m_getBst;
+    insights::application::LookupInBPlusTree                   m_lookupInBPlusTree;
+    insights::application::RangeInBPlusTree                    m_rangeInBPlusTree;
+    insights::application::GetBPlusTree                        m_getBPlusTree;
+    insights::application::CompareShipmentStates               m_compareShipmentStates;
+    insights::application::GetCodeSet                          m_getCodeSet;
+    insights::application::CombineCodeSets                     m_combineCodeSets;
 
 public:
-    identity::application::SignInUseCase&                     signIn;
-    identity::application::AuthenticateUseCase&               authenticate;
-    identity::application::RegisterUserUseCase&               registerUser;
-    identity::application::UpdateUserUseCase&                 updateUser;
-    identity::application::ListUsersUseCase&                  listUsers;
-    identity::application::ListCouriersUseCase&               listCouriers;
-    identity::application::FindUserUseCase&                   findUser;
-    audit::application::ListAuditEventsUseCase&               listAuditEvents;
-    audit::application::CountAuditEventsUseCase&              countAuditEvents;
-    logistics::application::RegisterShipmentUseCase&          registerShipment;
-    logistics::application::ClassifyShipmentUseCase&          classifyShipment;
-    logistics::application::RescheduleShipmentUseCase&        rescheduleShipment;
-    logistics::application::DeliverShipmentUseCase&           deliverShipment;
-    logistics::application::DispatchNextShipmentUseCase&      dispatchNextShipment;
-    logistics::application::ListPendingShipmentsUseCase&      listPendingShipments;
-    logistics::application::ListShipmentsUseCase&             listShipments;
-    logistics::application::FindShipmentUseCase&              findShipment;
-    logistics::application::GetShipmentUseCase&               getShipment;
-    logistics::application::SummarizeZoneUseCase&             summarizeZone;
-    logistics::application::FindHeaviestShipmentUseCase&      findHeaviestShipment;
-    logistics::application::GetOperationsMetricsUseCase&      getOperationsMetrics;
-    logistics::application::CreateZoneUseCase&                createZone;
-    logistics::application::UpdateZoneUseCase&                updateZone;
-    logistics::application::ListZonesUseCase&                 listZones;
-    logistics::application::CreateServiceLevelUseCase&        createServiceLevel;
-    logistics::application::UpdateServiceLevelUseCase&        updateServiceLevel;
-    logistics::application::ListServiceLevelsUseCase&         listServiceLevels;
-    logistics::application::CreateShipmentFeatureUseCase&     createShipmentFeature;
-    logistics::application::UpdateShipmentFeatureUseCase&     updateShipmentFeature;
-    logistics::application::ListShipmentFeaturesUseCase&      listShipmentFeatures;
-    sorting::application::OpenSortingBatchUseCase&            openSortingBatch;
-    sorting::application::SortSortingBatchUseCase&            sortSortingBatch;
-    sorting::application::PrepareSortingBatchUseCase&         prepareSortingBatch;
-    sorting::application::ProcessSortingBatchItemUseCase&     processSortingBatchItem;
-    sorting::application::ReturnProcessedItemUseCase&         returnProcessedItem;
-    sorting::application::GetActiveSortingBatchUseCase&       getActiveSortingBatch;
-    sorting::application::GetSortingBatchUseCase&             getSortingBatch;
-    sorting::application::LinearSearchInSortingBatchUseCase&  linearSearchInSortingBatch;
-    sorting::application::BinarySearchInSortingBatchUseCase&  binarySearchInSortingBatch;
-    sorting::application::CompareSortingBatchSearchesUseCase& compareSortingBatchSearches;
-    routing::application::AssignDeliveryRouteUseCase&         assignDeliveryRoute;
-    routing::application::ResolveRouteStopUseCase&            resolveRouteStop;
-    routing::application::ReassignDeliveryRouteUseCase&       reassignDeliveryRoute;
-    routing::application::AddRoadNodeUseCase&                 addRoadNode;
-    routing::application::UpdateRoadNodeUseCase&              updateRoadNode;
-    routing::application::GetRoadMapUseCase&                  getRoadMap;
-    routing::application::PreviewRouteUseCase&                previewRoute;
-    routing::application::ListRoutesUseCase&                  listRoutes;
-    routing::application::GetRouteUseCase&                    getRoute;
-    routing::application::GetCourierRouteSheetUseCase&        getCourierRouteSheet;
-    insights::application::LookupInBstUseCase&                lookupInBst;
-    insights::application::GetBstUseCase&                     getBst;
-    insights::application::LookupInBPlusTreeUseCase&          lookupInBPlusTree;
-    insights::application::RangeInBPlusTreeUseCase&           rangeInBPlusTree;
-    insights::application::GetBPlusTreeUseCase&               getBPlusTree;
-    insights::application::CompareShipmentStatesUseCase&      compareShipmentStates;
-    insights::application::GetCodeSetUseCase&                 getCodeSet;
-    insights::application::CombineCodeSetsUseCase&            combineCodeSets;
+    identity::application::SignInUseCase&                       signIn;
+    identity::application::AuthenticateUseCase&                 authenticate;
+    identity::application::RegisterUserUseCase&                 registerUser;
+    identity::application::UpdateUserUseCase&                   updateUser;
+    identity::application::ListUsersUseCase&                    listUsers;
+    identity::application::ListCouriersUseCase&                 listCouriers;
+    identity::application::FindUserUseCase&                     findUser;
+    audit::application::ListAuditEventsUseCase&                 listAuditEvents;
+    audit::application::CountAuditEventsUseCase&                countAuditEvents;
+    logistics::application::RegisterShipmentUseCase&            registerShipment;
+    logistics::application::ClassifyShipmentUseCase&            classifyShipment;
+    logistics::application::RescheduleShipmentUseCase&          rescheduleShipment;
+    logistics::application::DeliverShipmentUseCase&             deliverShipment;
+    logistics::application::DispatchNextShipmentUseCase&        dispatchNextShipment;
+    logistics::application::ListPendingShipmentsUseCase&        listPendingShipments;
+    logistics::application::FormShipmentGroupUseCase&           formShipmentGroup;
+    logistics::application::DissolveShipmentGroupUseCase&       dissolveShipmentGroup;
+    logistics::application::ListShipmentGroupsUseCase&          listShipmentGroups;
+    logistics::application::GetShipmentGroupUseCase&            getShipmentGroup;
+    logistics::application::FindShipmentGroupOfShipmentUseCase& findShipmentGroupOfShipment;
+    logistics::application::ListShipmentsUseCase&               listShipments;
+    logistics::application::FindShipmentUseCase&                findShipment;
+    logistics::application::GetShipmentUseCase&                 getShipment;
+    logistics::application::SummarizeZoneUseCase&               summarizeZone;
+    logistics::application::FindHeaviestShipmentUseCase&        findHeaviestShipment;
+    logistics::application::GetOperationsMetricsUseCase&        getOperationsMetrics;
+    logistics::application::CreateZoneUseCase&                  createZone;
+    logistics::application::UpdateZoneUseCase&                  updateZone;
+    logistics::application::ListZonesUseCase&                   listZones;
+    logistics::application::CreateServiceLevelUseCase&          createServiceLevel;
+    logistics::application::UpdateServiceLevelUseCase&          updateServiceLevel;
+    logistics::application::ListServiceLevelsUseCase&           listServiceLevels;
+    logistics::application::CreateShipmentFeatureUseCase&       createShipmentFeature;
+    logistics::application::UpdateShipmentFeatureUseCase&       updateShipmentFeature;
+    logistics::application::ListShipmentFeaturesUseCase&        listShipmentFeatures;
+    sorting::application::OpenSortingBatchUseCase&              openSortingBatch;
+    sorting::application::SortSortingBatchUseCase&              sortSortingBatch;
+    sorting::application::PrepareSortingBatchUseCase&           prepareSortingBatch;
+    sorting::application::ProcessSortingBatchItemUseCase&       processSortingBatchItem;
+    sorting::application::ReturnProcessedItemUseCase&           returnProcessedItem;
+    sorting::application::GetActiveSortingBatchUseCase&         getActiveSortingBatch;
+    sorting::application::GetSortingBatchUseCase&               getSortingBatch;
+    sorting::application::LinearSearchInSortingBatchUseCase&    linearSearchInSortingBatch;
+    sorting::application::BinarySearchInSortingBatchUseCase&    binarySearchInSortingBatch;
+    sorting::application::CompareSortingBatchSearchesUseCase&   compareSortingBatchSearches;
+    routing::application::AssignDeliveryRouteUseCase&           assignDeliveryRoute;
+    routing::application::ResolveRouteStopUseCase&              resolveRouteStop;
+    routing::application::ConfirmStopParcelUseCase&             confirmStopParcel;
+    routing::application::ReassignDeliveryRouteUseCase&         reassignDeliveryRoute;
+    routing::application::AddRoadNodeUseCase&                   addRoadNode;
+    routing::application::UpdateRoadNodeUseCase&                updateRoadNode;
+    routing::application::GetRoadMapUseCase&                    getRoadMap;
+    routing::application::PreviewRouteUseCase&                  previewRoute;
+    routing::application::ListRoutesUseCase&                    listRoutes;
+    routing::application::GetRouteUseCase&                      getRoute;
+    routing::application::GetCourierRouteSheetUseCase&          getCourierRouteSheet;
+    insights::application::LookupInBstUseCase&                  lookupInBst;
+    insights::application::GetBstUseCase&                       getBst;
+    insights::application::LookupInBPlusTreeUseCase&            lookupInBPlusTree;
+    insights::application::RangeInBPlusTreeUseCase&             rangeInBPlusTree;
+    insights::application::GetBPlusTreeUseCase&                 getBPlusTree;
+    insights::application::CompareShipmentStatesUseCase&        compareShipmentStates;
+    insights::application::GetCodeSetUseCase&                   getCodeSet;
+    insights::application::CombineCodeSetsUseCase&              combineCodeSets;
 };
 
 } // namespace hubflow::test

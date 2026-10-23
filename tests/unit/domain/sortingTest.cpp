@@ -44,6 +44,7 @@ protected:
     }
 
     ShipmentCatalog                    catalog;
+    ShipmentGroupBook                  groups;
     hubflow::test::ReferencePriorities priorities;
     PendingShipments                   pending {priorities.policy};
     TicketDispenser                    tickets;
@@ -123,8 +124,8 @@ TEST_F(SortingBatchTest, PreparingAgainSkipsPackagesAlreadyLoaded)
     batch.sort(ShipmentOrdering::of(SortCriteria::CodeAscending));
     batch.prepare();
     const std::size_t total = batch.preparation().size();
-    batch.processNext();
-    batch.processNext();
+    batch.processNext(groups);
+    batch.processNext(groups);
 
     batch.prepare();
     batch.prepare();
@@ -142,22 +143,22 @@ TEST_F(SortingBatchTest, PreparationQueueIsFifoAndProcessedStackIsLifo)
     EXPECT_EQ(batch.preparation().front()->code(), "PKG-1001");
     EXPECT_EQ(batch.preparation().rear()->code(), "PKG-1009");
 
-    EXPECT_EQ(batch.processNext().code(), "PKG-1001");
-    EXPECT_EQ(batch.processNext().code(), "PKG-1002");
-    EXPECT_EQ(batch.processNext().code(), "PKG-1004");
+    EXPECT_EQ(batch.processNext(groups)[0]->code(), "PKG-1001");
+    EXPECT_EQ(batch.processNext(groups)[0]->code(), "PKG-1002");
+    EXPECT_EQ(batch.processNext(groups)[0]->code(), "PKG-1004");
     EXPECT_EQ(batch.processed().top()->code(), "PKG-1004");
-    EXPECT_EQ(batch.returnProcessed("PKG-1004").code(), "PKG-1004");
+    EXPECT_EQ(batch.returnProcessed("PKG-1004", groups)[0]->code(), "PKG-1004");
     EXPECT_EQ(batch.processed().top()->code(), "PKG-1002");
 
     while (!batch.preparation().isEmpty())
     {
-        batch.processNext();
+        batch.processNext(groups);
     }
-    EXPECT_THROW(batch.processNext(), business_error);
+    EXPECT_THROW(batch.processNext(groups), business_error);
     const auto unloaded = batch.unloadProcessed();
     EXPECT_EQ(unloaded[0]->code(), "PKG-1009");
     EXPECT_TRUE(batch.processed().isEmpty());
-    EXPECT_THROW(batch.returnProcessed("PKG-1009"), business_error);
+    EXPECT_THROW(batch.returnProcessed("PKG-1009", groups), business_error);
 }
 
 TEST_F(BatchSearchTest, LinearAndBinaryReportComparisons)
@@ -200,12 +201,12 @@ TEST_F(SortingBatchTest, ReturnProcessedItemOnlyAcceptsTheLastProcessedCode)
     SortingBatch batch {1, "NORTE", pending};
     batch.sort(ShipmentOrdering::of(SortCriteria::CodeAscending));
     batch.prepare();
-    batch.processNext();
-    batch.processNext();
+    batch.processNext(groups);
+    batch.processNext(groups);
 
-    EXPECT_THROW(batch.returnProcessed("PKG-1001"), business_error);
+    EXPECT_THROW(batch.returnProcessed("PKG-1001", groups), business_error);
     EXPECT_EQ(batch.processed().size(), 2U);
-    EXPECT_EQ(batch.returnProcessed("PKG-1002").code(), "PKG-1002");
+    EXPECT_EQ(batch.returnProcessed("PKG-1002", groups)[0]->code(), "PKG-1002");
     EXPECT_EQ(batch.processed().top()->code(), "PKG-1001");
 }
 
@@ -213,14 +214,14 @@ TEST_F(SortingBatchTest, ReturningTheSameItemTwiceFailsWithoutSideEffects)
 {
     SortingBatch batch {1, "NORTE", pending};
     batch.prepare();
-    batch.processNext();
+    batch.processNext(groups);
     const std::string code {batch.processed().top()->code()};
 
-    batch.returnProcessed(code);
+    batch.returnProcessed(code, groups);
     ErrorKind kind {ErrorKind::Validation};
     try
     {
-        batch.returnProcessed(code);
+        batch.returnProcessed(code, groups);
     }
     catch (const business_error& error)
     {

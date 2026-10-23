@@ -99,7 +99,7 @@ TEST(LogisticsFlow, DispatchRescheduleAndDeliverKeepPendingConsistent)
 
     app.dispatchNextShipment.execute(app.operador(), "");
     app.dispatchNextShipment.execute(app.operador(), "");
-    app.deliverShipment.execute(app.operador(), "PKG-1002", "Entrega confirmada");
+    app.deliverShipment.execute(app.operador(), "PKG-1002", "Entrega confirmada", true);
     EXPECT_EQ(app.getShipment.execute(app.operador(), "PKG-1002").history().size(), 5U);
     EXPECT_EQ(kindOf(
                   [&]

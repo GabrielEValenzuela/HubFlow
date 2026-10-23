@@ -1,4 +1,5 @@
 #include "support/applicationHarness.hpp"
+#include "support/fixtures.hpp"
 
 #include "hubflow/shared/domain/businessError.hpp"
 
@@ -80,8 +81,10 @@ TEST(InsightsFlow, NewShipmentIsReachableThroughEveryStructure)
     test::Storage            storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
-    app.registerShipment.execute(
-        app.operador(), logistics::domain::ShipmentDraft {"PKG-1009", "Inés Ríos", "NORTE", 2.0, "EXPRESS", "N4"});
+    auto extra          = test::draft("PKG-1009", "EXPRESS", "NORTE", 2.0);
+    extra.recipient     = "Inés Ríos";
+    extra.deliveryPoint = "N4";
+    app.registerShipment.execute(app.operador(), extra);
     EXPECT_NE(app.lookupInBPlusTree.execute(app.operador(), "PKG-1009").pShipment, nullptr);
     insights::application::SetSelector express;
     express.kind    = insights::application::SetSelector::Kind::Service;

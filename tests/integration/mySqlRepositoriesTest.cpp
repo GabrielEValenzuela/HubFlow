@@ -2,6 +2,7 @@
 #include "hubflow/identity/adapters/out/mysql/mySqlRolePermissionRepository.hpp"
 #include "hubflow/identity/adapters/out/mysql/mySqlUserRepository.hpp"
 #include "hubflow/logistics/adapters/out/mysql/mySqlCatalogRepository.hpp"
+#include "hubflow/logistics/adapters/out/mysql/mySqlShipmentGroupRepository.hpp"
 #include "hubflow/logistics/adapters/out/mysql/mySqlShipmentRepository.hpp"
 #include "hubflow/platform/config/settings.hpp"
 #include "hubflow/platform/mysql/mySqlConnection.hpp"
@@ -21,8 +22,16 @@ using namespace hubflow;
 
 namespace
 {
-constexpr const char* MIGRATIONS[] {"001_schema.sql", "002_road_map.sql", "003_idempotency.sql", "004_catalogs.sql"};
-constexpr const char* TABLES[] {"shipment_feature_links",
+constexpr const char* MIGRATIONS[] {"001_schema.sql",
+                                    "002_road_map.sql",
+                                    "003_idempotency.sql",
+                                    "004_catalogs.sql",
+                                    "005_shipments_parcels_groups.sql"};
+constexpr const char* TABLES[] {"route_stop_companions",
+                                "shipment_group_members",
+                                "shipment_groups",
+                                "parcels",
+                                "shipment_feature_links",
                                 "shipment_features",
                                 "service_levels",
                                 "zones",
@@ -68,6 +77,31 @@ private:
         movements.emplace_back(code, movement);
     }
 };
+
+class GroupCollector final : public logistics::application::ShipmentGroupRestorer
+{
+public:
+    std::vector<logistics::domain::ShipmentGroupState> groups;
+
+private:
+    void restoreGroup(const logistics::domain::ShipmentGroupState& state) override
+    {
+        groups.push_back(state);
+    }
+};
+
+logistics::domain::ShipmentDraft draftOf(const std::string& code, const std::string& id)
+{
+    logistics::domain::ShipmentDraft draft;
+    draft.id            = id;
+    draft.code          = code;
+    draft.recipient     = "Marta Lopez";
+    draft.zone          = "NORTE";
+    draft.service       = "EXPRESS";
+    draft.deliveryPoint = "N2";
+    draft.parcels.pushBack(logistics::domain::ParcelData {2.5, 30.0, 20.0, 10.0});
+    return draft;
+}
 
 class CatalogCollector final : public logistics::application::CatalogRestorer
 {
@@ -179,7 +213,9 @@ protected:
                                                  const std::string&                          code)
     {
         logistics::domain::ShipmentState state;
-        state.draft  = {code, "Marta Lopez", "NORTE", 2.5, "EXPRESS", "N2"};
+        state.draft  = draftOf(code,
+                              "018f0000-0000-7000-8000-" +
+                                  std::string(12 - std::min<std::size_t>(12, code.size() - 4), '0') + code.substr(4));
         state.ticket = 7;
         shipments.add(state);
         return state;
@@ -225,11 +261,64 @@ TEST_F(MySqlRepositories, ShipmentsAndMovementsSurviveReload)
 
     ASSERT_EQ(collector.states.size(), 1U);
     EXPECT_EQ(collector.states[0].draft.code, "PKG-9001");
+    EXPECT_EQ(collector.states[0].draft.id, "018f0000-0000-7000-8000-000000009001");
     EXPECT_EQ(collector.states[0].status, logistics::domain::ShipmentStatus::Clasificado);
     EXPECT_EQ(collector.states[0].attempts, 1U);
     EXPECT_EQ(collector.states[0].ticket, 7U);
     ASSERT_EQ(collector.movements.size(), 1U);
     EXPECT_EQ(collector.movements[0].second.note, "Recibido");
+}
+
+TEST_F(MySqlRepositories, ParcelsAndTheirDeliveryFlagsSurviveReload)
+{
+    logistics::adapters::MySqlShipmentRepository shipmentsAdapter {connection()};
+    logistics::application::ShipmentRepository&  shipments = shipmentsAdapter;
+    logistics::domain::ShipmentState             state;
+    state.draft = draftOf("HF-7K3M9Q2X8", "018f0000-0000-7000-8000-00000000a001");
+    state.draft.parcels.pushBack(logistics::domain::ParcelData {1.25, 60.0, 50.0, 40.0});
+    state.ticket = 1;
+    shipments.add(state);
+    state.draft.parcels[1].delivered = true;
+    shipments.update(state);
+    ShipmentCollector collector;
+
+    shipments.loadAll(collector);
+
+    ASSERT_EQ(collector.states.size(), 1U);
+    const auto& parcels = collector.states[0].draft.parcels;
+    ASSERT_EQ(parcels.size(), 2U);
+    EXPECT_DOUBLE_EQ(parcels[0].weightKg, 2.5);
+    EXPECT_FALSE(parcels[0].delivered);
+    EXPECT_DOUBLE_EQ(parcels[1].weightKg, 1.25);
+    EXPECT_DOUBLE_EQ(parcels[1].heightCm, 40.0);
+    EXPECT_TRUE(parcels[1].delivered);
+}
+
+TEST_F(MySqlRepositories, ShipmentGroupsSurviveReloadAndCanBeRemoved)
+{
+    logistics::adapters::MySqlShipmentRepository      shipmentsAdapter {connection()};
+    logistics::application::ShipmentRepository&       shipments = shipmentsAdapter;
+    logistics::adapters::MySqlShipmentGroupRepository groupsAdapter {connection()};
+    logistics::application::ShipmentGroupRepository&  groups = groupsAdapter;
+    addShipment(shipments, "PKG-9001");
+    addShipment(shipments, "PKG-9002");
+    logistics::domain::ShipmentGroupState group;
+    group.id            = "018f0000-0000-7000-8000-00000000b001";
+    group.deliveryPoint = "N2";
+    group.codes.pushBack("PKG-9002");
+    group.codes.pushBack("PKG-9001");
+    groups.add(group);
+    GroupCollector collector;
+
+    groups.loadAll(collector);
+
+    ASSERT_EQ(collector.groups.size(), 1U);
+    EXPECT_EQ(collector.groups[0].id, group.id);
+    EXPECT_EQ(collector.groups[0].codes[0], "PKG-9002");
+    groups.remove(group.id);
+    GroupCollector afterwards;
+    groups.loadAll(afterwards);
+    EXPECT_TRUE(afterwards.groups.empty());
 }
 
 TEST_F(MySqlRepositories, RoadMapLoadsReferenceCity)
@@ -259,9 +348,13 @@ TEST_F(MySqlRepositories, RoutesAndStopOutcomesSurviveReload)
     record.courier   = {courier.id, courier.name};
     record.algorithm = routing::domain::SearchAlgorithm::AStar;
     record.createdAt = 1700000000;
-    record.stops.pushBack(routing::domain::RouteStop {1, "PKG-9001", "N2", routing::domain::StopOutcome::Pending});
+    addShipment(shipments, "PKG-9002");
+    routing::domain::RouteStop stop {1, "PKG-9001", "N2", routing::domain::StopOutcome::Pending};
+    stop.companions.pushBack("PKG-9002");
+    record.stops.pushBack(stop);
     routes.add(record);
-    routes.updateStop(1, routing::domain::RouteStop {1, "PKG-9001", "N2", routing::domain::StopOutcome::Delivered});
+    stop.outcome = routing::domain::StopOutcome::Delivered;
+    routes.updateStop(1, stop);
 
     RouteCollector collector;
     routes.loadAll(collector);
@@ -270,6 +363,8 @@ TEST_F(MySqlRepositories, RoutesAndStopOutcomesSurviveReload)
     EXPECT_EQ(collector.records[0].courier.name, "Pum Uno");
     ASSERT_EQ(collector.records[0].stops.size(), 1U);
     EXPECT_EQ(collector.records[0].stops[0].outcome, routing::domain::StopOutcome::Delivered);
+    ASSERT_EQ(collector.records[0].stops[0].companions.size(), 1U);
+    EXPECT_EQ(collector.records[0].stops[0].companions[0], "PKG-9002");
 }
 
 TEST_F(MySqlRepositories, AuditEntriesAreListedNewestFirst)
@@ -348,7 +443,7 @@ TEST_F(MySqlRepositories, ShipmentFeaturesSurviveReload)
     logistics::adapters::MySqlShipmentRepository shipmentsAdapter {connection()};
     logistics::application::ShipmentRepository&  shipments = shipmentsAdapter;
     logistics::domain::ShipmentState             state;
-    state.draft = {"PKG-9001", "Marta Lopez", "NORTE", 2.5, "EXPRESS", "N2"};
+    state.draft = draftOf("PKG-9001", "018f0000-0000-7000-8000-000000009001");
     state.draft.features.pushBack("FRAGIL");
     state.draft.features.pushBack("REFRIGERADO");
     state.ticket = 1;

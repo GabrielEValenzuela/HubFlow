@@ -78,6 +78,31 @@ void InMemoryShipmentRepository::loadAll(logistics::application::ShipmentRestore
     }
 }
 
+void InMemoryShipmentGroupRepository::add(const logistics::domain::ShipmentGroupState& state)
+{
+    groups.push_back(state);
+}
+
+void InMemoryShipmentGroupRepository::remove(const std::string& id)
+{
+    for (auto it = groups.begin(); it != groups.end(); ++it)
+    {
+        if (it->id == id)
+        {
+            groups.erase(it);
+            break;
+        }
+    }
+}
+
+void InMemoryShipmentGroupRepository::loadAll(logistics::application::ShipmentGroupRestorer& restorer) const
+{
+    for (const auto& state : groups)
+    {
+        restorer.restoreGroup(state);
+    }
+}
+
 void InMemoryRouteRepository::add(const routing::domain::RouteRecord& record)
 {
     records[record.id] = record;

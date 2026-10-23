@@ -17,12 +17,13 @@ std::string url(const std::string& path)
     return std::string {API} + path;
 }
 
-json validShipment(const std::string& code)
+json validShipment()
 {
-    return json {{"code", code},
-                 {"recipient", "Marta Lopez"},
+    return json {{"recipient", "Marta Lopez"},
                  {"zone", "NORTE"},
-                 {"weightKg", 2.5},
+                 {"parcels",
+                  json::array({json {{"weightKg", 2.5}, {"lengthCm", 30}, {"widthCm", 20}, {"heightCm", 10}},
+                               json {{"weightKg", 1.0}, {"lengthCm", 60}, {"widthCm", 50}, {"heightCm", 40}}})},
                  {"service", "EXPRESS"},
                  {"deliveryPoint", "N2"}};
 }
@@ -84,8 +85,8 @@ TEST(RestApi, HealthIsPublicAndReportsDatabase)
 TEST(RestApi, PumCannotRegisterShipments)
 {
     HttpHarness http;
-    const auto  result = http.client().Post(
-        url("/shipments"), http.as("pum1@hubflow.local"), validShipment("PKG-2001").dump(), JSON_TYPE);
+    const auto  result =
+        http.client().Post(url("/shipments"), http.as("pum1@hubflow.local"), validShipment().dump(), JSON_TYPE);
 
     ASSERT_TRUE(result);
     EXPECT_EQ(result->status, 403);
@@ -94,7 +95,7 @@ TEST(RestApi, PumCannotRegisterShipments)
 TEST(RestApi, InvalidShipmentListsEveryFieldError)
 {
     HttpHarness http;
-    const json  invalid {{"code", "XYZ"}, {"recipient", "A"}, {"zone", "oeste"}, {"weightKg", -3}};
+    const json  invalid {{"recipient", "A"}, {"zone", "oeste"}, {"parcels", json::array()}};
     const auto  result =
         http.client().Post(url("/shipments"), http.as("operador@hubflow.local"), invalid.dump(), JSON_TYPE);
 
@@ -106,8 +107,8 @@ TEST(RestApi, InvalidShipmentListsEveryFieldError)
     {
         fields.insert(error.at("field").get<std::string>());
     }
-    EXPECT_TRUE(fields.count("code") == 1U && fields.count("recipient") == 1U && fields.count("zone") == 1U);
-    EXPECT_TRUE(fields.count("weightKg") == 1U && fields.count("service") == 1U && fields.count("deliveryPoint") == 1U);
+    EXPECT_TRUE(fields.count("recipient") == 1U && fields.count("zone") == 1U && fields.count("parcels") == 1U);
+    EXPECT_TRUE(fields.count("service") == 1U && fields.count("deliveryPoint") == 1U);
 }
 
 TEST(RestApi, MalformedJsonIsBadRequest)
@@ -123,24 +124,53 @@ TEST(RestApi, MalformedJsonIsBadRequest)
 TEST(RestApi, RegisteringShipmentRespondsCreatedWithLocation)
 {
     HttpHarness http;
-    const auto  result = http.client().Post(
-        url("/shipments"), http.as("operador@hubflow.local"), validShipment("PKG-2001").dump(), JSON_TYPE);
+    const auto  result =
+        http.client().Post(url("/shipments"), http.as("operador@hubflow.local"), validShipment().dump(), JSON_TYPE);
 
     ASSERT_TRUE(result);
     EXPECT_EQ(result->status, 201);
-    EXPECT_EQ(result->get_header_value("Location"), "/api/v1/shipments/PKG-2001");
-    EXPECT_EQ(HttpHarness::bodyOf(result).at("status"), "RECIBIDO");
+    const auto body = HttpHarness::bodyOf(result);
+    EXPECT_EQ(result->get_header_value("Location"), "/api/v1/shipments/" + body.at("code").get<std::string>());
+    EXPECT_EQ(body.at("status"), "RECIBIDO");
+    EXPECT_EQ(body.at("parcelCount"), 2);
+    EXPECT_EQ(body.at("parcels")[1].at("label"), body.at("code").get<std::string>() + "-2/2");
+    EXPECT_DOUBLE_EQ(body.at("parcels")[1].at("billableWeightKg").get<double>(), 24.0);
+    EXPECT_DOUBLE_EQ(body.at("billableWeightKg").get<double>(), 26.5);
+    EXPECT_DOUBLE_EQ(body.at("realWeightKg").get<double>(), 3.5);
 }
 
-TEST(RestApi, DuplicateShipmentCodeIsConflict)
+TEST(RestApi, RegisteringTheSamePackageTwiceCreatesTwoShipmentsWithTheirOwnCodes)
 {
     HttpHarness http;
     const auto  headers = http.as("operador@hubflow.local");
-    http.client().Post(url("/shipments"), headers, validShipment("PKG-2001").dump(), JSON_TYPE);
-    const auto second = http.client().Post(url("/shipments"), headers, validShipment("PKG-2001").dump(), JSON_TYPE);
+    const auto  first   = http.client().Post(url("/shipments"), headers, validShipment().dump(), JSON_TYPE);
+    const auto  second  = http.client().Post(url("/shipments"), headers, validShipment().dump(), JSON_TYPE);
 
-    ASSERT_TRUE(second);
-    EXPECT_EQ(second->status, 409);
+    ASSERT_TRUE(first && second);
+    EXPECT_EQ(second->status, 201);
+    EXPECT_NE(HttpHarness::bodyOf(first).at("code"), HttpHarness::bodyOf(second).at("code"));
+    EXPECT_NE(HttpHarness::bodyOf(first).at("id"), HttpHarness::bodyOf(second).at("id"));
+}
+
+TEST(RestApi, InvalidParcelsListTheOffendingPosition)
+{
+    HttpHarness http;
+    json        shipment               = validShipment();
+    shipment["parcels"][1]["heightCm"] = 0;
+    shipment["parcels"][0].erase("weightKg");
+    const auto result =
+        http.client().Post(url("/shipments"), http.as("operador@hubflow.local"), shipment.dump(), JSON_TYPE);
+
+    ASSERT_TRUE(result);
+    EXPECT_EQ(result->status, 422);
+    const auto            body = HttpHarness::bodyOf(result);
+    std::set<std::string> fields;
+    for (const auto& error : body.at("errors"))
+    {
+        fields.insert(error.at("field").get<std::string>());
+    }
+    EXPECT_EQ(fields.count("parcels[0].weightKg"), 1U);
+    EXPECT_EQ(fields.count("parcels[1].heightCm"), 1U);
 }
 
 TEST(RestApi, IdempotencyKeyReplaysDispatchWithoutDispatchingTwice)
@@ -182,7 +212,7 @@ TEST(RestApi, ReusingKeyOnAnotherRouteIsUnprocessable)
     const auto headers = http.as("operador@hubflow.local", {{"Idempotency-Key", "shared-key"}});
     http.client().Post(url("/dispatches"), headers, json::object().dump(), JSON_TYPE);
 
-    const auto other = http.client().Post(url("/shipments"), headers, validShipment("PKG-2001").dump(), JSON_TYPE);
+    const auto other = http.client().Post(url("/shipments"), headers, validShipment().dump(), JSON_TYPE);
 
     ASSERT_TRUE(other);
     EXPECT_EQ(other->status, 422);
@@ -192,7 +222,7 @@ TEST(RestApi, OverlongIdempotencyKeyIsUnprocessable)
 {
     HttpHarness http;
     const auto  headers = http.as("operador@hubflow.local", {{"Idempotency-Key", std::string(81, 'k')}});
-    const auto  result  = http.client().Post(url("/shipments"), headers, validShipment("PKG-2001").dump(), JSON_TYPE);
+    const auto  result  = http.client().Post(url("/shipments"), headers, validShipment().dump(), JSON_TYPE);
 
     ASSERT_TRUE(result);
     EXPECT_EQ(result->status, 422);
@@ -203,7 +233,7 @@ TEST(RestApi, ResolvingTheSameStopTwiceRespondsOkBothTimes)
     HttpHarness http;
     http.app.seedDataset();
     const auto batchId = openPreparedNorthBatch(http);
-    http.app.processSortingBatchItem.execute(http.app.operador(), batchId);
+    http.app.processSortingBatchItem.execute(http.app.operador(), batchId, {});
     const auto routeId = http.app.assignDeliveryRoute
                              .execute(http.app.operador(),
                                       routing::application::AssignRouteRequest {
@@ -211,7 +241,7 @@ TEST(RestApi, ResolvingTheSameStopTwiceRespondsOkBothTimes)
                              .id();
     const auto headers = http.as("pum1@hubflow.local");
     const auto path    = url("/routes/" + std::to_string(routeId) + "/stops/1");
-    const json body {{"outcome", "ENTREGADO"}, {"note", "Recibió el titular"}};
+    const json body {{"outcome", "ENTREGADO"}, {"note", "Recibió el titular"}, {"confirmAllParcels", true}};
 
     const auto first  = http.client().Patch(path, headers, body.dump(), JSON_TYPE);
     const auto second = http.client().Patch(path, headers, body.dump(), JSON_TYPE);
@@ -229,7 +259,7 @@ TEST(RestApi, RouteSequenceIsAnAttachmentWithSegments)
     HttpHarness http;
     http.app.seedDataset();
     const auto batchId = openPreparedNorthBatch(http);
-    http.app.processSortingBatchItem.execute(http.app.operador(), batchId);
+    http.app.processSortingBatchItem.execute(http.app.operador(), batchId, {});
     const auto routeId = http.app.assignDeliveryRoute
                              .execute(http.app.operador(),
                                       routing::application::AssignRouteRequest {
@@ -257,7 +287,7 @@ TEST(RestApi, CourierSeesRecipientsOnOwnRouteAndOthersAreForbidden)
     HttpHarness http;
     http.app.seedDataset();
     const auto batchId = openPreparedNorthBatch(http);
-    http.app.processSortingBatchItem.execute(http.app.operador(), batchId);
+    http.app.processSortingBatchItem.execute(http.app.operador(), batchId, {});
     const auto routeId = http.app.assignDeliveryRoute
                              .execute(http.app.operador(),
                                       routing::application::AssignRouteRequest {
@@ -275,8 +305,10 @@ TEST(RestApi, CourierSeesRecipientsOnOwnRouteAndOthersAreForbidden)
     EXPECT_TRUE(stop.contains("service") && stop.contains("zone") && stop.contains("weightKg"));
     EXPECT_EQ(other->status, 403);
 
-    const auto resolved = http.client().Patch(
-        path + "/stops/1", http.as("pum1@hubflow.local"), json {{"outcome", "ENTREGADO"}}.dump(), JSON_TYPE);
+    const auto resolved = http.client().Patch(path + "/stops/1",
+                                              http.as("pum1@hubflow.local"),
+                                              json {{"outcome", "ENTREGADO"}, {"confirmAllParcels", true}}.dump(),
+                                              JSON_TYPE);
     ASSERT_TRUE(resolved);
     EXPECT_EQ(resolved->status, 200);
     const auto resolvedStop = HttpHarness::bodyOf(resolved).at("stops")[0];
@@ -289,7 +321,7 @@ TEST(RestApi, AnotherPumCannotReadTheRoute)
     HttpHarness http;
     http.app.seedDataset();
     const auto batchId = openPreparedNorthBatch(http);
-    http.app.processSortingBatchItem.execute(http.app.operador(), batchId);
+    http.app.processSortingBatchItem.execute(http.app.operador(), batchId, {});
     const auto routeId = http.app.assignDeliveryRoute
                              .execute(http.app.operador(),
                                       routing::application::AssignRouteRequest {
@@ -308,7 +340,7 @@ TEST(RestApi, PreparingTwiceAfterLoadingDoesNotQueueLoadedPackagesAgain)
     HttpHarness http;
     http.app.seedDataset();
     const auto batchId = openPreparedNorthBatch(http);
-    http.app.processSortingBatchItem.execute(http.app.operador(), batchId);
+    http.app.processSortingBatchItem.execute(http.app.operador(), batchId, {});
     const auto headers = http.as("operador@hubflow.local");
     const auto path    = url("/sorting-batches/" + std::to_string(batchId) + "/preparation-queue");
 
@@ -329,7 +361,7 @@ TEST(RestApi, DeletingProcessedItemTwiceIsNotFoundTheSecondTime)
     HttpHarness http;
     http.app.seedDataset();
     const auto        batchId = openPreparedNorthBatch(http);
-    const std::string code {http.app.processSortingBatchItem.execute(http.app.operador(), batchId).code()};
+    const std::string code {http.app.processSortingBatchItem.execute(http.app.operador(), batchId, {})[0]->code()};
     const auto        headers = http.as("operador@hubflow.local");
     const auto        path    = url("/sorting-batches/" + std::to_string(batchId) + "/processed-items/" + code);
 
@@ -459,7 +491,7 @@ TEST(RestApi, ANewZoneWithMapPointsReceivesPackagesWithFeatures)
     EXPECT_EQ(tooShort->status, 422);
     EXPECT_EQ(noLinks->status, 422);
 
-    json shipment             = validShipment("PKG-3001");
+    json shipment             = validShipment();
     shipment["zone"]          = "OESTE";
     shipment["deliveryPoint"] = "O1";
     shipment["features"]      = json::array({"FRAGIL", "REFRIGERADO"});
@@ -469,7 +501,6 @@ TEST(RestApi, ANewZoneWithMapPointsReceivesPackagesWithFeatures)
     EXPECT_EQ(registered->status, 201);
     EXPECT_EQ(HttpHarness::bodyOf(registered).at("features"), json::array({"FRAGIL", "REFRIGERADO"}));
 
-    shipment["code"]     = "PKG-3002";
     shipment["features"] = json::array({"NO_EXISTE"});
     const auto badFeature =
         http.client().Post(url("/shipments"), http.as("operador@hubflow.local"), shipment.dump(), JSON_TYPE);
@@ -513,14 +544,15 @@ TEST(RestApi, ServiceLevelsAndFeaturesAreManagedAsData)
     EXPECT_EQ(feature->status, 201);
     EXPECT_EQ(badPriority->status, 422);
 
-    http.client().Post(
-        url("/shipments"), http.as("operador@hubflow.local"), validShipment("PKG-3001").dump(), JSON_TYPE);
-    json urgent       = validShipment("PKG-3002");
+    http.client().Post(url("/shipments"), http.as("operador@hubflow.local"), validShipment().dump(), JSON_TYPE);
+    json urgent       = validShipment();
     urgent["service"] = "RELAMPAGO";
-    http.client().Post(url("/shipments"), http.as("operador@hubflow.local"), urgent.dump(), JSON_TYPE);
+    const auto urgentResult =
+        http.client().Post(url("/shipments"), http.as("operador@hubflow.local"), urgent.dump(), JSON_TYPE);
+    ASSERT_TRUE(urgentResult);
     const auto pending = http.client().Get(url("/pending-shipments"), http.as("operador@hubflow.local"));
     ASSERT_TRUE(pending);
-    EXPECT_EQ(HttpHarness::bodyOf(pending).at("items")[0].at("code"), "PKG-3002");
+    EXPECT_EQ(HttpHarness::bodyOf(pending).at("items")[0].at("code"), HttpHarness::bodyOf(urgentResult).at("code"));
 
     const auto services = http.client().Get(url("/service-levels"), http.as("operador@hubflow.local"));
     const auto features = http.client().Get(url("/shipment-features"), http.as("operador@hubflow.local"));
@@ -539,7 +571,7 @@ TEST(RestApi, ACourierWithARouteInProgressIsDeactivatedOnlyAfterTheRouteIsReassi
     HttpHarness http;
     http.app.seedDataset();
     const auto batchId = openPreparedNorthBatch(http);
-    http.app.processSortingBatchItem.execute(http.app.operador(), batchId);
+    http.app.processSortingBatchItem.execute(http.app.operador(), batchId, {});
     const auto routeId = http.app.assignDeliveryRoute
                              .execute(http.app.operador(),
                                       routing::application::AssignRouteRequest {
@@ -581,4 +613,126 @@ TEST(RestApi, ACourierWithARouteInProgressIsDeactivatedOnlyAfterTheRouteIsReassi
         reassigned = reassigned || event.at("type") == "route.reassigned";
     }
     EXPECT_TRUE(reassigned);
+}
+
+namespace
+{
+std::string registerOverHttp(HttpHarness& http, const std::string& point)
+{
+    json shipment             = validShipment();
+    shipment["deliveryPoint"] = point;
+    const auto result =
+        http.client().Post(url("/shipments"), http.as("operador@hubflow.local"), shipment.dump(), JSON_TYPE);
+    return result && result->status == 201 ? HttpHarness::bodyOf(result).at("code").get<std::string>() : std::string {};
+}
+} // namespace
+
+TEST(RestApi, PlantStaffLinksPackagesThatTravelTogetherAndUnlinksThem)
+{
+    HttpHarness http;
+    const auto  first     = registerOverHttp(http, "N2");
+    const auto  second    = registerOverHttp(http, "N2");
+    const auto  elsewhere = registerOverHttp(http, "N3");
+    const auto  headers   = http.as("operador@hubflow.local", {{"Idempotency-Key", "link-1"}});
+
+    const auto created =
+        http.client().Post(url("/shipment-groups"), headers, json {{"codes", {first, second}}}.dump(), JSON_TYPE);
+    const auto replay =
+        http.client().Post(url("/shipment-groups"), headers, json {{"codes", {first, second}}}.dump(), JSON_TYPE);
+    const auto again   = http.client().Post(url("/shipment-groups"),
+                                          http.as("operador@hubflow.local"),
+                                          json {{"codes", {first, second}}}.dump(),
+                                          JSON_TYPE);
+    const auto farAway = http.client().Post(url("/shipment-groups"),
+                                            http.as("operador@hubflow.local"),
+                                            json {{"codes", {first, elsewhere}}}.dump(),
+                                            JSON_TYPE);
+    const auto tooFew  = http.client().Post(
+        url("/shipment-groups"), http.as("operador@hubflow.local"), json {{"codes", {first}}}.dump(), JSON_TYPE);
+
+    ASSERT_TRUE(created && replay && again && farAway && tooFew);
+    EXPECT_EQ(created->status, 201);
+    EXPECT_EQ(replay->get_header_value("Idempotent-Replayed"), "true");
+    EXPECT_EQ(again->status, 409);
+    EXPECT_EQ(farAway->status, 409);
+    EXPECT_EQ(tooFew->status, 422);
+    const auto groupId = HttpHarness::bodyOf(created).at("id").get<std::string>();
+    EXPECT_EQ(created->get_header_value("Location"), "/api/v1/shipment-groups/" + groupId);
+
+    const auto detail = http.client().Get(url("/shipments/" + first), http.as("operador@hubflow.local"));
+    ASSERT_TRUE(detail);
+    const auto detailBody = HttpHarness::bodyOf(detail);
+    EXPECT_EQ(detailBody.at("group").at("id"), groupId);
+    EXPECT_EQ(detailBody.at("group").at("travelsWith"), json::array({second}));
+    const auto listed = http.client().Get(url("/shipment-groups"), http.as("operador@hubflow.local"));
+    ASSERT_TRUE(listed);
+    EXPECT_EQ(HttpHarness::bodyOf(listed).at("total"), 1);
+
+    const auto removed = http.client().Delete(url("/shipment-groups/" + groupId), http.as("operador@hubflow.local"));
+    const auto removedAgain =
+        http.client().Delete(url("/shipment-groups/" + groupId), http.as("operador@hubflow.local"));
+    ASSERT_TRUE(removed && removedAgain);
+    EXPECT_EQ(removed->status, 200);
+    EXPECT_EQ(removedAgain->status, 404);
+    const auto afterwards = http.client().Get(url("/shipments/" + first), http.as("operador@hubflow.local"));
+    EXPECT_TRUE(HttpHarness::bodyOf(afterwards).at("group").is_null());
+}
+
+TEST(RestApi, TheDeskRefusesALoneGroupMemberOverHttp)
+{
+    HttpHarness http;
+    const auto  first   = registerOverHttp(http, "N2");
+    const auto  second  = registerOverHttp(http, "N2");
+    const auto  headers = http.as("operador@hubflow.local");
+    http.client().Post(url("/shipment-groups"), headers, json {{"codes", {first, second}}}.dump(), JSON_TYPE);
+    const auto batchId = openPreparedNorthBatch(http);
+    const auto path    = url("/sorting-batches/" + std::to_string(batchId) + "/processed-items");
+
+    const auto alone = http.client().Post(path, headers, json {{"codes", {first}}}.dump(), JSON_TYPE);
+    const auto both  = http.client().Post(path, headers, json {{"codes", {first, second}}}.dump(), JSON_TYPE);
+
+    ASSERT_TRUE(alone && both);
+    EXPECT_EQ(alone->status, 409);
+    EXPECT_EQ(HttpHarness::bodyOf(alone).at("code"), "sorting.group_incomplete");
+    EXPECT_EQ(both->status, 201);
+    EXPECT_EQ(HttpHarness::bodyOf(both).at("shipments").size(), 2U);
+}
+
+TEST(RestApi, CourierConfirmsParcelsOneByOneAndClosesTheStop)
+{
+    HttpHarness http;
+    const auto  code    = registerOverHttp(http, "N2");
+    const auto  batchId = openPreparedNorthBatch(http);
+    http.app.processSortingBatchItem.execute(http.app.operador(), batchId, {});
+    const auto routeId = http.app.assignDeliveryRoute
+                             .execute(http.app.operador(),
+                                      routing::application::AssignRouteRequest {
+                                          batchId, http.pumId, routing::domain::SearchAlgorithm::AStar})
+                             .id();
+    const auto pum        = http.as("pum1@hubflow.local");
+    const auto stopPath   = url("/routes/" + std::to_string(routeId) + "/stops/1");
+    const auto parcelPath = [&](const int ordinal)
+    {
+        return stopPath + "/shipments/" + code + "/parcels/" + std::to_string(ordinal);
+    };
+
+    const auto first      = http.client().Put(parcelPath(1), pum, "", JSON_TYPE);
+    const auto firstAgain = http.client().Put(parcelPath(1), pum, "", JSON_TYPE);
+    const auto early      = http.client().Patch(stopPath, pum, json {{"outcome", "ENTREGADO"}}.dump(), JSON_TYPE);
+    const auto second     = http.client().Put(parcelPath(2), pum, "", JSON_TYPE);
+    const auto closed     = http.client().Patch(stopPath, pum, json {{"outcome", "ENTREGADO"}}.dump(), JSON_TYPE);
+
+    ASSERT_TRUE(first && firstAgain && early && second && closed);
+    EXPECT_EQ(first->status, 200);
+    EXPECT_EQ(HttpHarness::bodyOf(first), HttpHarness::bodyOf(firstAgain));
+    const auto sheet = HttpHarness::bodyOf(first);
+    EXPECT_TRUE(sheet.at("stops")[0].at("shipments")[0].at("parcels")[0].at("delivered").get<bool>());
+    EXPECT_FALSE(sheet.at("stops")[0].at("shipments")[0].at("parcels")[1].at("delivered").get<bool>());
+    EXPECT_EQ(early->status, 409);
+    EXPECT_EQ(HttpHarness::bodyOf(early).at("code"), "shipment.parcels_pending");
+    EXPECT_EQ(closed->status, 200);
+    EXPECT_EQ(HttpHarness::bodyOf(closed).at("stops")[0].at("outcome"), "ENTREGADO");
+    const auto other = http.client().Put(parcelPath(1), http.as("pum2@hubflow.local"), "", JSON_TYPE);
+    ASSERT_TRUE(other);
+    EXPECT_EQ(other->status, 403);
 }

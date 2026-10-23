@@ -7,6 +7,7 @@
 #include "hubflow/identity/application/ports/out/userRepository.hpp"
 #include "hubflow/identity/domain/services/accessPolicy.hpp"
 #include "hubflow/logistics/application/ports/out/catalogRepository.hpp"
+#include "hubflow/logistics/application/ports/out/shipmentGroupRepository.hpp"
 #include "hubflow/logistics/application/ports/out/shipmentRepository.hpp"
 #include "hubflow/routing/application/ports/out/roadMapRepository.hpp"
 #include "hubflow/routing/application/ports/out/routeRepository.hpp"
@@ -62,6 +63,18 @@ private:
     void update(const logistics::domain::ShipmentState& state) override;
     void appendMovement(const std::string& code, const logistics::domain::Movement& movement) override;
     void loadAll(logistics::application::ShipmentRestorer& restorer) const override;
+};
+
+/// @brief Repositorio de grupos de envíos en memoria.
+class InMemoryShipmentGroupRepository final : public logistics::application::ShipmentGroupRepository
+{
+public:
+    std::vector<logistics::domain::ShipmentGroupState> groups;
+
+private:
+    void add(const logistics::domain::ShipmentGroupState& state) override;
+    void remove(const std::string& id) override;
+    void loadAll(logistics::application::ShipmentGroupRestorer& restorer) const override;
 };
 
 /// @brief Repositorio de rutas en memoria.

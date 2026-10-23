@@ -49,7 +49,7 @@ const routing::domain::DeliveryRoute& assignNorthRoute(test::ApplicationHarness&
     app.prepareSortingBatch.execute(app.operador(), batch.id());
     for (int i = 0; i < 3; ++i)
     {
-        app.processSortingBatchItem.execute(app.operador(), batch.id());
+        app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
     }
     return app.assignDeliveryRoute.execute(
         app.operador(),
