@@ -2,6 +2,7 @@
 
 #include "hubflow/platform/http/inputValidator.hpp"
 #include "hubflow/routing/adapters/in/http/routingJsonPresenter.hpp"
+#include "hubflow/routing/domain/services/travelTimePolicy.hpp"
 #include "hubflow/shared/application/vocabulary.hpp"
 
 namespace hubflow::routing::adapters
@@ -33,7 +34,12 @@ void RoadMapController::registerRoutes(platform::ApiRouter& router)
     router.get("/road-map",
                [this](const platform::RequestContext&)
                {
-                   return platform::HttpResponse::ok(RoutingJsonPresenter::roadMap(m_getRoadMap.execute()));
+                   platform::Json body = RoutingJsonPresenter::roadMap(m_getRoadMap.execute());
+                   body["travelEstimate"] =
+                       platform::Json {{"avgKmh", domain::TravelTimePolicy::AVERAGE_KMH},
+                                       {"minutesPerStop", domain::TravelTimePolicy::MINUTES_PER_STOP},
+                                       {"note", domain::TravelTimePolicy::assumptions()}};
+                   return platform::HttpResponse::ok(body);
                });
     router.post(
         "/road-nodes",
