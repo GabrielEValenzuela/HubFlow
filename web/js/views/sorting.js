@@ -1,6 +1,7 @@
 import { api } from "../api.js";
 import { navigate } from "../router.js";
-import { h, svg, pageHead, loading, empty, errorBox, field, busy, toast, statusBadge, zoneTag, serviceBadge, fmtKg, ZONE, ALGORITHM, ALGORITHMS, setFieldError } from "../ui.js";
+import { h, svg, pageHead, loading, empty, errorBox, field, busy, toast, statusBadge, zoneTag, serviceBadge, fmtKg, ZONE, fmtKm, setFieldError } from "../ui.js";
+import { ROUTE_OPTIONS, DEFAULT_OPTION, ETA, compareOptions, fmtDuration } from "../lib/routeOptions.js";
 import { icon } from "../icons.js";
 
 const ORDER_LABEL = { NONE: "Sin ordenar", CODE_ASC: "Por código (A→Z)", WEIGHT_DESC: "Por peso (mayor primero)" };
@@ -168,25 +169,60 @@ export default async function sorting(root) {
 
   function assignCard() {
     const courier = h("select", { class: "input" }, h("option", { value: "" }, "Cargando repartidores…"));
-    const algo = h("select", { class: "input" }, ...ALGORITHMS.map((a) => h("option", { value: a, selected: a === "ASTAR" }, ALGORITHM[a])));
     const btn = h("button", { class: "btn primary", type: "submit", disabled: !batch.processedStack.length }, icon("route"), "Asignar ruta");
     api.get("/couriers").then((r) => {
       courier.replaceChildren(h("option", { value: "" }, "Elegí un repartidor"), ...r.items.filter((u) => u.active).map((u) => h("option", { value: u.id }, u.name)));
     }).catch(() => courier.replaceChildren(h("option", { value: "" }, "No se pudo cargar")));
+
+    // Orden de descarga = orden de la pila (el último procesado baja primero), igual que el servidor.
+    const pointOf = new Map(batch.items.map((s) => [s.code, s.deliveryPoint]));
+    const stopNodes = batch.processedStack.map((c) => pointOf.get(c)).filter(Boolean);
+    let chosen = DEFAULT_OPTION;
+    const optionsBox = h("div", { class: "route-options", role: "radiogroup", "aria-labelledby": "opt-legend" });
+    const drawOptions = (stats, failed) => {
+      optionsBox.replaceChildren(...ROUTE_OPTIONS.map((o) => {
+        const st = stats?.find((x) => x.algorithm === o.algorithm);
+        const input = h("input", { type: "radio", name: "routeOption", value: o.algorithm, checked: chosen === o.algorithm, onChange: () => { chosen = o.algorithm; mark(); } });
+        const body = h("span", { class: "opt-body" },
+          h("span", { class: "opt-title" }, h("strong", {}, o.label), o.recommended ? h("span", { class: "badge s-ENTREGADO" }, "Recomendada") : null),
+          h("span", { class: "muted small" }, o.short),
+          st ? h("dl", { class: "opt-stats" },
+            h("div", {}, h("dt", {}, "Kilómetros"), h("dd", {}, fmtKm(st.km))),
+            h("div", {}, h("dt", {}, "Paradas"), h("dd", {}, String(st.stops))),
+            h("div", {}, h("dt", {}, "Tiempo estimado"), h("dd", {}, "≈ " + fmtDuration(st.minutes))),
+            h("div", {}, h("dt", {}, "Cruces"), h("dd", {}, String(st.crossings)))) : null,
+          st ? h("span", { class: "opt-reason" }, st.reason) : stats === undefined && !failed ? h("span", { class: "muted small" }, "Calculando…") : null);
+        return h("label", { class: "route-option" + (chosen === o.algorithm ? " on" : "") }, input, body);
+      }));
+    };
+    const mark = () => optionsBox.querySelectorAll(".route-option").forEach((l) => l.classList.toggle("on", l.querySelector("input").checked));
+    drawOptions(undefined, false);
+    const note = h("p", { class: "muted small", style: "margin-top:8px" }, ETA.note);
+    const failure = h("div", {});
+    const compute = () => {
+      failure.replaceChildren();
+      if (!stopNodes.length) return drawOptions(null, true);
+      drawOptions(undefined, false);
+      compareOptions(stopNodes).then((stats) => drawOptions(stats, false))
+        .catch((e) => { drawOptions(null, true); failure.replaceChildren(errorBox(e, compute)); });
+    };
+    compute();
+
     const form = h("form", { novalidate: true, onSubmit: async (e) => {
       e.preventDefault();
       if (!courier.value) return setFieldError(form, "courierId", "Elegí quién va a repartir.");
       try {
-        const r = await busy(btn, () => api.post("/routes", { batchId: batch.id, courierId: Number(courier.value), algorithm: algo.value }));
+        const r = await busy(btn, () => api.post("/routes", { batchId: batch.id, courierId: Number(courier.value), algorithm: chosen }));
         toast(`Ruta #${r.id} asignada a ${r.courier.name}.`);
         navigate("/rutas/" + r.id);
       } catch (err) {
         toast(err.message, "error");
       }
-    } }, h("div", { class: "form-grid" }, field("courierId", "Repartidor (PUM)", courier), field("algorithm", "Cómo busca el camino", algo, { hint: "A* encuentra el más corto en km; los otros sirven para comparar." })),
+    } }, h("div", { class: "form-grid" }, field("courierId", "Repartidor (PUM)", courier)),
+      h("fieldset", { class: "crit", style: "margin-top:12px" }, h("legend", { id: "opt-legend" }, "¿Qué priorizar en esta ruta?"), optionsBox, note, failure),
       h("div", { class: "form-error" }), h("div", { class: "form-actions" }, btn,
         batch.processedStack.length ? h("span", { class: "muted small" }, `Se reparten ${batch.processedStack.length} envíos procesados, en el orden de la pila.`) : h("span", { class: "muted small" }, "Procesá al menos un envío para asignar la ruta.")));
-    return h("section", { class: "card" }, h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "4. Asignar la ruta"), h("p", {}, "El repartidor recibe las paradas y el recorrido calculado sobre el mapa de la ciudad."))), form);
+    return h("section", { class: "card" }, h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "4. Asignar la ruta"), h("p", {}, "Compará las opciones para esta carga y elegí cuál recibe el repartidor."))), form);
   }
 
   load();

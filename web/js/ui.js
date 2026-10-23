@@ -52,8 +52,6 @@ export const STATUS = {
 export const SERVICE = { EXPRESS: "Express", PRIORITARIO: "Prioritario", ESTANDAR: "Estándar" };
 export const ZONE = { CENTRO: "Centro", NORTE: "Norte", SUR: "Sur" };
 export const ROLE = { ADMIN: "Administrador", OPERADOR: "Operador", PUM: "Repartidor (PUM)" };
-export const ALGORITHM = { BFS: "Amplitud (BFS)", DFS: "Profundidad (DFS)", GREEDY: "Voraz (Greedy)", ASTAR: "A*" };
-export const ALGORITHMS = Object.keys(ALGORITHM);
 export const BIT_ORDER = ["RECIBIDO", "CLASIFICADO", "EN_REPARTO", "REPROGRAMADO", "ENTREGADO"];
 
 export const statusBadge = (s) => h("span", { class: "badge s-" + s }, STATUS[s] ?? s);
