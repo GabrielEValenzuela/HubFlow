@@ -77,6 +77,16 @@ volumen (largo × ancho × alto / 5000). El chofer confirma cada bulto o entrega
 paquete vuelve a la planta con los restantes. El jefe de planta puede unir paquetes del mismo destino para que
 **viajen juntos**: se cargan juntos, son una sola parada y se reprograman juntos (`/shipment-groups`).
 
+## Seguimiento para el cliente
+
+Página pública, sin login y pensada para el celular: <http://localhost:8480/seguimiento/> (acepta
+`?codigo=PKG-1002`). Muestra dónde está el paquete en lenguaje llano; con "Ver más detalles" y los últimos 4 dígitos
+del teléfono o el código postal del destinatario muestra además primer nombre, zona y barrio, bultos y la franja
+estimada de entrega. Los intentos están limitados (5 cada 15 minutos por código y origen). El enlace va en las
+etiquetas y en los avisos; su dirección base se configura con `HUBFLOW_PUBLIC_BASE_URL` en `.env`. En la ficha de cada
+paquete hay un botón "Copiar enlace de seguimiento" y el administrador ve los "Avisos a clientes" (por ahora se
+registran, no se envían). Datos de prueba: PKG-1002 con teléfono terminado en `4410` o código postal `1640`.
+
 ## Pantallas
 
 La web (`web/`) tiene dos mundos separados.

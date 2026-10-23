@@ -99,6 +99,18 @@ Convenciones de rutas (todas bajo `src/hubflow/` salvo que se indique otra cosa)
 | Envíos que viajan juntos (carga, parada única, reprogramación) | `logistics/domain/entities/shipmentGroup`, `logistics/domain/services/shipmentGroupBook`, `SortingBatch`, `AssignDeliveryRoute` | `GroupFixture.*Group*`, `ParcelsAndGroupsFlow.*`, `RestApi.PlantStaffLinksPackagesThatTravelTogetherAndUnlinksThem`, `RestApi.TheDeskRefusesALoneGroupMemberOverHttp` |
 | Persistencia de bultos, grupos y paradas con compañeros | `logistics/adapters/out/mysql/*`, `routing/adapters/out/mysql/mySqlRouteRepository`, migración 005 | `MySqlRepositories.ParcelsAndTheirDeliveryFlagsSurviveReload`, `MySqlRepositories.ShipmentGroupsSurviveReloadAndCanBeRemoved`, `MySqlRepositories.RoutesAndStopOutcomesSurviveReload` |
 
+## Seguimiento del cliente
+
+| Tema | Dónde | Tests |
+|---|---|---|
+| Teléfono y código postal del destinatario (validación, alta, persistencia, hidratación, semilla) | `logistics/domain/valueobjects/{phone,postalCode,recipient}`, `InputValidator`, `mySqlShipmentRepository`, `bootstrap/datasetSeeder`, migración 006 | `PhoneValueObject.*`, `PostalCodeValueObject.*`, `RecipientValueObject.*`, `PublicTrackingApi.RegisteringRequiresPhoneAndPostalCodeInAValidFormat`, `MySqlRepositories.ShipmentsAndMovementsSurviveReload` |
+| Línea de tiempo en lenguaje de cliente | `tracking/domain/services/{customerWording,customerTimeline}`, `tracking/application/statusMilestones` | `CustomerWordingPhrases.*`, `CustomerTimelineMapping.*`, `CustomerTracking.PublicViewTellsTheJourneyInCustomerLanguage`, `PublicTrackingApi.ThePublicViewNeverLeaksInternalOrPersonalData` |
+| Verificación, constancia acotada y sin oráculo | `tracking/application/usecases/*`, `tracking/domain/services/verificationProof`, `tracking/adapters/out/security/hmacTrackingTokenIssuer` | `CustomerTracking.*`, `VerificationProofCheck.*`, `PublicTrackingApi.*`, `MySqlRepositories.TheTrackingTokenIsSignedScopedAndExpires` |
+| Límite de intentos (429 + `Retry-After`) | `shared/application/ports/out/rateLimiter`, `shared/adapters/out/memory/slidingWindowRateLimiter` | `SlidingWindowRateLimiter.*`, `CustomerTracking.AttemptsAreLimitedPerAddressAndCode`, `PublicTrackingApi.TooManyAttemptsAreAnswered429WithRetryAfter` |
+| Franja estimada con la política de tiempos compartida | `routing/domain/services/travelTimePolicy`, `tracking/domain/services/deliveryWindow`, `tracking/adapters/out/routing/routingDeliveryProgress` | `TravelTimeEstimate.*`, `DeliveryWindowEstimate.*`, `CustomerTracking.ExtendedViewShowsTheEstimatedWindowWhileOnTheWay` |
+| Avisos a clientes (puerto, log, tabla `notifications`, vista del administrador) | `tracking/application/subscribers/customerNoticeSubscriber`, `tracking/adapters/out/{notification,mysql}`, `web/js/views/notices.js` | `CustomerNotices.*`, `PublicTrackingApi.OnlyTheAdministratorSeesTheCustomerNotices`, `MySqlRepositories.CustomerNoticesAreStoredMaskedAndListedNewestFirst` |
+| Página pública | `web/seguimiento/` | verificación manual (README) |
+
 ## Idempotencia
 
 La tabla completa de casos de uso y su idempotencia está en la documentación de cada puerto de entrada

@@ -158,6 +158,21 @@ Docker solo corre las migraciones sobre un volumen nuevo: para aplicarla sobre u
   se puede adivinar; el estado público de un envío y la verificación del destinatario se agregan encima de esta
   base sin tocar el modelo.
 
+## Seguimiento del cliente (contexto `tracking`)
+
+El cliente es otro público, con otro lenguaje y otras reglas de privacidad, así que tiene su propio contexto
+(`src/hubflow/tracking`) y no vive dentro de logística: así el vocabulario "Está en camino" y las reglas de
+verificación no contaminan el modelo de la planta. Consulta a logística y ruteo sólo a través de puertos de salida,
+con adaptadores que hacen de capa anticorrupción (mismo patrón que `routing/adapters/out/logistics`):
+
+- `TrackedShipmentDirectory` (adaptador `PlantTrackedShipments`): traduce movimientos a hitos del cliente (`StatusMilestones`) y deja afuera notas internas y nombres del personal.
+- `DeliveryProgressSource` (adaptador `RoutingDeliveryProgress`): minutos hasta la parada con `routing/domain/services/travelTimePolicy` (25 km/h + 4 min por parada), la política única que también publica `GET /road-map` (`travelEstimate`) y que usa la interfaz de la planta. `tracking/domain/services/deliveryWindow` la convierte en una franja de una hora.
+- `TrackingTokenIssuer` (HMAC-SHA256, clave derivada con etiqueta propia): constancia atada a un código, 15 minutos.
+- `RateLimiter` (shared; ventana deslizante en memoria): 5 intentos / 15 min por dirección + código.
+- `CustomerNotifier`: `CustomerNoticeSubscriber` escucha los eventos de envío (ingreso, en camino, reintento, entrega, entrega parcial) y compone los mensajes con `CustomerWording`, la misma fuente de frases que la línea de tiempo. Adaptadores: `LogCustomerNotifier` (stdout), `RecordingCustomerNotifier` hacia `CustomerNoticeLog` (tabla `notifications`, contacto enmascarado) y `CompositeCustomerNotifier`.
+
+Seguridad: código inexistente, mal escrito y verificación fallida dan el mismo 404 (`tracking.not_found`); el límite de intentos se aplica también a códigos inexistentes (sin oráculo); una constancia ausente, vencida, falsa o de otro paquete da el mismo 401; el origen es la dirección de la conexión (no `X-Forwarded-For`, falseable); respuestas con `Cache-Control: no-store`; la vista pública no contiene notas, actores ni datos del destinatario; el primer nombre y la franja sólo salen con constancia.
+
 ## Arranque
 
 `Application` lee las variables de entorno (`Settings`), espera a MySQL, aplica la hidratación

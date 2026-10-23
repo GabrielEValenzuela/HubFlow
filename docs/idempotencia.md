@@ -29,6 +29,15 @@ Cada puerto de entrada (`ports/in`) declara `static constexpr Idempotency IDEMPO
 | AddRoadNode | `POST /road-nodes` | No | clave natural `id` (repetir = 409) + `Idempotency-Key` |
 | UpdateRoadNode | `PATCH /road-nodes/:id` | Sí | estado final deseado; repetir = 200 sin eventos |
 
+## Seguimiento público (sin sesión)
+
+| Caso de uso | Endpoint | Idempotente | Cómo se maneja |
+|---|---|---|---|
+| GetPublicTracking | `GET /public/tracking/:code` | Sí | lectura |
+| GetVerifiedTracking | `GET /public/tracking/:code` con `Authorization: Bearer <constancia>` | Sí | lectura |
+| VerifyTracking | `POST /public/tracking/:code/verifications` | No | cada intento gasta un lugar del límite y cada acierto emite una constancia nueva; es inofensivo (no cambia datos del negocio) y no usa `Idempotency-Key` porque no hay usuario: repetirlo sólo consume intentos |
+| ListCustomerNotices | `GET /customer-notices` | Sí | lectura (administrador) |
+
 ## Header `Idempotency-Key`
 
 Se acepta en los `POST` no idempotentes autenticados (1 a 80 caracteres).
