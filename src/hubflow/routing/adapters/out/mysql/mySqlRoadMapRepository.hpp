@@ -15,6 +15,8 @@ public:
 
 private:
     void loadInto(domain::RoadMap& map) const override;
+    void addNode(const domain::RoadNode& node, const ds::DynamicArray<domain::RoadLink>& links) override;
+    void updateNode(const domain::RoadNode& node) override;
 
     platform::MySqlConnection& m_connection;
 };

@@ -24,6 +24,10 @@ constexpr const char* UPDATE_STOP {R"SQL(
     UPDATE route_stops SET outcome = ? WHERE route_id = ? AND stop_order = ?
 )SQL"};
 
+constexpr const char* UPDATE_COURIER {R"SQL(
+    UPDATE routes SET courier_id = ?, courier_name = ? WHERE id = ?
+)SQL"};
+
 constexpr const char* SELECT_ROUTES {R"SQL(
     SELECT id, courier_id, courier_name, algorithm, created_at FROM routes ORDER BY id
 )SQL"};
@@ -58,6 +62,11 @@ void MySqlRouteRepository::add(const domain::RouteRecord& record)
 void MySqlRouteRepository::updateStop(const std::uint64_t routeId, const domain::RouteStop& stop)
 {
     m_connection.execute(UPDATE_STOP, {Vocabulary::name(stop.outcome), routeId, std::uint64_t {stop.order}});
+}
+
+void MySqlRouteRepository::updateCourier(const std::uint64_t routeId, const domain::Courier& courier)
+{
+    m_connection.execute(UPDATE_COURIER, {courier.id, courier.name, routeId});
 }
 
 void MySqlRouteRepository::loadAll(application::RouteRestorer& restorer) const

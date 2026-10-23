@@ -60,7 +60,8 @@ json nodesOf(const domain::RoadMap& map)
         const auto& node = map.node(i);
         nodes.push_back({{"id", node.id},
                          {"label", node.label},
-                         {"zone", Vocabulary::name(node.zone)},
+                         {"zone", node.zone},
+                         {"active", node.active},
                          {"isHub", node.isHub},
                          {"x", node.x},
                          {"y", node.y}});

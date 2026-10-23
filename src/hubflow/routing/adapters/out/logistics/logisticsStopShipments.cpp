@@ -1,7 +1,5 @@
 #include "hubflow/routing/adapters/out/logistics/logisticsStopShipments.hpp"
 
-#include "hubflow/shared/application/vocabulary.hpp"
-
 namespace hubflow::routing::adapters
 {
 
@@ -16,10 +14,8 @@ std::optional<application::StopShipmentDetails> LogisticsStopShipments::detailsO
     if (m_model.catalog.contains(shipmentCode))
     {
         const auto& shipment = m_model.catalog.require(shipmentCode);
-        details              = application::StopShipmentDetails {shipment.recipient(),
-                                                    shared::application::Vocabulary::name(shipment.service()),
-                                                    shared::application::Vocabulary::name(shipment.zone()),
-                                                    shipment.weightKg()};
+        details              = application::StopShipmentDetails {
+            shipment.recipient(), shipment.service(), shipment.zone(), shipment.weightKg()};
     }
     return details;
 }

@@ -16,6 +16,7 @@ public:
 private:
     void add(const domain::RouteRecord& record) override;
     void updateStop(std::uint64_t routeId, const domain::RouteStop& stop) override;
+    void updateCourier(std::uint64_t routeId, const domain::Courier& courier) override;
     void loadAll(application::RouteRestorer& restorer) const override;
 
     platform::MySqlConnection& m_connection;

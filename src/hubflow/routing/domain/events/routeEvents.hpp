@@ -41,6 +41,24 @@ private:
     bool          m_routeCompleted;
 };
 
+/// @brief La hoja de ruta pasó de un repartidor a otro.
+class DeliveryRouteReassigned final : public shared::domain::DomainEvent
+{
+public:
+    DeliveryRouteReassigned(std::uint64_t routeId, Courier from, Courier to, shared::domain::ActorContext context);
+
+    std::uint64_t  routeId() const noexcept;
+    const Courier& from() const noexcept;
+    const Courier& to() const noexcept;
+
+private:
+    void accept(shared::domain::DomainEventVisitor& visitor) const override;
+
+    std::uint64_t m_routeId;
+    Courier       m_from;
+    Courier       m_to;
+};
+
 } // namespace hubflow::routing::domain
 
 #endif // HUBFLOW_ROUTING_DOMAIN_EVENTS_ROUTE_EVENTS_HPP

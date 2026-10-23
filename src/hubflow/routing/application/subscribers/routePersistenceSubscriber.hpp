@@ -7,7 +7,7 @@
 namespace hubflow::routing::application
 {
 
-/// @brief Persiste las hojas de ruta y el resultado de cada parada a partir de sus eventos.
+/// @brief Persiste las hojas de ruta, el resultado de cada parada y los cambios de repartidor a partir de sus eventos.
 class RoutePersistenceSubscriber final : public shared::domain::DomainEventVisitor
 {
 public:
@@ -16,6 +16,7 @@ public:
 private:
     void on(const domain::DeliveryRouteAssigned& event) override;
     void on(const domain::RouteStopResolved& event) override;
+    void on(const domain::DeliveryRouteReassigned& event) override;
 
     RouteRepository& m_repository;
 };

@@ -1,8 +1,10 @@
 #ifndef HUBFLOW_ROUTING_DOMAIN_ENTITIES_ROAD_MAP_HPP
 #define HUBFLOW_ROUTING_DOMAIN_ENTITIES_ROAD_MAP_HPP
 
+#include "datastructures/dynamicArray.hpp"
 #include "datastructures/graph.hpp"
 #include "hubflow/routing/domain/valueobjects/roadNode.hpp"
+#include "hubflow/shared/domain/aggregateRoot.hpp"
 
 #include <optional>
 
@@ -16,7 +18,7 @@ namespace hubflow::routing::domain
  * extremos. Por eso la heurística euclídea nunca sobreestima el costo restante: es admisible y
  * consistente, condición para que A* devuelva el camino de costo mínimo.
  */
-class RoadMap final
+class RoadMap final : public shared::domain::AggregateRoot
 {
 public:
     RoadMap() = default;
@@ -26,6 +28,26 @@ public:
 
     /// @throws business_error si el id está vacío o repetido.
     std::size_t addNode(const RoadNode& node);
+
+    /**
+     * @brief Da de alta un punto nuevo del mapa junto con las calles que lo unen a puntos existentes, y registra
+     * RoadNodeAdded. O se agrega todo o no se agrega nada.
+     * @throws business_error Conflict (id repetido), Validation (datos inválidos, sin calles, calle duplicada o más
+     * corta que la línea recta) o NotFound (algún extremo no existe).
+     */
+    std::size_t declareNode(const RoadNode&                     node,
+                            const ds::DynamicArray<RoadLink>&   links,
+                            const shared::domain::ActorContext& context);
+
+    /**
+     * @brief Reasigna la zona de un punto y/o lo activa o desactiva, y registra RoadNodeChanged si algo cambió.
+     * Repetir el mismo pedido no cambia nada.
+     * @throws business_error NotFound (punto inexistente) o Conflict (el centro de distribución no se desactiva).
+     */
+    void reviseNode(const std::string&                  id,
+                    const std::optional<std::string>&   zone,
+                    const std::optional<bool>&          active,
+                    const shared::domain::ActorContext& context);
 
     /// @throws business_error si algún extremo no existe o el costo es menor a la línea recta.
     void connect(const std::string& fromId, const std::string& toId, double costKm);

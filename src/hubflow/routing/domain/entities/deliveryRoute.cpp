@@ -108,6 +108,22 @@ const RouteStop& DeliveryRoute::resolveStop(const std::size_t                   
     return target;
 }
 
+void DeliveryRoute::reassign(const Courier& courier, const shared::domain::ActorContext& context)
+{
+    if (courier.id != m_courier.id)
+    {
+        if (status() == RouteStatus::Completed)
+        {
+            throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
+                                                  "route.completed",
+                                                  "El reparto ya terminó: no se puede pasar a otro chofer"};
+        }
+        const Courier previous {m_courier};
+        m_courier = courier;
+        raise(new DeliveryRouteReassigned {m_id, previous, m_courier, context});
+    }
+}
+
 const RouteStop& DeliveryRoute::stop(const std::size_t order) const
 {
     if (order == 0 || order > m_stops.size())

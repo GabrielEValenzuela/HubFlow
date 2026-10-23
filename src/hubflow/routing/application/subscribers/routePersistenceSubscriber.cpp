@@ -20,4 +20,9 @@ void RoutePersistenceSubscriber::on(const domain::RouteStopResolved& event)
     m_repository.updateStop(event.routeId(), event.stop());
 }
 
+void RoutePersistenceSubscriber::on(const domain::DeliveryRouteReassigned& event)
+{
+    m_repository.updateCourier(event.routeId(), event.to());
+}
+
 } // namespace hubflow::routing::application

@@ -7,6 +7,7 @@
 #include "hubflow/routing/application/ports/in/getRoadMapUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getRouteUseCase.hpp"
 #include "hubflow/routing/application/ports/in/listRoutesUseCase.hpp"
+#include "hubflow/routing/application/ports/in/reassignDeliveryRouteUseCase.hpp"
 #include "hubflow/routing/application/ports/in/resolveRouteStopUseCase.hpp"
 
 namespace hubflow::routing::adapters
@@ -17,6 +18,7 @@ struct RouteUseCases
 {
     application::AssignDeliveryRouteUseCase&        assign;
     application::ResolveRouteStopUseCase&           resolveStop;
+    application::ReassignDeliveryRouteUseCase&      reassign;
     const application::ListRoutesUseCase&           list;
     const application::GetRouteUseCase&             get;
     const application::GetRoadMapUseCase&           roadMap;
@@ -30,6 +32,8 @@ struct RouteUseCases
  *   El detalle de la ruta incluye, por parada, el destinatario, el servicio, el peso y la zona del paquete.
  * - @c POST /routes {batchId, courierId, algorithm}: el agente calcula el recorrido del lote y se asigna al
  *   repartidor (acepta @c Idempotency-Key). Responde 201 con @c Location.
+ * - @c PUT /routes/:id/courier {courierId}: pasa el reparto en curso a otro chofer activo (jefe de planta o
+ *   administrador). Repetir el pedido con el mismo chofer responde 200 sin cambios.
  * - @c PATCH /routes/:id/stops/:order {outcome, note}: el repartidor informa el resultado de una parada.
  *   Repetir el mismo resultado responde 200 sin cambios; informar otro distinto responde 409.
  * - @c GET /routes/:id/initial-state y @c GET /routes/:id/sequence: documentos para el simulador, como descarga.

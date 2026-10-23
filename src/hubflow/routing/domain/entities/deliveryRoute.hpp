@@ -71,6 +71,13 @@ public:
      */
     const RouteStop& resolveStop(std::size_t order, StopOutcome outcome, const shared::domain::ActorContext& context);
 
+    /**
+     * @brief Pasa la ruta a otro repartidor y registra DeliveryRouteReassigned. Si ya es de ese repartidor no hace
+     * nada.
+     * @throws business_error (Conflict) si la ruta ya está completada.
+     */
+    void reassign(const Courier& courier, const shared::domain::ActorContext& context);
+
     const RouteStop& stop(std::size_t order) const;
 
     /// @brief Visita los tramos en orden de recorrido.

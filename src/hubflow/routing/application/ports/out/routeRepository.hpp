@@ -25,6 +25,9 @@ public:
 
     virtual void updateStop(std::uint64_t routeId, const domain::RouteStop& stop) = 0;
 
+    /// @brief Registra el nuevo repartidor de la ruta.
+    virtual void updateCourier(std::uint64_t routeId, const domain::Courier& courier) = 0;
+
     virtual void loadAll(RouteRestorer& restorer) const = 0;
 };
 

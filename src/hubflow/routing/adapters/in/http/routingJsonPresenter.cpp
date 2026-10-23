@@ -25,6 +25,17 @@ Json RoutingJsonPresenter::roadMap(const domain::RoadMap& map)
     return RoutePlanJson::roadMap(map);
 }
 
+Json RoutingJsonPresenter::node(const domain::RoadNode& node)
+{
+    return Json {{"id", node.id},
+                 {"label", node.label},
+                 {"zone", node.zone},
+                 {"isHub", node.isHub},
+                 {"x", node.x},
+                 {"y", node.y},
+                 {"active", node.active}};
+}
+
 Json RoutingJsonPresenter::searchTrace(const domain::SearchTrace& trace, const domain::RoadMap& map)
 {
     return RoutePlanJson::searchTrace(map, trace);

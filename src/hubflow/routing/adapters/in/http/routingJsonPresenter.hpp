@@ -21,6 +21,9 @@ public:
     /// @brief Mapa vial: nodos con su zona y coordenadas, y calles con su costo en kilómetros.
     static platform::Json roadMap(const domain::RoadMap& map);
 
+    /// @brief Un punto del mapa con su zona, coordenadas y habilitación.
+    static platform::Json node(const domain::RoadNode& node);
+
     /// @brief Una búsqueda individual con sus pasos, camino y métricas.
     static platform::Json searchTrace(const domain::SearchTrace& trace, const domain::RoadMap& map);
 

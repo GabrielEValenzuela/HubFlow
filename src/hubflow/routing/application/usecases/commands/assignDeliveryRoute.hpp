@@ -25,8 +25,6 @@ private:
     const domain::DeliveryRoute& execute(const shared::application::Principal& principal,
                                          const AssignRouteRequest&             request) override;
 
-    domain::Courier requireCourier(std::uint64_t courierId) const;
-
     RoutingModel&                                m_routing;
     sorting::domain::SortingDesk&                m_desk;
     const identity::application::UserRepository& m_users;

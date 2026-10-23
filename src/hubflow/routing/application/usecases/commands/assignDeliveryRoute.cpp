@@ -4,6 +4,7 @@
 #include "datastructures/stack.hpp"
 #include "hubflow/identity/domain/services/accessPolicy.hpp"
 #include "hubflow/logistics/domain/entities/shipment.hpp"
+#include "hubflow/routing/application/usecases/requireCourier.hpp"
 #include "hubflow/routing/domain/services/pumAgent.hpp"
 #include "hubflow/routing/domain/services/search/searchStrategy.hpp"
 #include "hubflow/shared/domain/businessError.hpp"
@@ -62,7 +63,7 @@ const domain::DeliveryRoute& AssignDeliveryRoute::execute(const shared::applicat
                                                           const AssignRouteRequest&             request)
 {
     principal.require(identity::domain::Permission::AssignRoutes);
-    const domain::Courier          courier {requireCourier(request.courierId)};
+    const domain::Courier          courier {requireCourier(m_users, request.courierId)};
     sorting::domain::SortingBatch& batch = m_desk.require(request.batchId);
     if (batch.processed().isEmpty())
     {
@@ -84,16 +85,6 @@ const domain::DeliveryRoute& AssignDeliveryRoute::execute(const shared::applicat
     batch.unloadProcessed();
     m_desk.close();
     return route;
-}
-
-domain::Courier AssignDeliveryRoute::requireCourier(const std::uint64_t courierId) const
-{
-    const auto user = m_users.byId(courierId);
-    if (!user.has_value() || !user->active || user->role != identity::domain::Role::Pum)
-    {
-        throw business_error {ErrorKind::Validation, "route.courier_invalid", "El repartidor no es un PUM activo"};
-    }
-    return domain::Courier {user->id, user->name};
 }
 
 } // namespace hubflow::routing::application

@@ -66,6 +66,17 @@ void RouteController::registerRoutes(platform::ApiRouter& router)
                    return platform::HttpResponse::ok(RoutingJsonPresenter::courierSheet(
                        m_useCases.sheet.execute(context.user(), routeId(context)), m_useCases.roadMap.execute()));
                });
+    router.put("/routes/:id/courier",
+               [this](const RequestContext& context)
+               {
+                   const std::uint64_t id {routeId(context)};
+                   auto                input     = InputValidator::body(context.request);
+                   const auto          courierId = input.requiredIdentifier("courierId");
+                   input.validate();
+                   m_useCases.reassign.execute(context.user(), id, courierId);
+                   return platform::HttpResponse::ok(RoutingJsonPresenter::courierSheet(
+                       m_useCases.sheet.execute(context.user(), id), m_useCases.roadMap.execute()));
+               });
     router.patch("/routes/:id/stops/:order",
                  [this](const RequestContext& context)
                  {
