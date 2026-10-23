@@ -179,3 +179,21 @@
 .map-legend .l-done { background: var(--accent); border-color: var(--accent); border-radius: 3px; height: 4px; vertical-align: 4px; opacity: .6; }
 .map-legend .l-courier { background: var(--signal); border-color: var(--surface); }
 .stop.is-next { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+/* Cómo decide el PUM: formulación y tabla comparativa */
+.algo-def { display: grid; grid-template-columns: max-content 1fr; gap: 6px var(--s-4); margin-top: var(--s-2); font-size: .9rem; }
+.algo-def dt { font-weight: 600; color: var(--ink-2); }
+.algo-def dd { margin: 0; }
+.algo-table-wrap table { min-width: 880px; font-size: .86rem; }
+.algo-table th[scope="row"] { white-space: normal; background: var(--surface-2); min-width: 110px; }
+.algo-table td { vertical-align: top; }
+.algo-notes { margin: var(--s-3) 0 0; padding-left: 1.2em; }
+@media (max-width: 760px) {
+  .algo-def { grid-template-columns: 1fr; gap: 0; }
+  .algo-def dd { margin-bottom: 8px; }
+  .algo-table-wrap table, .algo-table-wrap tbody, .algo-table-wrap tr, .algo-table-wrap td, .algo-table-wrap th { display: block; min-width: 0; width: auto; }
+  .algo-table thead { display: none; }
+  .algo-table tr { border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+  .algo-table td { border-bottom: 0; padding: 4px 14px; }
+  .algo-table td::before { content: attr(data-label); display: block; font-size: .75rem; font-weight: 600; color: var(--ink-3); }
+}
