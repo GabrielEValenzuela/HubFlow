@@ -54,11 +54,11 @@ El tablero no muestra nombres de algoritmos al operador ni al repartidor; la API
 | Menos cruces | `BFS` | Menos tramos (intersecciones); puede sumar km |
 | Salida inmediata | `GREEDY` | Prioriza el punto más cercano al destino en línea recta; calcula rápido y puede sumar km |
 
-`DFS` no se ofrece a operadores; solo aparece en la pantalla "Cómo decide el PUM" (operador y administrador),
+`DFS` no se ofrece en el producto; solo aparece en la página de estudio `/lab/` (pestaña "Cómo decide el PUM"; ingreso de jefe de planta o administrador),
 donde también están el simulador lado a lado, el reproductor paso a paso con las métricas y la descarga de
-`initial_state.json` / `sequence.json`. Antes de asignar, la mesa compara las tres opciones con
-`GET /route-previews` por tramo `HUB -> paradas -> HUB`, en el orden de la pila del lote (el último procesado
-baja primero). El tiempo estimado supone 25 km/h promedio urbano + 4 min por parada (constantes `ETA`).
+`initial_state.json` / `sequence.json`. Antes de asignar, la pantalla Armar carga compara las tres opciones con
+`GET /route-previews` por tramo `HUB -> paradas -> HUB`, en el orden de descarga del lote (el último procesado
+baja primero). El tiempo estimado supone 25 km/h promedio urbano + 4 min por parada (constante `TRAVEL_ESTIMATE`).
 
 ## Heurística euclídea admisible
 

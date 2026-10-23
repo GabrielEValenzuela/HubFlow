@@ -50,8 +50,26 @@ eventos de dominio en un bus síncrono; las proyecciones, la persistencia y la a
 
 Al asignar una ruta el operador elige **Menos kilómetros** (A*, recomendada), **Menos cruces** (BFS) o
 **Salida inmediata** (Greedy), con una comparación de km, tiempo estimado y cruces para la carga actual. Los
-algoritmos y sus trazas (incluido DFS) se explican en la pantalla "Cómo decide el PUM"; el detalle está en
-[docs/grafos-pum.md](docs/grafos-pum.md).
+algoritmos y sus trazas (incluido DFS) se explican en la página de estudio `/lab/` (pestaña "Cómo decide el
+PUM"); el detalle está en [docs/grafos-pum.md](docs/grafos-pum.md).
+
+## Pantallas
+
+La web (`web/`) tiene dos mundos separados.
+
+**Producto** (`http://localhost:8480/`), en lenguaje de logística, sin vocabulario técnico. Cada puesto ve solo lo suyo:
+
+| Puesto (rol de la API) | Pantallas |
+|---|---|
+| Chofer (`PUM`) | **Mi ruta**: próxima parada, botones "Entregado" y "No se pudo entregar" (con motivo), lista de paradas y mapa |
+| Jefe de planta (`OPERADOR`) | **Paquetes en planta** (ingresar, ver, clasificar, despachar), **Armar carga** (zona, orden, "Por cargar" / "En el vehículo", buscar en la carga, asignar chofer), **Repartos en curso** (avance por chofer, paquetes que vuelven a la planta), **Buscar paquete** (por código, por tramo de códigos, lista por zona y servicio) |
+| Administrador (`ADMIN`) | **Resumen de la operación**, **Repartos** (solo lectura), **Personal** (altas, puesto, acceso), **Actividad** (oraciones cortas) |
+
+**Material del curso** (`http://localhost:8480/lab/`, "Por dentro"): página aparte, sin enlaces desde el producto,
+con su propio ingreso (solo jefe de planta o administrador). Reúne el contenido técnico: lista de pendientes
+(lista enlazada con prioridad estable y recursión por zona), mesa con Queue FIFO, Stack LIFO, Insertion Sort y
+búsqueda lineal frente a binaria, índices BST y B+, Set y BitSet, y "Cómo decide el PUM" (formulación, simulador,
+reproductor paso a paso y descargas `initial_state.json` / `sequence.json`). Su código vive en `web/lab/`.
 
 ## Comandos
 
@@ -80,7 +98,7 @@ src/bootstrap/        composition root y datos iniciales
 tests/                unit, application, adapters, http, integration
 db/migrations/        esquema, mapa de la ciudad e idempotencia (se cargan al crear la base)
 docker/               Dockerfile de la API
-web/                  dashboard estático servido por la API
+web/                  producto estático servido por la API; web/lab/ es la página de estudio del curso
 exports/              archivos initial_state.json / sequence.json por ruta
 docs/                 documentación (abajo)
 ```
