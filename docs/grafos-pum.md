@@ -21,18 +21,27 @@ El mapa es un grafo **no dirigido y ponderado** (`ds::Graph`, listas de adyacenc
 
 ## Algoritmos
 
-Todos comparten el esqueleto de `SearchStrategy::search` (Template Method); cada estrategia solo decide la
-frontera, la prioridad y qué sucesores admite (Strategy). Se evita repetir estados con un registro de explorados.
+Todos comparten el esqueleto de `SearchStrategy::search` (Template Method): extraer un nodo de la frontera,
+descartarlo si ya fue explorado, aplicar el test de objetivo **al expandir** y generar los sucesores. Cada
+estrategia define la frontera, la prioridad y qué sucesores admite (Strategy). Es búsqueda **en grafo**: un
+nodo se expande a lo sumo una vez. g(n) es la suma de km desde el origen, h(n) la distancia euclídea al
+destino y f(n) = g(n) + h(n).
 
-| Algoritmo | Frontera | Prioridad | Propiedades |
-|---|---|---|---|
-| BFS | cola FIFO | orden de llegada | óptimo en cantidad de saltos, no en km |
-| DFS | pila LIFO | orden inverso | encuentra una solución, no necesariamente corta |
-| Greedy | heap | h(n) | expande poco, no es óptimo |
-| A* | heap | f(n) = g(n) + h(n) | óptimo en km si h es admisible |
+| Algoritmo | Frontera (estructura propia) | Prioridad | Completo | Óptimo | Tiempo / espacio (grafo) |
+|---|---|---|---|---|---|
+| BFS | `Queue` FIFO | ninguna (orden de llegada) | sí (grafo finito) | en cantidad de tramos, no en km | O(V + E) / O(V) |
+| DFS | `Stack` LIFO | ninguna (se expande el último apilado) | sí (grafo finito, con explorados) | no | O(V + E) / O(V) |
+| Greedy | `MinHeap` | h(n) | sí (grafo finito, con explorados) | no | O((V + E) log V) / O(V) |
+| A* | `MinHeap` | f(n) = g(n) + h(n) | sí | en km, con h admisible y consistente | O((V + E) log V) / O(V + E) |
 
-Desempate en el heap: menor prioridad primero y, a igualdad, el nodo creado antes. Las aristas se recorren en
-el orden en que se agregaron, por lo que toda la búsqueda es determinista.
+Los sucesores se generan en el orden de la lista de adyacencia. BFS, DFS y Greedy no re-insertan un nodo que ya
+está en la frontera; A* sí lo hace si llega con menor g(n) (`bestCost`) y deja la entrada anterior obsoleta en el
+heap, que se descarta al extraerla porque el nodo ya fue explorado. Desempate en el heap: menor prioridad
+primero y, a igualdad, el nodo creado antes. Toda la búsqueda es determinista.
+
+Las cotas son sobre el grafo (V nodos, E aristas). Las formas de árbol O(b^d) (BFS, A*) y O(b^m) (DFS) son la
+referencia teórica sin conjunto de explorados. La traza copia frontera y explorados en cada paso, lo que
+agrega O(V) por paso.
 
 ## Opciones de ruta (lenguaje de negocio)
 
@@ -42,8 +51,8 @@ El tablero no muestra nombres de algoritmos al operador ni al repartidor; la API
 | Opción en pantalla | `algorithm` | Descripción |
 |---|---|---|
 | Menos kilómetros (recomendada, por defecto) | `ASTAR` | La ruta más corta, garantizada |
-| Menos cruces | `BFS` | Pasa por menos intersecciones; puede sumar algunos km |
-| Salida inmediata | `GREEDY` | Siempre hacia el punto más cercano; rápida de calcular, puede recorrer más km |
+| Menos cruces | `BFS` | Menos tramos (intersecciones); puede sumar km |
+| Salida inmediata | `GREEDY` | Prioriza el punto más cercano al destino en línea recta; calcula rápido y puede sumar km |
 
 `DFS` no se ofrece a operadores; solo aparece en la pantalla "Cómo decide el PUM" (operador y administrador),
 donde también están el simulador lado a lado, el reproductor paso a paso con las métricas y la descarga de
@@ -57,8 +66,9 @@ h(n) es la distancia en línea recta entre el nodo y el destino, con las coorden
 nodo. Es **admisible** porque el mapa garantiza un invariante: el costo de cada arista es mayor o igual que
 la distancia euclídea entre sus extremos (`RoadMap::connect` rechaza las aristas más baratas que la línea
 recta). Como cualquier camino es una poligonal que une los extremos, su costo nunca baja de la línea recta, así
-que h nunca sobreestima. La desigualdad triangular además la vuelve **consistente**, y con ella A* no necesita
-reabrir nodos y devuelve el camino de costo mínimo.
+que h nunca sobreestima. La desigualdad triangular además la vuelve **consistente**: h(n) ≤ c(n, n') + h(n').
+Con h consistente, el primer pop de un nodo ya tiene su g mínimo, por lo que A* no necesita reabrir nodos
+explorados y devuelve el camino de costo mínimo.
 
 ## API
 
