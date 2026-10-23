@@ -3,7 +3,7 @@ import { drawBst, drawBPlus } from "./tree.js";
 import { h, subHead, loading, errorBox, field, busy, setFieldError, tabs, shipmentTable, toast, zoneTag, statusBadge, serviceBadge, fmtKg } from "../js/ui.js";
 import { icon } from "../js/icons.js";
 
-const CODE = /^PKG-\d{4}$/;
+const CODE = /^(PKG-\d{4}|HF-[0-9A-Z]{9})$/;
 
 export default async function indexes(root) {
   const slot = h("div", {}, loading());
@@ -27,7 +27,7 @@ export default async function indexes(root) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const c = input.value.trim().toUpperCase();
-      if (!CODE.test(c)) return setFieldError(form, "code", "Usá el formato PKG-0000.");
+      if (!CODE.test(c)) return setFieldError(form, "code", "Usá PKG-0000 o HF- seguido de 9 caracteres.");
       setFieldError(form, "code", "");
       try {
         await busy(btn, () => onSubmit(c));
@@ -81,8 +81,8 @@ export default async function indexes(root) {
       e.preventDefault();
       const a = from.value.trim().toUpperCase(), b = to.value.trim().toUpperCase();
       let ok = true;
-      if (!CODE.test(a)) { setFieldError(rangeForm, "from", "Formato PKG-0000."); ok = false; } else setFieldError(rangeForm, "from", "");
-      if (!CODE.test(b)) { setFieldError(rangeForm, "to", "Formato PKG-0000."); ok = false; } else setFieldError(rangeForm, "to", "");
+      if (!CODE.test(a)) { setFieldError(rangeForm, "from", "Usá PKG-0000 o HF- seguido de 9 caracteres."); ok = false; } else setFieldError(rangeForm, "from", "");
+      if (!CODE.test(b)) { setFieldError(rangeForm, "to", "Usá PKG-0000 o HF- seguido de 9 caracteres."); ok = false; } else setFieldError(rangeForm, "to", "");
       if (ok && a > b) { setFieldError(rangeForm, "from", "El inicio no puede ser mayor al final."); ok = false; }
       if (!ok) return;
       try {

@@ -57,7 +57,7 @@ export default async function routeDetail(root, { id }) {
         const actions = s.outcome === "REPROGRAMADO" ? h("span", { class: "badge s-REPROGRAMADO" }, "No entregado") : statusBadge(s.outcome);
         return h("li", { class: "stop " + s.outcome + (next && next.order === s.order ? " is-next" : "") },
           h("span", { class: "n", "aria-hidden": "true" }, s.outcome === "ENTREGADO" ? "✓" : s.outcome === "REPROGRAMADO" ? "!" : String(s.order)),
-          h("div", {}, h("div", {}, h("strong", {}, labels.get(s.nodeId) ?? "Parada"), " · ", h("span", { class: "code muted" }, s.shipmentCode)),
+          h("div", {}, h("div", {}, h("strong", {}, labels.get(s.nodeId) ?? "Parada"), " · ", h("span", { class: "code muted" }, s.shipmentCodes.join(", ")), s.shipmentCodes.length > 1 ? h("span", { class: "together" }, "viajan juntos") : null),
             h("div", { class: "small muted" }, `Parada ${s.order} · ${fmtKm(legKm(s))} desde la anterior${pending ? "" : " · " + (s.outcome === "REPROGRAMADO" ? "No entregado" : STATUS[s.outcome])}`)), actions);
       }));
 

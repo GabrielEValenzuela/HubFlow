@@ -68,10 +68,10 @@ export default async function queueStack(root) {
 
     const processed = new Set(batch.processedStack);
     const itemsTable = h("div", { class: "table-wrap" }, h("table", {},
-      h("thead", {}, h("tr", {}, ...["Posición", "Código", "Destinatario", "Servicio", "Peso", "Estado"].map((t) => h("th", { class: t === "Peso" ? "num" : "" }, t)))),
+      h("thead", {}, h("tr", {}, ...["Posición", "Código", "Destinatario", "Servicio", "Bultos", "Peso facturable (clave de orden)", "Estado"].map((t) => h("th", { class: t.startsWith("Peso") ? "num" : "" }, t)))),
       h("tbody", {}, ...batch.items.map((s, i) => h("tr", {},
         h("td", { class: "code" }, String(i + 1)), h("td", { class: "code" }, s.code), h("td", {}, s.recipient), h("td", {}, serviceBadge(s.service)),
-        h("td", { class: "num" }, fmtKg(s.weightKg)),
+        h("td", {}, String(s.parcelCount)), h("td", { class: "num" }, fmtKg(s.weightKg)),
         h("td", {}, processed.has(s.code) ? h("span", { class: "badge s-CLASIFICADO" }, "Procesado") : statusBadge(s.status)))))));
 
     const prepare = h("button", { class: "btn", onClick: (e) => act(e.currentTarget, async () => { batch = await api.put(`/sorting-batches/${id}/preparation-queue`); }, "Cola de preparación lista.") }, "Preparar cola");
@@ -127,7 +127,7 @@ export default async function queueStack(root) {
     const form = h("form", { novalidate: true, class: "actions", onSubmit: async (e) => {
       e.preventDefault();
       const code = input.value.trim().toUpperCase();
-      if (!/^PKG-\d{4}$/.test(code)) return setFieldError(wrap, "code", "Usá el formato PKG-0000.");
+      if (!/^(PKG-\d{4}|HF-[0-9A-Z]{9})$/.test(code)) return setFieldError(wrap, "code", "Usá PKG-0000 o HF- seguido de 9 caracteres.");
       setFieldError(wrap, "code", "");
       try {
         search = await busy(btn, () => api.get(`/sorting-batches/${batch.id}/searches`, { code, algorithm: sortedByCode ? "both" : "linear" }));

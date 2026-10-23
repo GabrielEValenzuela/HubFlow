@@ -1,22 +1,20 @@
 import { api } from "../api.js";
-import { h, pageHead, errorBox, field, busy, setFieldError, shipmentTable, zoneTag, serviceBadge, statusBadge, fmtKg, empty } from "../ui.js";
+import { h, pageHead, errorBox, field, busy, setFieldError, shipmentTable, zoneTag, serviceBadge, statusBadge, fmtKg, empty, isTrackingCode, CODE_ERROR } from "../ui.js";
 import { icon } from "../icons.js";
 import { openShipment } from "./shipmentDetail.js";
 import filters from "./filters.js";
-
-const CODE = /^PKG-\d{4}$/;
 
 export default function findShipments(root) {
   const byCodeOut = h("div", { class: "results", "aria-live": "polite" });
   const rangeOut = h("div", { class: "results", "aria-live": "polite" });
 
-  const code = h("input", { class: "input", placeholder: "PKG-1003", autocomplete: "off", style: "width:170px" });
+  const code = h("input", { class: "input", placeholder: "HF-7K3M9Q2X8", autocomplete: "off", style: "width:170px" });
   const codeBtn = h("button", { class: "btn primary", type: "submit" }, icon("search"), "Buscar");
   const codeForm = h("form", { novalidate: true, class: "actions", style: "align-items:flex-end" }, field("code", "Código de seguimiento", code), codeBtn);
   codeForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const c = code.value.trim().toUpperCase();
-    if (!CODE.test(c)) return setFieldError(codeForm, "code", "Usá el formato PKG-0000.");
+    if (!isTrackingCode(c)) return setFieldError(codeForm, "code", CODE_ERROR);
     setFieldError(codeForm, "code", "");
     try {
       const r = await busy(codeBtn, () => api.get("/indexes/bplus/entries/" + c));
@@ -31,16 +29,16 @@ export default function findShipments(root) {
     }
   });
 
-  const from = h("input", { class: "input", placeholder: "PKG-1002", autocomplete: "off", style: "width:150px" });
-  const to = h("input", { class: "input", placeholder: "PKG-1005", autocomplete: "off", style: "width:150px" });
+  const from = h("input", { class: "input", placeholder: "Primer código", autocomplete: "off", style: "width:150px" });
+  const to = h("input", { class: "input", placeholder: "Último código", autocomplete: "off", style: "width:150px" });
   const rangeBtn = h("button", { class: "btn primary", type: "submit" }, icon("search"), "Buscar");
   const rangeForm = h("form", { novalidate: true, class: "actions", style: "align-items:flex-end" }, field("from", "Desde el código", from), field("to", "Hasta el código", to), rangeBtn);
   rangeForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const a = from.value.trim().toUpperCase(), b = to.value.trim().toUpperCase();
     let ok = true;
-    if (!CODE.test(a)) { setFieldError(rangeForm, "from", "Usá el formato PKG-0000."); ok = false; } else setFieldError(rangeForm, "from", "");
-    if (!CODE.test(b)) { setFieldError(rangeForm, "to", "Usá el formato PKG-0000."); ok = false; } else setFieldError(rangeForm, "to", "");
+    if (!isTrackingCode(a)) { setFieldError(rangeForm, "from", CODE_ERROR); ok = false; } else setFieldError(rangeForm, "from", "");
+    if (!isTrackingCode(b)) { setFieldError(rangeForm, "to", CODE_ERROR); ok = false; } else setFieldError(rangeForm, "to", "");
     if (ok && a > b) { setFieldError(rangeForm, "from", "El código inicial no puede ser mayor que el final."); ok = false; }
     if (!ok) return;
     try {

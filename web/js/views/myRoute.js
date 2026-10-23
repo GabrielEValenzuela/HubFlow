@@ -1,7 +1,7 @@
 import { api } from "../api.js";
 import { roadMap } from "../data.js";
 import { MapView } from "../lib/mapview.js";
-import { h, pageHead, loading, errorBox, empty, field, busy, toast, dialog, fmtKm, fmtKg, SERVICE } from "../ui.js";
+import { h, pageHead, loading, errorBox, empty, field, busy, toast, dialog, fmtKm, fmtKg, SERVICE, confirmDialog, parcelsText, packagesText } from "../ui.js";
 import { icon } from "../icons.js";
 
 const REASONS = ["No había nadie", "La dirección está cerrada o no existe", "No quisieron recibirlo", "Otro motivo"];
@@ -45,46 +45,84 @@ export default async function myRoute(root) {
     view = new MapView(map, { stops: route.stops, title: "Mapa con tu recorrido" });
     view.render({ done: segs.slice(0, doneCount).map((s) => s.path), path: segs.slice(doneCount).flatMap((s) => s.path), courier: position });
 
-    async function deliver(btn, stop) {
+    const refresh = (updated) => draw({ ...updated, sequence: updated.sequence ?? route.sequence }, map);
+
+    async function closeStop(btn, stop, confirmAllParcels) {
       try {
-        const updated = await busy(btn, () => api.patch(`/routes/${route.id}/stops/${stop.order}`, { outcome: "ENTREGADO", note: "Entregado en destino" }));
-        toast(`Entregaste ${stop.shipmentCode}.`);
-        draw({ ...updated, sequence: updated.sequence ?? route.sequence }, map);
+        const updated = await busy(btn, () => api.patch(`/routes/${route.id}/stops/${stop.order}`, { outcome: "ENTREGADO", note: "Entregado en destino", confirmAllParcels }));
+        toast(`Entregaste ${stop.shipmentCodes.join(" y ")}.`);
+        refresh(updated);
       } catch (e) {
         toast(e.message, "error");
       }
     }
 
-    async function notDelivered(stop) {
+    async function confirmParcel(btn, stop, shipment, parcel) {
+      try {
+        const updated = await busy(btn, () => api.put(`/routes/${route.id}/stops/${stop.order}/shipments/${shipment.code}/parcels/${parcel.ordinal}`));
+        toast(`Bulto ${parcel.ordinal} de ${shipment.parcels.length} entregado.`);
+        refresh(updated);
+      } catch (e) {
+        toast(e.message, "error");
+      }
+    }
+
+    async function notDelivered(stop, partial) {
+      if (partial) {
+        const missing = stop.shipments.flatMap((s) => s.parcels).filter((p) => !p.delivered).length;
+        const ok = await confirmDialog({ title: "Terminar con lo entregado", text: `Faltan ${parcelsText(missing)}. Esos bultos vuelven a la planta con su paquete y lo que ya entregaste queda registrado.`, confirmLabel: "Terminar parada" });
+        if (!ok) return;
+      }
       const note = await askReason(stop);
       if (!note) return;
       try {
         const updated = await api.patch(`/routes/${route.id}/stops/${stop.order}`, { outcome: "REPROGRAMADO", note });
-        toast(`${stop.shipmentCode} vuelve a la planta.`);
-        draw({ ...updated, sequence: updated.sequence ?? route.sequence }, map);
+        toast(`${stop.shipmentCodes.join(" y ")} vuelve a la planta.`);
+        refresh(updated);
       } catch (e) {
         toast(e.message, "error");
       }
+    }
+
+    function packageBox(stop, shipment) {
+      return h("div", { class: "stop-pkg" },
+        h("h3", {}, h("span", { class: "code" }, shipment.code), " · ", shipment.recipient, h("span", { class: "muted small" }, ` · ${SERVICE[shipment.service] ?? shipment.service}`)),
+        ...shipment.parcels.map((p) => h("div", { class: "parcel-line" + (p.delivered ? " is-done" : "") },
+          h("span", {}, h("strong", {}, `Bulto ${p.ordinal} de ${shipment.parcels.length}`), h("span", { class: "muted small" }, ` · ${fmtKg(p.billableWeightKg)}`)),
+          p.delivered ? h("span", { class: "badge s-ENTREGADO" }, "Entregado")
+            : h("button", { class: "btn", onClick: (e) => confirmParcel(e.currentTarget, stop, shipment, p) }, icon("check"), "Entregado"))));
+    }
+
+    function nextActions(stop) {
+      const all = stop.shipments.flatMap((s) => s.parcels);
+      const done = all.filter((p) => p.delivered).length;
+      const actions = [];
+      if (done === all.length) actions.push(h("button", { class: "btn big ok", onClick: (e) => closeStop(e.currentTarget, stop, false) }, icon("check", 24), "Cerrar parada"));
+      else actions.push(h("button", { class: "btn big ok", onClick: (e) => closeStop(e.currentTarget, stop, true) }, icon("check", 24), all.length === 1 ? "Entregado" : "Entregar todo"));
+      if (done > 0 && done < all.length) actions.push(h("button", { class: "btn big", onClick: () => notDelivered(stop, true) }, "Terminar con lo entregado"));
+      if (done === 0) actions.push(h("button", { class: "btn big", onClick: () => notDelivered(stop, false) }, "No se pudo entregar"));
+      return actions;
     }
 
     const nextCard = next
       ? h("section", { class: "driver-next", "aria-labelledby": "next-title" },
         h("p", { class: "driver-kicker", id: "next-title" }, `Próxima parada (${next.order} de ${route.stopCount})`),
         h("p", { class: "driver-place" }, labels.get(next.nodeId) ?? "Parada"),
-        next.recipient ? h("p", { class: "driver-recipient" }, "Entregar a ", h("strong", {}, next.recipient)) : null,
-        h("p", { class: "driver-meta" }, h("span", {}, "Paquete ", h("strong", { class: "code" }, next.shipmentCode)),
-          next.service ? h("span", {}, `${SERVICE[next.service] ?? next.service} · ${fmtKg(next.weightKg)}`) : null, h("span", {}, `${fmtKm(legKm(next))} desde la parada anterior`)),
-        h("div", { class: "driver-actions" },
-          h("button", { class: "btn big ok", onClick: (e) => deliver(e.currentTarget, next) }, icon("check", 24), "Entregado"),
-          h("button", { class: "btn big", onClick: () => notDelivered(next) }, "No se pudo entregar")))
+        next.shipments.length > 1
+          ? h("p", { class: "driver-recipient" }, `Entregás ${packagesText(next.shipments.length)} juntos en este lugar`)
+          : next.recipient ? h("p", { class: "driver-recipient" }, "Entregar a ", h("strong", {}, next.recipient)) : null,
+        h("p", { class: "driver-meta" }, h("span", {}, `${fmtKm(legKm(next))} desde la parada anterior`)),
+        h("div", { class: "stop-parcels" }, ...next.shipments.map((s) => packageBox(next, s))),
+        h("div", { class: "driver-actions" }, ...nextActions(next)))
       : h("section", { class: "driver-next done" }, icon("check", 28), h("div", {}, h("p", { class: "driver-place" }, "Terminaste tu ruta"),
-        h("p", { class: "driver-meta" }, `Entregaste ${delivered} ${delivered === 1 ? "paquete" : "paquetes"}.` + (failed ? ` ${failed} vuelve${failed === 1 ? "" : "n"} a la planta.` : ""))));
+        h("p", { class: "driver-meta" }, `Entregaste ${delivered} ${delivered === 1 ? "parada" : "paradas"}.` + (failed ? ` ${failed} vuelve${failed === 1 ? "" : "n"} a la planta.` : ""))));
 
     const stopList = h("ol", { class: "stops", "aria-label": "Paradas de la ruta" }, ...route.stops.map((s) => {
       const [text, cls] = OUTCOME[s.outcome] ?? [s.outcome, ""];
       return h("li", { class: "stop " + s.outcome + (next && next.order === s.order ? " is-next" : "") },
         h("span", { class: "n", "aria-hidden": "true" }, s.outcome === "ENTREGADO" ? "✓" : s.outcome === "REPROGRAMADO" ? "!" : String(s.order)),
-        h("div", {}, h("strong", {}, labels.get(s.nodeId) ?? "Parada"), s.recipient ? h("div", {}, s.recipient) : null, h("div", { class: "small muted" }, h("span", { class: "code" }, s.shipmentCode), ` · ${fmtKm(legKm(s))}`)),
+        h("div", {}, h("strong", {}, labels.get(s.nodeId) ?? "Parada"), s.recipient ? h("div", {}, s.recipient) : null,
+          h("div", { class: "small muted" }, h("span", { class: "code" }, s.shipmentCodes.join(", ")), ` · ${parcelsText(s.shipments.reduce((n, x) => n + x.parcels.length, 0))} · ${fmtKm(legKm(s))}`)),
         h("span", { class: "badge " + cls }, text));
     }));
 
@@ -105,7 +143,7 @@ export default async function myRoute(root) {
       const radios = REASONS.map((r, i) => h("label", { class: "reason" }, h("input", { type: "radio", name: "reason", value: r, checked: i === 0 }), h("span", {}, r)));
       const extra = h("textarea", { class: "input", rows: "2", maxlength: "150" });
       const form = h("form", { novalidate: true },
-        h("fieldset", { class: "crit" }, h("legend", {}, `¿Por qué no se pudo entregar ${stop.shipmentCode}?`), h("div", { class: "reasons" }, ...radios)),
+        h("fieldset", { class: "crit" }, h("legend", {}, `¿Por qué no se pudo entregar ${stop.shipmentCodes.join(" y ")}?`), h("div", { class: "reasons" }, ...radios)),
         field("extra", "Querés agregar algo (opcional)", extra),
         h("div", { class: "form-actions" }, h("button", { class: "btn primary big", type: "submit" }, "Confirmar"), h("button", { class: "btn big", type: "button", onClick: () => dlg.close() }, "Volver")));
       form.addEventListener("submit", (e) => {

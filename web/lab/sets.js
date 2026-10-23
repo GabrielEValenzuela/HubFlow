@@ -88,8 +88,8 @@ export default async function queries(root) {
       e.preventDefault();
       let ok = true;
       for (const [n, i] of [["first", first], ["second", second]]) {
-        const bad = !/^PKG-\d{4}$/.test(i.value.trim().toUpperCase());
-        setFieldError(form, n, bad ? "Usá el formato PKG-0000." : "");
+        const bad = !/^(PKG-\d{4}|HF-[0-9A-Z]{9})$/.test(i.value.trim().toUpperCase());
+        setFieldError(form, n, bad ? "Usá PKG-0000 o HF- seguido de 9 caracteres." : "");
         if (bad) ok = false;
       }
       if (!ok) return;

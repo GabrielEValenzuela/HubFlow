@@ -1,6 +1,6 @@
 import { api } from "../api.js";
 import { navigate } from "../router.js";
-import { h, pageHead, loading, errorBox, field, busy, toast, statusBadge, zoneTag, serviceBadge, fmtKg, ZONE, zoneChoices, fmtKm, setFieldError } from "../ui.js";
+import { h, pageHead, loading, errorBox, field, busy, toast, statusBadge, zoneTag, serviceBadge, fmtKg, ZONE, zoneChoices, fmtKm, setFieldError, isTrackingCode, CODE_ERROR } from "../ui.js";
 import { ROUTE_OPTIONS, DEFAULT_OPTION, TRAVEL_ESTIMATE, compareOptions, fmtDuration } from "../lib/routeOptions.js";
 import { icon } from "../icons.js";
 
@@ -9,6 +9,7 @@ const ORDER_LABEL = { NONE: "Sin ordenar", CODE_ASC: "Por código", WEIGHT_DESC:
 export default async function loadPlan(root) {
   let load = null;
   let hit = null;
+  let groupOf = new Map();
   const slot = h("div", {}, loading());
   root.append(pageHead("Armar carga", "Elegí una zona, ordená los paquetes, cargalos en el vehículo y asigná el chofer que sale a entregar."), slot);
 
@@ -19,8 +20,17 @@ export default async function loadPlan(root) {
       if (e.status === 404) load = null;
       else return slot.replaceChildren(errorBox(e, fetchLoad));
     }
+    try {
+      const groups = await api.get("/shipment-groups", { limit: 200 });
+      groupOf = new Map(groups.items.flatMap((g) => g.codes.map((c) => [c, g])));
+    } catch {
+      groupOf = new Map();
+    }
     draw();
   }
+
+  const mates = (code) => (groupOf.get(code)?.codes ?? []).filter((c) => c !== code);
+  const togetherTag = (code) => (groupOf.has(code) ? h("span", { class: "together", title: "Se cargan y se reparten juntos" }, icon("link"), "Viaja con " + mates(code).join(", ")) : null);
 
   const draw = () => slot.replaceChildren(load ? board() : opener());
 
@@ -75,21 +85,21 @@ export default async function loadPlan(root) {
     const next = h("button", { class: "btn primary", disabled: !toLoad.length, onClick: (e) => act(e.currentTarget, async () => {
       const r = await api.post(`/sorting-batches/${id}/processed-items`, {});
       load = r.batch;
-      toast(`${r.shipment.code} subió al vehículo.`);
+      toast(r.shipments.length > 1 ? `${r.shipments.map((x) => x.code).join(" y ")} subieron juntos al vehículo.` : `${r.shipment.code} subió al vehículo.`);
     }) }, icon("check"), "Cargar siguiente");
     const last = onVehicle[0];
     const back = h("button", { class: "btn", disabled: !last, onClick: (e) => act(e.currentTarget, async () => {
       const r = await api.del(`/sorting-batches/${id}/processed-items/${last}`);
       load = r.batch;
-      toast(`${last} bajó del vehículo y quedó sin cargar.`);
+      toast(r.shipments.length > 1 ? `${r.shipments.map((x) => x.code).join(" y ")} bajaron juntos del vehículo.` : `${last} bajó del vehículo y quedó sin cargar.`);
     }) }, icon("undo"), "Bajar del vehículo");
 
     const tableHolder = h("div", {});
     const paintTable = () => tableHolder.replaceChildren(h("div", { class: "table-wrap" }, h("table", {},
-      h("thead", {}, h("tr", {}, ...["N.º", "Código", "Destinatario", "Servicio", "Peso", "Estado"].map((t) => h("th", { class: t === "Peso" ? "num" : "" }, t)))),
+      h("thead", {}, h("tr", {}, ...["N.º", "Código", "Destinatario", "Servicio", "Bultos", "Peso a facturar", "Estado"].map((t) => h("th", { class: t === "Peso a facturar" ? "num" : "" }, t)))),
       h("tbody", {}, ...load.items.map((s, i) => h("tr", { class: hit === s.code ? "is-hit" : "", "aria-current": hit === s.code ? "true" : null },
-        h("td", { class: "code" }, String(i + 1)), h("td", { class: "code" }, s.code), h("td", {}, s.recipient), h("td", {}, serviceBadge(s.service)),
-        h("td", { class: "num" }, fmtKg(s.weightKg)),
+        h("td", { class: "code" }, String(i + 1)), h("td", { class: "code" }, s.code), h("td", {}, s.recipient, togetherTag(s.code)), h("td", {}, serviceBadge(s.service)),
+        h("td", {}, String(s.parcelCount)), h("td", { class: "num" }, fmtKg(s.weightKg)),
         h("td", {}, placed.has(s.code) ? h("span", { class: "badge s-CLASIFICADO" }, "En el vehículo") : waiting.has(s.code) ? h("span", { class: "badge s-PENDIENTE" }, "Por cargar") : statusBadge(s.status))))))));
     paintTable();
 
@@ -105,7 +115,7 @@ export default async function loadPlan(root) {
 
       h("section", { class: "card" },
         h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "2. Preparar y cargar"),
-          h("p", {}, "Preparar para cargar arma la lista “Por cargar” en el orden elegido. Cargar siguiente sube el primero al vehículo. Lo último que subió es lo primero que se entrega. Si volvés a preparar, los paquetes que ya cargaste no se repiten.")),
+          h("p", {}, "Preparar para cargar arma la lista “Por cargar” en el orden elegido. Cargar siguiente sube el primero al vehículo; si viaja junto con otros paquetes, suben todos juntos. Lo último que subió es lo primero que se entrega. Si volvés a preparar, los paquetes que ya cargaste no se repiten.")),
           h("div", { class: "actions" }, prepare, next, back)),
         h("div", { class: "lanes" }, toLoadLane(toLoad), vehicleLane(onVehicle))),
 
@@ -114,24 +124,24 @@ export default async function loadPlan(root) {
 
   function toLoadLane(codes) {
     return h("div", { class: "lane" }, h("h3", {}, "Por cargar"),
-      codes.length ? h("ol", { class: "todo-list", "aria-label": "Por cargar, en orden" }, ...codes.map((c, i) => h("li", { class: i === 0 ? "front" : "" }, h("span", { class: "code" }, c), i === 0 ? h("small", {}, "sigue") : null)))
+      codes.length ? h("ol", { class: "todo-list", "aria-label": "Por cargar, en orden" }, ...codes.map((c, i) => h("li", { class: i === 0 ? "front" : "" }, h("span", { class: "code" }, c), togetherTag(c), i === 0 ? h("small", {}, "sigue") : null)))
         : h("p", { class: "muted lane-empty" }, "No hay paquetes esperando. Tocá “Preparar para cargar” para armar la lista."));
   }
 
   function vehicleLane(codes) {
     return h("div", { class: "lane" }, h("h3", {}, "En el vehículo"),
-      codes.length ? h("ol", { class: "on-board", "aria-label": "En el vehículo, el último que subió primero" }, ...codes.map((c, i) => h("li", { class: i === 0 ? "top" : "" }, h("span", { class: "code" }, c), i === 0 ? h("small", {}, "último en subir") : null)))
+      codes.length ? h("ol", { class: "on-board", "aria-label": "En el vehículo, el último que subió primero" }, ...codes.map((c, i) => h("li", { class: i === 0 ? "top" : "" }, h("span", { class: "code" }, c), togetherTag(c), i === 0 ? h("small", {}, "último en subir") : null)))
         : h("p", { class: "muted lane-empty" }, "Todavía no subió ningún paquete."));
   }
 
   function search(paintTable) {
-    const input = h("input", { class: "input", placeholder: "PKG-1005", style: "max-width:200px", autocomplete: "off" });
+    const input = h("input", { class: "input", placeholder: "HF-7K3M9Q2X8", style: "max-width:200px", autocomplete: "off" });
     const btn = h("button", { class: "btn", type: "submit" }, icon("search"), "Buscar en esta carga");
     const out = h("div", { style: "margin-top:12px", "aria-live": "polite" });
     const form = h("form", { novalidate: true, class: "actions", style: "align-items:flex-end;margin-top:16px", onSubmit: async (e) => {
       e.preventDefault();
       const code = input.value.trim().toUpperCase();
-      if (!/^PKG-\d{4}$/.test(code)) return setFieldError(form, "code", "Usá el formato PKG-0000.");
+      if (!isTrackingCode(code)) return setFieldError(form, "code", CODE_ERROR);
       setFieldError(form, "code", "");
       try {
         const r = await busy(btn, () => api.get(`/sorting-batches/${load.id}/searches`, { code, algorithm: "linear" }));
@@ -159,7 +169,11 @@ export default async function loadPlan(root) {
 
     // Orden de entrega: el último que subió al vehículo es el primero en bajar (igual que el servidor).
     const pointOf = new Map(load.items.map((s) => [s.code, s.deliveryPoint]));
-    const stopNodes = onVehicle.map((c) => pointOf.get(c)).filter(Boolean);
+    const seenStops = new Set();
+    const stopNodes = onVehicle.filter((c) => {
+      const key = groupOf.get(c)?.id ?? c;
+      return seenStops.has(key) ? false : (seenStops.add(key), true);
+    }).map((c) => pointOf.get(c)).filter(Boolean);
     let chosen = DEFAULT_OPTION;
     const optionsBox = h("div", { class: "route-options", role: "radiogroup", "aria-labelledby": "opt-legend" });
     const drawOptions = (stats, failed) => {

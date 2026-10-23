@@ -44,7 +44,7 @@ export default async function deliveries(root) {
         h("dt", {}, "No entregados"), h("dd", {}, String(back.length)),
         h("dt", {}, "Faltan"), h("dd", {}, String(waiting)),
         h("dt", {}, "Salió"), h("dd", {}, fmtDate(r.createdAt))),
-      back.length ? h("div", { class: "alert warn", style: "margin-top:10px" }, h("div", {}, h("strong", {}, "Vuelven a la planta: "), back.map((s) => s.shipmentCode).join(", "))) : null,
+      back.length ? h("div", { class: "alert warn", style: "margin-top:10px" }, h("div", {}, h("strong", {}, "Vuelven a la planta: "), back.flatMap((s) => s.shipmentCodes).join(", "))) : null,
       h("div", { class: "actions", style: "margin-top:12px" }, h("a", { class: "btn small", href: "#/repartos/" + r.id }, "Ver detalle"),
         r.status === "EN_CURSO" ? h("button", { class: "btn small", onClick: () => reassignRoute(r, load) }, "Pasar a otro chofer") : null));
   }

@@ -278,3 +278,24 @@ export function shipmentTable(items, { extra, hit } = {}) {
       h("td", { class: "num" }, fmtKg(s.weightKg)), h("td", {}, statusBadge(s.status)), extra ? h("td", {}, extra(s)) : null));
   return h("div", { class: "table-wrap" }, h("table", {}, h("thead", {}, head), h("tbody", {}, ...rows)));
 }
+
+const CODE_SYMBOLS = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+
+/** Un código de seguimiento escrito a mano: PKG-1001 o HF-XXXXXXXXX (el último símbolo detecta errores de tipeo). */
+export function isTrackingCode(text) {
+  if (/^PKG-\d{4}$/.test(text)) return true;
+  const m = /^HF-([0-9A-Z]{8})([0-9A-Z])$/.exec(text);
+  if (!m) return false;
+  let sum = 0;
+  for (let i = 0; i < 8; i++) {
+    const v = CODE_SYMBOLS.indexOf(m[1][i]);
+    if (v < 0) return false;
+    sum += v * (i + 1);
+  }
+  const expected = sum % 37;
+  return expected < 32 && CODE_SYMBOLS[expected] === m[2];
+}
+export const CODE_ERROR = "Ese código no está bien escrito. Revisalo (por ejemplo HF-7K3M9Q2X8 o PKG-1001).";
+
+export const parcelsText = (n) => `${n} ${n === 1 ? "bulto" : "bultos"}`;
+export const packagesText = (n) => `${n} ${n === 1 ? "paquete" : "paquetes"}`;

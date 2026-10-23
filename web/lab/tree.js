@@ -1,6 +1,6 @@
 import { svg } from "../js/ui.js";
 
-const short = (c) => c.replace(/^PKG-/, "");
+const short = (c) => c.replace(/^(PKG|HF)-/, "");
 
 export function drawBst(root, { path = [], found = null } = {}) {
   const nodes = [];
