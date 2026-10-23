@@ -35,30 +35,34 @@ if(HUBFLOW_BUILD_TESTS OR HUBFLOW_BUILD_SERVER)
         src/hubflow/routing/adapters/out/export/*.cpp)
     add_library(hubflow_export STATIC ${HUBFLOW_EXPORT_SOURCES})
     target_link_libraries(hubflow_export PUBLIC hubflow_application nlohmann_json::nlohmann_json)
+
+    file(GLOB_RECURSE HUBFLOW_HTTP_SOURCES CONFIGURE_DEPENDS
+        src/hubflow/platform/http/*.cpp
+        src/hubflow/*/adapters/in/http/*.cpp)
+    add_library(hubflow_http STATIC ${HUBFLOW_HTTP_SOURCES})
+    target_link_libraries(hubflow_http PUBLIC hubflow_export httplib::httplib nlohmann_json::nlohmann_json)
 endif()
 
 if(HUBFLOW_BUILD_SERVER)
     hubflow_require_server_dependencies()
     file(GLOB_RECURSE HUBFLOW_ADAPTER_SOURCES CONFIGURE_DEPENDS
-        src/hubflow/platform/*.cpp
+        src/hubflow/platform/config/*.cpp
+        src/hubflow/platform/mysql/*.cpp
         src/hubflow/*/adapters/out/mysql/*.cpp
         src/hubflow/*/adapters/out/security/*.cpp
         src/hubflow/*/adapters/out/system/*.cpp)
     add_library(hubflow_adapters STATIC ${HUBFLOW_ADAPTER_SOURCES})
     target_link_libraries(hubflow_adapters
-        PUBLIC hubflow_application hubflow_export nlohmann_json::nlohmann_json
-        PRIVATE hubflow_mysql hubflow_sodium OpenSSL::Crypto)
+        PUBLIC hubflow_application
+        PRIVATE hubflow_mysql hubflow_sodium OpenSSL::Crypto nlohmann_json::nlohmann_json)
 
-    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp)
-        file(GLOB_RECURSE HUBFLOW_INFRASTRUCTURE_SOURCES CONFIGURE_DEPENDS src/legacyInfrastructure/*.cpp)
-        add_library(hubflow_infrastructure STATIC ${HUBFLOW_INFRASTRUCTURE_SOURCES})
-        target_link_libraries(hubflow_infrastructure
-            PUBLIC hubflow_adapters httplib::httplib nlohmann_json::nlohmann_json)
+    file(GLOB_RECURSE HUBFLOW_BOOTSTRAP_SOURCES CONFIGURE_DEPENDS src/bootstrap/*.cpp)
+    add_library(hubflow_bootstrap STATIC ${HUBFLOW_BOOTSTRAP_SOURCES})
+    target_link_libraries(hubflow_bootstrap PUBLIC hubflow_adapters hubflow_http)
 
-        add_executable(hubflow src/main.cpp)
-        target_link_libraries(hubflow PRIVATE hubflow_infrastructure)
-        install(TARGETS hubflow RUNTIME DESTINATION bin)
-    endif()
+    add_executable(hubflow src/main.cpp)
+    target_link_libraries(hubflow PRIVATE hubflow_bootstrap)
+    install(TARGETS hubflow RUNTIME DESTINATION bin)
 endif()
 
 if(HUBFLOW_BUILD_TESTS)
