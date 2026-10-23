@@ -16,11 +16,17 @@ DeliverShipment::DeliverShipment(LogisticsModel&                   model,
 
 const domain::Shipment& DeliverShipment::execute(const shared::application::Principal& principal,
                                                  const std::string&                    code,
-                                                 const std::string&                    note)
+                                                 const std::string&                    note,
+                                                 const bool                            confirmAllParcels)
 {
     principal.require(identity::domain::Permission::ResolveStops);
     domain::Shipment& shipment = m_model.catalog.require(code);
-    shipment.deliver(note, principal.contextAt(m_clock));
+    const auto        context  = principal.contextAt(m_clock);
+    if (confirmAllParcels && shipment.status() == domain::ShipmentStatus::EnReparto)
+    {
+        shipment.confirmAllParcels(context);
+    }
+    shipment.deliver(note, context);
     shipment.publishEvents(m_bus);
     return shipment;
 }

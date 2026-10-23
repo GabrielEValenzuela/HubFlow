@@ -12,7 +12,7 @@ namespace hubflow::logistics::application
 
 /**
  * @brief Despacha el envío que encabeza la lista de pendientes (el de mayor prioridad y, a igual prioridad, el que
- * llegó primero).
+ * llegó primero). Si viaja junto con otros paquetes, salen todos los de su grupo.
  *
  * @par Quién puede ejecutarlo
  * ADMIN y OPERADOR.

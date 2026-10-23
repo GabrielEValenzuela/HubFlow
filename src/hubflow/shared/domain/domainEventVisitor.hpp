@@ -14,6 +14,9 @@ class ShipmentClassified;
 class ShipmentDispatched;
 class ShipmentRescheduled;
 class ShipmentDelivered;
+class ParcelDeliveryConfirmed;
+class ShipmentGroupFormed;
+class ShipmentGroupDissolved;
 class ZoneChanged;
 class ServiceLevelChanged;
 class ShipmentFeatureChanged;
@@ -55,6 +58,12 @@ public:
     virtual void on(const logistics::domain::ShipmentRescheduled&) {}
 
     virtual void on(const logistics::domain::ShipmentDelivered&) {}
+
+    virtual void on(const logistics::domain::ParcelDeliveryConfirmed&) {}
+
+    virtual void on(const logistics::domain::ShipmentGroupFormed&) {}
+
+    virtual void on(const logistics::domain::ShipmentGroupDissolved&) {}
 
     virtual void on(const logistics::domain::ZoneChanged&) {}
 

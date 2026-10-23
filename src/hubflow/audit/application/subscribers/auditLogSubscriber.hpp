@@ -22,6 +22,9 @@ private:
     void on(const logistics::domain::ShipmentDispatched& event) override;
     void on(const logistics::domain::ShipmentRescheduled& event) override;
     void on(const logistics::domain::ShipmentDelivered& event) override;
+    void on(const logistics::domain::ParcelDeliveryConfirmed& event) override;
+    void on(const logistics::domain::ShipmentGroupFormed& event) override;
+    void on(const logistics::domain::ShipmentGroupDissolved& event) override;
     void on(const logistics::domain::ZoneChanged& event) override;
     void on(const logistics::domain::ServiceLevelChanged& event) override;
     void on(const logistics::domain::ShipmentFeatureChanged& event) override;

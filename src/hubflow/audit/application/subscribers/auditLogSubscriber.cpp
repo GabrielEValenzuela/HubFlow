@@ -3,6 +3,7 @@
 #include "hubflow/identity/domain/events/userEvents.hpp"
 #include "hubflow/logistics/domain/events/catalogEvents.hpp"
 #include "hubflow/logistics/domain/events/shipmentEvents.hpp"
+#include "hubflow/logistics/domain/events/shipmentGroupEvents.hpp"
 #include "hubflow/routing/domain/events/roadMapEvents.hpp"
 #include "hubflow/routing/domain/events/routeEvents.hpp"
 #include "hubflow/shared/application/vocabulary.hpp"
@@ -14,6 +15,16 @@ namespace
 std::string shipmentDetail(const logistics::domain::ShipmentEvent& event)
 {
     return shared::application::Vocabulary::name(event.state().status) + " · " + event.movement().note;
+}
+
+std::string joined(const ds::DynamicArray<std::string>& codes)
+{
+    std::string text;
+    for (std::size_t i = 0; i < codes.size(); ++i)
+    {
+        text += (i == 0 ? "" : ", ") + codes[i];
+    }
+    return text;
 }
 
 std::string availability(const bool active)
@@ -66,6 +77,26 @@ void AuditLogSubscriber::on(const logistics::domain::ShipmentDelivered& event)
     write(event, "shipment.delivered", event.code(), shipmentDetail(event));
 }
 
+void AuditLogSubscriber::on(const logistics::domain::ParcelDeliveryConfirmed& event)
+{
+    write(event,
+          "shipment.parcel_delivered",
+          event.code(),
+          "Bulto " + std::to_string(event.parcelOrdinal()) + " de " +
+              std::to_string(event.state().draft.parcels.size()) + " entregado");
+}
+
+void AuditLogSubscriber::on(const logistics::domain::ShipmentGroupFormed& event)
+{
+    write(event, "shipment_group.formed", event.state().id, "Viajan juntos: " + joined(event.state().codes));
+}
+
+void AuditLogSubscriber::on(const logistics::domain::ShipmentGroupDissolved& event)
+{
+    write(
+        event, "shipment_group.dissolved", event.state().id, "Dejan de viajar juntos: " + joined(event.state().codes));
+}
+
 void AuditLogSubscriber::on(const logistics::domain::ZoneChanged& event)
 {
     write(event,
@@ -106,7 +137,7 @@ void AuditLogSubscriber::on(const routing::domain::RouteStopResolved& event)
     write(event,
           "route.stop_resolved",
           "Ruta #" + std::to_string(event.routeId()),
-          event.stop().shipmentCode + " · " + shared::application::Vocabulary::name(event.stop().outcome));
+          joined(event.stop().shipmentCodes()) + " · " + shared::application::Vocabulary::name(event.stop().outcome));
 }
 
 void AuditLogSubscriber::on(const routing::domain::DeliveryRouteReassigned& event)

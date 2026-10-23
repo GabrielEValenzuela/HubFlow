@@ -15,6 +15,9 @@ using logistics::domain::ShipmentDraft;
 
 constexpr const char* OPERATOR_EMAIL {"operador@hubflow.local"};
 constexpr const char* SYSTEM_NAME {"Sistema"};
+constexpr double      PARCEL_LENGTH_CM {10.0};
+constexpr double      PARCEL_WIDTH_CM {10.0};
+constexpr double      PARCEL_HEIGHT_CM {10.0};
 
 struct SeedUser
 {
@@ -28,17 +31,35 @@ const SeedUser SEED_USERS[] {{"admin@hubflow.local", "Marta Ibáñez", Role::Adm
                              {"pum1@hubflow.local", "Carlos Medina", Role::Pum},
                              {"pum2@hubflow.local", "Diego Ferreyra", Role::Pum}};
 
+ShipmentDraft packageOf(const char*  code,
+                        const char*  recipient,
+                        const char*  zone,
+                        const double weightKg,
+                        const char*  service,
+                        const char*  deliveryPoint)
+{
+    ShipmentDraft draft;
+    draft.code          = code;
+    draft.recipient     = recipient;
+    draft.zone          = zone;
+    draft.service       = service;
+    draft.deliveryPoint = deliveryPoint;
+    draft.parcels.pushBack(
+        logistics::domain::ParcelData {weightKg, PARCEL_LENGTH_CM, PARCEL_WIDTH_CM, PARCEL_HEIGHT_CM});
+    return draft;
+}
+
 std::vector<ShipmentDraft> initialShipments()
 {
     return {
-        {"PKG-1001", "Ana Torres", "CENTRO", 1.20, "ESTANDAR", "C1"},
-        {"PKG-1002", "Bruno Díaz", "NORTE", 0.75, "EXPRESS", "N2"},
-        {"PKG-1003", "Carla Ruiz", "SUR", 4.10, "PRIORITARIO", "S3"},
-        {"PKG-1004", "Diego López", "CENTRO", 2.30, "ESTANDAR", "C2"},
-        {"PKG-1005", "Elena Castro", "NORTE", 1.90, "PRIORITARIO", "N3"},
-        {"PKG-1006", "Franco Gómez", "SUR", 0.50, "EXPRESS", "S5"},
-        {"PKG-1007", "Gabriela Soto", "CENTRO", 6.20, "ESTANDAR", "C4"},
-        {"PKG-1008", "Hugo Pérez", "NORTE", 3.40, "PRIORITARIO", "N5"},
+        packageOf("PKG-1001", "Ana Torres", "CENTRO", 1.20, "ESTANDAR", "C1"),
+        packageOf("PKG-1002", "Bruno Díaz", "NORTE", 0.75, "EXPRESS", "N2"),
+        packageOf("PKG-1003", "Carla Ruiz", "SUR", 4.10, "PRIORITARIO", "S3"),
+        packageOf("PKG-1004", "Diego López", "CENTRO", 2.30, "ESTANDAR", "C2"),
+        packageOf("PKG-1005", "Elena Castro", "NORTE", 1.90, "PRIORITARIO", "N3"),
+        packageOf("PKG-1006", "Franco Gómez", "SUR", 0.50, "EXPRESS", "S5"),
+        packageOf("PKG-1007", "Gabriela Soto", "CENTRO", 6.20, "ESTANDAR", "C4"),
+        packageOf("PKG-1008", "Hugo Pérez", "NORTE", 3.40, "PRIORITARIO", "N5"),
     };
 }
 } // namespace

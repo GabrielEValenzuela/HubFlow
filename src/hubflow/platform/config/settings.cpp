@@ -29,6 +29,7 @@ Settings Settings::fromEnvironment()
     settings.exportDirectory   = environmentValue("HUBFLOW_EXPORT_DIR", settings.exportDirectory);
     settings.jwtSecret         = environmentValue("HUBFLOW_JWT_SECRET", "");
     settings.seedPassword      = environmentValue("HUBFLOW_SEED_PASSWORD", settings.seedPassword);
+    settings.trackingCodes     = environmentValue("HUBFLOW_TRACKING_CODES", settings.trackingCodes);
     settings.database.host     = environmentValue("DB_HOST", settings.database.host);
     settings.database.port     = portFrom("DB_PORT", settings.database.port);
     settings.database.user     = environmentValue("DB_USER", settings.database.user);
@@ -37,6 +38,10 @@ Settings Settings::fromEnvironment()
     if (settings.jwtSecret.size() < MIN_SECRET_LENGTH)
     {
         throw std::invalid_argument("HUBFLOW_JWT_SECRET debe tener al menos 32 caracteres");
+    }
+    if (settings.trackingCodes != "public" && settings.trackingCodes != "sequential")
+    {
+        throw std::invalid_argument("HUBFLOW_TRACKING_CODES debe ser public o sequential");
     }
     return settings;
 }

@@ -103,20 +103,23 @@ platform::HttpResponse ShipmentController::registerShipment(const RequestContext
 {
     auto                  input = InputValidator::body(context.request);
     domain::ShipmentDraft draft;
-    draft.code          = input.trackingCode("code");
     draft.recipient     = input.requiredText("recipient", 2, 80);
     draft.zone          = input.code("zone");
-    draft.weightKg      = input.requiredNumber("weightKg", 0.01, domain::Weight::MAX_KILOGRAMS);
     draft.service       = input.code("service");
     draft.deliveryPoint = input.requiredText("deliveryPoint", 1, 16);
     for (const auto& feature : input.optionalCodes("features"))
     {
         draft.features.pushBack(feature);
     }
+    for (const auto& parcel : input.parcels("parcels", domain::Shipment::MAX_PARCELS))
+    {
+        draft.parcels.pushBack(parcel);
+    }
     input.validate();
     const auto& shipment = m_useCases.registerShipment.execute(context.user(), draft);
-    return platform::HttpResponse::created(LogisticsJsonPresenter::shipment(shipment),
-                                           locationOf("/shipments/" + shipment.code()));
+    Json        body     = LogisticsJsonPresenter::shipment(shipment);
+    body["group"]        = nullptr;
+    return platform::HttpResponse::created(body, locationOf("/shipments/" + shipment.code()));
 }
 
 platform::HttpResponse ShipmentController::find(const RequestContext& context) const
@@ -131,7 +134,9 @@ platform::HttpResponse ShipmentController::find(const RequestContext& context) c
         throw shared::domain::business_error {
             shared::domain::ErrorKind::NotFound, "shipment.not_found", "Envío no encontrado."};
     }
-    Json body      = LogisticsJsonPresenter::shipment(*result.pShipment);
+    Json body = LogisticsJsonPresenter::shipment(*result.pShipment);
+    body["group"] =
+        LogisticsJsonPresenter::groupOf(*result.pShipment, m_useCases.findGroup.execute(context.user(), code));
     body["lookup"] = Json {{"index", indexName(index)}, {"visited", result.visited}};
     return platform::HttpResponse::ok(body);
 }

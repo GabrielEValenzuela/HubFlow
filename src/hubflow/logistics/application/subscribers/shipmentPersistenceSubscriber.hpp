@@ -20,6 +20,7 @@ private:
     void on(const domain::ShipmentDispatched& event) override;
     void on(const domain::ShipmentRescheduled& event) override;
     void on(const domain::ShipmentDelivered& event) override;
+    void on(const domain::ParcelDeliveryConfirmed& event) override;
 
     void persistChange(const domain::ShipmentEvent& event);
 

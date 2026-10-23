@@ -54,15 +54,68 @@ std::string binary(const domain::StateHistory& history)
 
 Json LogisticsJsonPresenter::shipmentSummary(const domain::Shipment& shipment)
 {
-    return Json {{"code", shipment.code()},
+    return Json {{"id", shipment.id()},
+                 {"code", shipment.code()},
                  {"recipient", shipment.recipient()},
                  {"zone", shipment.zone()},
                  {"weightKg", rounded(shipment.weightKg())},
+                 {"realWeightKg", rounded(shipment.realWeightKg())},
+                 {"billableWeightKg", rounded(shipment.billableWeightKg())},
+                 {"parcelCount", shipment.parcelCount()},
+                 {"pendingParcels", shipment.pendingParcelCount()},
+                 {"parcels", parcels(shipment)},
                  {"service", shipment.service()},
                  {"features", featureCodes(shipment)},
                  {"status", Vocabulary::name(shipment.status())},
                  {"attempts", shipment.attempts()},
                  {"deliveryPoint", shipment.deliveryPoint()}};
+}
+
+Json LogisticsJsonPresenter::parcels(const domain::Shipment& shipment)
+{
+    Json items = Json::array();
+    for (std::size_t i = 0; i < shipment.parcelCount(); ++i)
+    {
+        const auto& parcel = shipment.parcel(i);
+        items.push_back(Json {{"ordinal", parcel.ordinal()},
+                              {"label", parcel.label()},
+                              {"weightKg", rounded(parcel.weightKg())},
+                              {"lengthCm", parcel.dimensions().lengthCm()},
+                              {"widthCm", parcel.dimensions().widthCm()},
+                              {"heightCm", parcel.dimensions().heightCm()},
+                              {"volumetricWeightKg", rounded(parcel.volumetricWeightKg())},
+                              {"billableWeightKg", rounded(parcel.billableWeightKg())},
+                              {"delivered", parcel.delivered()}});
+    }
+    return items;
+}
+
+Json LogisticsJsonPresenter::group(const domain::ShipmentGroup& group)
+{
+    Json codes = Json::array();
+    for (std::size_t i = 0; i < group.codes().size(); ++i)
+    {
+        codes.push_back(group.codes()[i]);
+    }
+    return Json {{"id", group.id()}, {"deliveryPoint", group.deliveryPoint()}, {"codes", codes}};
+}
+
+Json LogisticsJsonPresenter::groupOf(const domain::Shipment& shipment, const domain::ShipmentGroup* pGroup)
+{
+    Json result = nullptr;
+    if (pGroup != nullptr)
+    {
+        result                = group(*pGroup);
+        result["travelsWith"] = Json::array();
+        for (std::size_t i = 0; i < pGroup->codes().size(); ++i)
+        {
+            if (pGroup->codes()[i] != shipment.code())
+            {
+                result["travelsWith"].push_back(pGroup->codes()[i]);
+            }
+        }
+    }
+    return result;
 }
 
 Json LogisticsJsonPresenter::shipment(const domain::Shipment& shipment)

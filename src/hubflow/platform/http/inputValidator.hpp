@@ -1,6 +1,7 @@
 #ifndef HUBFLOW_PLATFORM_HTTP_INPUT_VALIDATOR_HPP
 #define HUBFLOW_PLATFORM_HTTP_INPUT_VALIDATOR_HPP
 
+#include "hubflow/logistics/domain/entities/parcel.hpp"
 #include "hubflow/platform/http/httpTypes.hpp"
 
 #include <cstdint>
@@ -32,7 +33,16 @@ public:
     std::uint64_t              requiredIdentifier(const std::string& field);
     std::optional<bool>        optionalFlag(const std::string& field);
     std::string                trackingCode(const std::string& field);
-    std::string                email(const std::string& field);
+
+    /// @brief Lista de entre @p minimum y @p maximum códigos de seguimiento.
+    std::vector<std::string> trackingCodes(const std::string& field, std::size_t minimum, std::size_t maximum);
+
+    /**
+     * @brief Bultos de un envío: entre 1 y @p maximum objetos con @c weightKg, @c lengthCm, @c widthCm y @c heightCm.
+     * Los errores indican la posición del bulto, por ejemplo @c parcels[1].weightKg.
+     */
+    std::vector<logistics::domain::ParcelData> parcels(const std::string& field, std::size_t maximum);
+    std::string                                email(const std::string& field);
 
     /// @brief Código de catálogo (zona, servicio, característica): 2 a 16 caracteres entre A-Z, 0-9 y guion bajo.
     std::string code(const std::string& field);

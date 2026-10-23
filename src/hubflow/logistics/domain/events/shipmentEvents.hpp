@@ -72,6 +72,23 @@ private:
     void accept(shared::domain::DomainEventVisitor& visitor) const override;
 };
 
+/// @brief El repartidor confirmó que un bulto del envío llegó a destino.
+class ParcelDeliveryConfirmed final : public shared::domain::DomainEvent
+{
+public:
+    ParcelDeliveryConfirmed(ShipmentState state, std::size_t parcelOrdinal, shared::domain::ActorContext context);
+
+    const ShipmentState& state() const noexcept;
+    const std::string&   code() const noexcept;
+    std::size_t          parcelOrdinal() const noexcept;
+
+private:
+    void accept(shared::domain::DomainEventVisitor& visitor) const override;
+
+    ShipmentState m_state;
+    std::size_t   m_parcelOrdinal;
+};
+
 } // namespace hubflow::logistics::domain
 
 #endif // HUBFLOW_LOGISTICS_DOMAIN_EVENTS_SHIPMENT_EVENTS_HPP

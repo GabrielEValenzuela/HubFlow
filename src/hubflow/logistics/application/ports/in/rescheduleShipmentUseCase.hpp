@@ -12,7 +12,9 @@ namespace hubflow::logistics::application
 
 /**
  * @brief Reprograma un envío que estaba en reparto: suma un intento fallido y lo devuelve a pendientes respetando su
- * prioridad.
+ * prioridad. Los bultos que ya se habían entregado quedan registrados como entregados.
+ *
+ * Si el paquete viaja junto con otros que también están en reparto, se reprograman todos.
  *
  * @par Quién puede ejecutarlo
  * ADMIN, OPERADOR y PUM.

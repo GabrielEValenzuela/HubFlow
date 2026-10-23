@@ -26,21 +26,23 @@ std::optional<bool> newestFirst(const std::string& text)
 
 MovementController::MovementController(MovementUseCases useCases)
     : m_useCases {useCases}
-    , m_transitions {{ShipmentStatus::Clasificado,
-                      [this](const auto& principal, const auto& code, const auto& note) -> const domain::Shipment&
-                      {
-                          return m_useCases.classify.execute(principal, code, note);
-                      }},
-                     {ShipmentStatus::Reprogramado,
-                      [this](const auto& principal, const auto& code, const auto& note) -> const domain::Shipment&
-                      {
-                          return m_useCases.reschedule.execute(principal, code, note);
-                      }},
-                     {ShipmentStatus::Entregado,
-                      [this](const auto& principal, const auto& code, const auto& note) -> const domain::Shipment&
-                      {
-                          return m_useCases.deliver.execute(principal, code, note);
-                      }}}
+    , m_transitions {
+          {ShipmentStatus::Clasificado,
+           [this](const auto& principal, const auto& code, const auto& note, const bool) -> const domain::Shipment&
+           {
+               return m_useCases.classify.execute(principal, code, note);
+           }},
+          {ShipmentStatus::Reprogramado,
+           [this](const auto& principal, const auto& code, const auto& note, const bool) -> const domain::Shipment&
+           {
+               return m_useCases.reschedule.execute(principal, code, note);
+           }},
+          {ShipmentStatus::Entregado,
+           [this](const auto& principal, const auto& code, const auto& note, const bool confirmAll)
+               -> const domain::Shipment&
+           {
+               return m_useCases.deliver.execute(principal, code, note, confirmAll);
+           }}}
 {
 }
 
@@ -73,6 +75,7 @@ platform::HttpResponse MovementController::record(const RequestContext& context)
     auto       input  = InputValidator::body(context.request);
     const auto status = input.requiredTerm<ShipmentStatus>("status", Vocabulary::shipmentStatus, MOVEMENT_STATUSES);
     const std::string note {input.requiredText("note", MIN_NOTE, MAX_NOTE)};
+    const bool        confirmAll {input.optionalFlag("confirmAllParcels").value_or(false)};
     input.validate();
     const auto transition = m_transitions.find(status);
     if (transition == m_transitions.end())
@@ -81,7 +84,7 @@ platform::HttpResponse MovementController::record(const RequestContext& context)
             platform::HttpStatus::UnprocessableEntity,
             {{"status", "Usá POST /dispatches o una hoja de ruta para EN_REPARTO; RECIBIDO es inicial"}}};
     }
-    const domain::Shipment& shipment = transition->second(context.user(), code, note);
+    const domain::Shipment& shipment = transition->second(context.user(), code, note, confirmAll);
     return platform::HttpResponse::created(LogisticsJsonPresenter::movement(*shipment.history().latest()),
                                            locationOf("/shipments/" + code + "/movements"));
 }

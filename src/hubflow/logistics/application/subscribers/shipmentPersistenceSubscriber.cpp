@@ -34,6 +34,11 @@ void ShipmentPersistenceSubscriber::on(const domain::ShipmentDelivered& event)
     persistChange(event);
 }
 
+void ShipmentPersistenceSubscriber::on(const domain::ParcelDeliveryConfirmed& event)
+{
+    m_repository.update(event.state());
+}
+
 void ShipmentPersistenceSubscriber::persistChange(const domain::ShipmentEvent& event)
 {
     m_repository.update(event.state());

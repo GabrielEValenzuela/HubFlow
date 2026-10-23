@@ -27,9 +27,9 @@ struct MovementUseCases
  * @brief Historial de movimientos de un envío.
  *
  * - @c GET /shipments/:code/movements?order=asc|desc: movimientos en orden cronológico o inverso.
- * - @c POST /shipments/:code/movements {status, note}: registra clasificación, reprogramación o entrega.
- *   Cada pedido agrega un movimiento nuevo, por eso acepta @c Idempotency-Key. El despacho se hace con
- *   @c POST /dispatches.
+ * - @c POST /shipments/:code/movements {status, note, confirmAllParcels?}: registra clasificación, reprogramación o
+ *   entrega. Para entregar hay que haber confirmado todos los bultos o pedir @c confirmAllParcels. Cada pedido agrega
+ *   un movimiento nuevo, por eso acepta @c Idempotency-Key. El despacho se hace con @c POST /dispatches.
  */
 class MovementController final : public platform::Controller
 {
@@ -38,7 +38,7 @@ public:
 
 private:
     using Transition = std::function<
-        const domain::Shipment&(const shared::application::Principal&, const std::string&, const std::string&)>;
+        const domain::Shipment&(const shared::application::Principal&, const std::string&, const std::string&, bool)>;
 
     void registerRoutes(platform::ApiRouter& router) override;
 

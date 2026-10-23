@@ -4,6 +4,7 @@
 #include "datastructures/dynamicArray.hpp"
 #include "hubflow/logistics/application/ports/in/getOperationsMetricsUseCase.hpp"
 #include "hubflow/logistics/domain/entities/shipment.hpp"
+#include "hubflow/logistics/domain/entities/shipmentGroup.hpp"
 #include "hubflow/logistics/domain/services/zoneReport.hpp"
 #include "hubflow/platform/http/httpTypes.hpp"
 
@@ -20,6 +21,15 @@ class LogisticsJsonPresenter final
 public:
     /// @brief Datos principales del envío.
     static platform::Json shipmentSummary(const domain::Shipment& shipment);
+
+    /// @brief Un grupo de paquetes que viajan juntos.
+    static platform::Json group(const domain::ShipmentGroup& group);
+
+    /// @brief Grupo con el que viaja @p shipment (o null si viaja solo), con los códigos de los demás.
+    static platform::Json groupOf(const domain::Shipment& shipment, const domain::ShipmentGroup* pGroup);
+
+    /// @brief Los bultos de un envío con sus pesos, medidas y si ya se entregaron.
+    static platform::Json parcels(const domain::Shipment& shipment);
 
     /// @brief Datos principales más historial de estados y último movimiento.
     static platform::Json shipment(const domain::Shipment& shipment);

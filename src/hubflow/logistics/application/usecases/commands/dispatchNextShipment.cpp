@@ -28,9 +28,21 @@ const domain::Shipment& DispatchNextShipment::execute(const shared::application:
         throw shared::domain::business_error {
             shared::domain::ErrorKind::Conflict, "pending.empty", "No hay envíos pendientes"};
     }
-    domain::Shipment& shipment = *m_model.pending.head()->pShipment;
-    shipment.dispatch(note.empty() ? DEFAULT_DISPATCH_NOTE : note, principal.contextAt(m_clock));
+    domain::Shipment&            shipment = *m_model.pending.head()->pShipment;
+    const auto                   context  = principal.contextAt(m_clock);
+    const std::string            reason {note.empty() ? DEFAULT_DISPATCH_NOTE : note};
+    const domain::ShipmentGroup* pGroup = m_model.groups.groupOf(shipment.code());
+    shipment.dispatch(reason, context);
     shipment.publishEvents(m_bus);
+    for (std::size_t i = 0; pGroup != nullptr && i < pGroup->codes().size(); ++i)
+    {
+        domain::Shipment& companion = m_model.catalog.require(pGroup->codes()[i]);
+        if (companion.isAwaitingDispatch())
+        {
+            companion.dispatch(reason, context);
+            companion.publishEvents(m_bus);
+        }
+    }
     return shipment;
 }
 

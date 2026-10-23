@@ -13,6 +13,10 @@ namespace hubflow::logistics::application
 /**
  * @brief Confirma la entrega de un envío que estaba en reparto; es un estado final.
  *
+ * Un envío sólo se da por entregado cuando todos sus bultos fueron confirmados. Con @c confirmAllParcels el operador
+ * declara que los bultos que faltan también llegaron y se confirman en el mismo paso; sin él, si falta alguno se
+ * rechaza. Para una entrega parcial se confirman los bultos entregados y se reprograma el envío.
+ *
  * @par Quién puede ejecutarlo
  * ADMIN, OPERADOR y PUM.
  *
@@ -20,6 +24,7 @@ namespace hubflow::logistics::application
  * - Forbidden: el rol no puede resolver paradas.
  * - NotFound: el envío no existe.
  * - InvalidState: el envío no está en reparto.
+ * - Conflict: faltan bultos por confirmar y no se pidió confirmarlos todos.
  *
  * @par Idempotencia
  * No. Agrega un movimiento al historial. Repetirla falla por estado (ya entregado), pero no reproduce la respuesta
@@ -32,8 +37,10 @@ public:
 
     virtual ~DeliverShipmentUseCase() = default;
 
-    virtual const domain::Shipment&
-    execute(const shared::application::Principal& principal, const std::string& code, const std::string& note) = 0;
+    virtual const domain::Shipment& execute(const shared::application::Principal& principal,
+                                            const std::string&                    code,
+                                            const std::string&                    note,
+                                            bool                                  confirmAllParcels) = 0;
 };
 
 } // namespace hubflow::logistics::application

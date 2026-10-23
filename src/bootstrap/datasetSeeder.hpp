@@ -17,7 +17,8 @@ namespace hubflow::bootstrap
  * - Si no existe ningún usuario crea admin, operador, pum1 y pum2 (dominio hubflow.local), todos con la contraseña
  *   de arranque configurada.
  * - Si el catálogo de envíos está vacío registra ocho paquetes de ejemplo, uno para cada punto de entrega
- *   C1, N2, S3, C2, N3, S5, C4 y N5, de modo que se pueda armar un lote y una ruta enseguida.
+ *   C1, N2, S3, C2, N3, S5, C4 y N5, de modo que se pueda armar un lote y una ruta enseguida. Llevan los códigos
+ *   fijos PKG-1001 a PKG-1008 del trabajo práctico, sea cual sea el formato de código elegido para los nuevos.
  *
  * Las zonas, niveles de servicio, características y permisos por rol iniciales no se cargan acá: los siembra la
  * migración del esquema, porque son datos de configuración y no del dataset de ejemplo.

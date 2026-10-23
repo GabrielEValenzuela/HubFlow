@@ -150,12 +150,76 @@ std::optional<bool> InputValidator::optionalFlag(const std::string& field)
 
 std::string InputValidator::trackingCode(const std::string& field)
 {
-    const std::string code {requiredText(field, 8, 8)};
+    const std::string code {requiredText(field, 8, logistics::domain::TrackingCode::PUBLIC_LENGTH)};
     if (!code.empty() && !logistics::domain::TrackingCode::isValid(code))
     {
-        fail(field, "Debe tener el formato PKG-NNNN");
+        fail(field, "No es un código de seguimiento válido: revisá que esté bien escrito");
     }
     return code;
+}
+
+std::vector<std::string>
+InputValidator::trackingCodes(const std::string& field, const std::size_t minimum, const std::size_t maximum)
+{
+    std::vector<std::string> codes;
+    if (!has(field) || !m_source.at(field).is_array() || m_source.at(field).size() < minimum ||
+        m_source.at(field).size() > maximum)
+    {
+        fail(field,
+             "Debe ser una lista de entre " + std::to_string(minimum) + " y " + std::to_string(maximum) +
+                 " códigos de seguimiento");
+    }
+    else
+    {
+        for (const auto& item : m_source.at(field))
+        {
+            const std::string value {item.is_string() ? item.get<std::string>() : std::string {}};
+            if (!logistics::domain::TrackingCode::isValid(value))
+            {
+                fail(field, "Cada elemento debe ser un código de seguimiento válido");
+            }
+            else
+            {
+                codes.push_back(value);
+            }
+        }
+    }
+    return codes;
+}
+
+std::vector<logistics::domain::ParcelData> InputValidator::parcels(const std::string& field, const std::size_t maximum)
+{
+    std::vector<logistics::domain::ParcelData> parcels;
+    if (!has(field) || !m_source.at(field).is_array() || m_source.at(field).empty() ||
+        m_source.at(field).size() > maximum)
+    {
+        fail(field, "Debe ser una lista de entre 1 y " + std::to_string(maximum) + " bultos");
+    }
+    else
+    {
+        std::size_t position {0};
+        for (const auto& item : m_source.at(field))
+        {
+            const std::string prefix {field + "[" + std::to_string(position++) + "]."};
+            if (!item.is_object())
+            {
+                fail(field, "Cada bulto debe ser un objeto con peso y medidas");
+                continue;
+            }
+            InputValidator                one {item};
+            logistics::domain::ParcelData parcel;
+            parcel.weightKg = one.requiredNumber("weightKg", 0.01, logistics::domain::Weight::MAX_KILOGRAMS);
+            parcel.lengthCm = one.requiredNumber("lengthCm", 0.1, logistics::domain::Dimensions::MAX_CENTIMETERS);
+            parcel.widthCm  = one.requiredNumber("widthCm", 0.1, logistics::domain::Dimensions::MAX_CENTIMETERS);
+            parcel.heightCm = one.requiredNumber("heightCm", 0.1, logistics::domain::Dimensions::MAX_CENTIMETERS);
+            for (const auto& error : one.m_errors)
+            {
+                fail(prefix + error.field, error.message);
+            }
+            parcels.push_back(parcel);
+        }
+    }
+    return parcels;
 }
 
 std::string InputValidator::email(const std::string& field)

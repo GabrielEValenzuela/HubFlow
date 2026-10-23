@@ -55,7 +55,11 @@
 #include "hubflow/logistics/adapters/in/http/movementController.hpp"
 #include "hubflow/logistics/adapters/in/http/operationsController.hpp"
 #include "hubflow/logistics/adapters/in/http/shipmentController.hpp"
+#include "hubflow/logistics/adapters/in/http/shipmentGroupController.hpp"
+#include "hubflow/logistics/adapters/out/generation/publicTrackingCodeGenerator.hpp"
+#include "hubflow/logistics/adapters/out/generation/sequentialPkgCodeGenerator.hpp"
 #include "hubflow/logistics/adapters/out/mysql/mySqlCatalogRepository.hpp"
+#include "hubflow/logistics/adapters/out/mysql/mySqlShipmentGroupRepository.hpp"
 #include "hubflow/logistics/adapters/out/mysql/mySqlShipmentRepository.hpp"
 #include "hubflow/logistics/adapters/out/routing/roadMapDeliveryPoints.hpp"
 #include "hubflow/logistics/adapters/out/routing/routingPlantOccupancy.hpp"
@@ -66,13 +70,18 @@
 #include "hubflow/logistics/application/ports/in/createZoneUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/deliverShipmentUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/dispatchNextShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/dissolveShipmentGroupUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/findHeaviestShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/findShipmentGroupOfShipmentUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/findShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/formShipmentGroupUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/getOperationsMetricsUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/getShipmentGroupUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/getShipmentUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/listPendingShipmentsUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/listServiceLevelsUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/listShipmentFeaturesUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/listShipmentGroupsUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/listShipmentsUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/listZonesUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/registerShipmentUseCase.hpp"
@@ -83,6 +92,7 @@
 #include "hubflow/logistics/application/ports/in/updateZoneUseCase.hpp"
 #include "hubflow/logistics/application/subscribers/catalogPersistenceSubscriber.hpp"
 #include "hubflow/logistics/application/subscribers/pendingShipmentsProjector.hpp"
+#include "hubflow/logistics/application/subscribers/shipmentGroupPersistenceSubscriber.hpp"
 #include "hubflow/logistics/application/subscribers/shipmentPersistenceSubscriber.hpp"
 #include "hubflow/logistics/application/usecases/commands/classifyShipment.hpp"
 #include "hubflow/logistics/application/usecases/commands/createServiceLevel.hpp"
@@ -90,6 +100,8 @@
 #include "hubflow/logistics/application/usecases/commands/createZone.hpp"
 #include "hubflow/logistics/application/usecases/commands/deliverShipment.hpp"
 #include "hubflow/logistics/application/usecases/commands/dispatchNextShipment.hpp"
+#include "hubflow/logistics/application/usecases/commands/dissolveShipmentGroup.hpp"
+#include "hubflow/logistics/application/usecases/commands/formShipmentGroup.hpp"
 #include "hubflow/logistics/application/usecases/commands/registerShipment.hpp"
 #include "hubflow/logistics/application/usecases/commands/rescheduleShipment.hpp"
 #include "hubflow/logistics/application/usecases/commands/updateServiceLevel.hpp"
@@ -97,11 +109,14 @@
 #include "hubflow/logistics/application/usecases/commands/updateZone.hpp"
 #include "hubflow/logistics/application/usecases/queries/findHeaviestShipment.hpp"
 #include "hubflow/logistics/application/usecases/queries/findShipment.hpp"
+#include "hubflow/logistics/application/usecases/queries/findShipmentGroupOfShipment.hpp"
 #include "hubflow/logistics/application/usecases/queries/getOperationsMetrics.hpp"
 #include "hubflow/logistics/application/usecases/queries/getShipment.hpp"
+#include "hubflow/logistics/application/usecases/queries/getShipmentGroup.hpp"
 #include "hubflow/logistics/application/usecases/queries/listPendingShipments.hpp"
 #include "hubflow/logistics/application/usecases/queries/listServiceLevels.hpp"
 #include "hubflow/logistics/application/usecases/queries/listShipmentFeatures.hpp"
+#include "hubflow/logistics/application/usecases/queries/listShipmentGroups.hpp"
 #include "hubflow/logistics/application/usecases/queries/listShipments.hpp"
 #include "hubflow/logistics/application/usecases/queries/listZones.hpp"
 #include "hubflow/logistics/application/usecases/queries/summarizeZone.hpp"
@@ -119,6 +134,7 @@
 #include "hubflow/routing/application/hydration/routingHydrator.hpp"
 #include "hubflow/routing/application/ports/in/addRoadNodeUseCase.hpp"
 #include "hubflow/routing/application/ports/in/assignDeliveryRouteUseCase.hpp"
+#include "hubflow/routing/application/ports/in/confirmStopParcelUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getCourierRouteSheetUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getRoadMapUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getRouteUseCase.hpp"
@@ -132,6 +148,7 @@
 #include "hubflow/routing/application/subscribers/routePlanExportSubscriber.hpp"
 #include "hubflow/routing/application/usecases/commands/addRoadNode.hpp"
 #include "hubflow/routing/application/usecases/commands/assignDeliveryRoute.hpp"
+#include "hubflow/routing/application/usecases/commands/confirmStopParcel.hpp"
 #include "hubflow/routing/application/usecases/commands/reassignDeliveryRoute.hpp"
 #include "hubflow/routing/application/usecases/commands/resolveRouteStop.hpp"
 #include "hubflow/routing/application/usecases/commands/updateRoadNode.hpp"
@@ -140,6 +157,7 @@
 #include "hubflow/routing/application/usecases/queries/getRoute.hpp"
 #include "hubflow/routing/application/usecases/queries/listRoutes.hpp"
 #include "hubflow/routing/application/usecases/queries/previewRoute.hpp"
+#include "hubflow/shared/adapters/out/generation/uuidV7IdentityGenerator.hpp"
 #include "hubflow/shared/adapters/out/mysql/mySqlIdempotencyStore.hpp"
 #include "hubflow/shared/adapters/out/system/systemClock.hpp"
 #include "hubflow/sorting/adapters/in/http/sortingBatchController.hpp"
@@ -178,7 +196,22 @@ namespace hubflow::bootstrap
 namespace
 {
 constexpr std::chrono::milliseconds POLL_INTERVAL {100};
+
+std::unique_ptr<logistics::application::TrackingCodeGenerator>
+trackingCodeGeneratorFor(const platform::Settings& settings)
+{
+    std::unique_ptr<logistics::application::TrackingCodeGenerator> spGenerator;
+    if (settings.trackingCodes == "sequential")
+    {
+        spGenerator = std::make_unique<logistics::adapters::SequentialPkgCodeGenerator>();
+    }
+    else
+    {
+        spGenerator = std::make_unique<logistics::adapters::PublicTrackingCodeGenerator>();
+    }
+    return spGenerator;
 }
+} // namespace
 
 struct Application::Parts
 {
@@ -193,6 +226,7 @@ struct Application::Parts
         , zoneDirectory {logistics}
         , courierWorkload {routing}
         , shipments {connection}
+        , shipmentGroups {connection}
         , catalogs {connection}
         , routes {connection}
         , users {connection}
@@ -202,6 +236,7 @@ struct Application::Parts
         , idempotency {connection}
         , m_projector {logistics}
         , m_shipmentPersistence {shipments}
+        , m_shipmentGroupPersistence {shipmentGroups}
         , m_routePersistence {routes}
         , m_userPersistence {users}
         , m_catalogPersistence {catalogs}
@@ -217,12 +252,18 @@ struct Application::Parts
         , m_findUser {users}
         , m_listAuditEvents {audit}
         , m_countAuditEvents {audit}
-        , m_registerShipment {logistics, deliveryPoints, bus, clock}
+        , spTrackingCodes {trackingCodeGeneratorFor(settings)}
+        , m_registerShipment {logistics, deliveryPoints, identities, *spTrackingCodes, bus, clock}
         , m_classifyShipment {logistics, bus, clock}
         , m_rescheduleShipment {logistics, bus, clock}
         , m_deliverShipment {logistics, bus, clock}
         , m_dispatchNextShipment {logistics, bus, clock}
         , m_listPendingShipments {logistics}
+        , m_formShipmentGroup {logistics, identities, bus, clock}
+        , m_dissolveShipmentGroup {logistics, bus, clock}
+        , m_listShipmentGroups {logistics}
+        , m_getShipmentGroup {logistics}
+        , m_findShipmentGroupOfShipment {logistics}
         , m_listShipments {logistics}
         , m_findShipment {logistics}
         , m_getShipment {logistics}
@@ -241,15 +282,16 @@ struct Application::Parts
         , m_openSortingBatch {logistics, desk}
         , m_sortSortingBatch {desk}
         , m_prepareSortingBatch {desk}
-        , m_processSortingBatchItem {desk}
-        , m_returnProcessedItem {desk}
+        , m_processSortingBatchItem {desk, logistics.groups}
+        , m_returnProcessedItem {desk, logistics.groups}
         , m_getActiveSortingBatch {desk}
         , m_getSortingBatch {desk}
         , m_linearSearchInSortingBatch {desk}
         , m_binarySearchInSortingBatch {desk}
         , m_compareSortingBatchSearches {desk}
-        , m_assignDeliveryRoute {routing, desk, users, bus, clock}
+        , m_assignDeliveryRoute {routing, desk, logistics.groups, users, bus, clock}
         , m_resolveRouteStop {logistics, routing, bus, clock}
+        , m_confirmStopParcel {logistics, routing, bus, clock}
         , m_reassignDeliveryRoute {routing, users, bus, clock}
         , m_addRoadNode {routing, zoneDirectory, bus, clock}
         , m_updateRoadNode {routing, zoneDirectory, bus, clock}
@@ -271,6 +313,7 @@ struct Application::Parts
     {
         bus.subscribe(m_projector);
         bus.subscribe(m_shipmentPersistence);
+        bus.subscribe(m_shipmentGroupPersistence);
         bus.subscribe(m_routePersistence);
         bus.subscribe(m_userPersistence);
         bus.subscribe(m_catalogPersistence);
@@ -278,7 +321,7 @@ struct Application::Parts
         bus.subscribe(m_routeExport);
         bus.subscribe(m_auditLog);
         identity::application::AccessPolicyHydrator {policy}.hydrate(rolePermissions);
-        logistics::application::LogisticsHydrator {logistics}.hydrate(catalogs, shipments);
+        logistics::application::LogisticsHydrator {logistics}.hydrate(catalogs, shipments, shipmentGroups);
         routing::application::RoutingHydrator {routing}.hydrate(maps, routes);
         seeder.seedUsers();
         seeder.seedShipments();
@@ -288,102 +331,112 @@ struct Application::Parts
 
     void wire();
 
-    platform::Settings                                    settings;
-    platform::MySqlConnection                             connection;
-    shared::adapters::SystemClock                         clock;
-    identity::adapters::Argon2PasswordHasher              hasher;
-    identity::adapters::JwtTokenIssuer                    tokens;
-    routing::adapters::JsonFileRoutePlanExporter          fileExporter;
-    routing::adapters::FailureTolerantRoutePlanExporter   exporter;
-    shared::application::EventBus                         bus;
-    logistics::application::LogisticsModel                logistics;
-    routing::application::RoutingModel                    routing;
-    sorting::domain::SortingDesk                          desk;
-    logistics::adapters::RoadMapDeliveryPoints            deliveryPoints;
-    logistics::adapters::RoutingPlantOccupancy            occupancy;
-    routing::adapters::LogisticsZoneDirectory             zoneDirectory;
-    identity::adapters::RoutingCourierWorkload            courierWorkload;
-    identity::domain::AccessPolicy                        policy;
-    logistics::adapters::MySqlShipmentRepository          shipments;
-    logistics::adapters::MySqlCatalogRepository           catalogs;
-    routing::adapters::MySqlRouteRepository               routes;
-    identity::adapters::MySqlUserRepository               users;
-    identity::adapters::MySqlRolePermissionRepository     rolePermissions;
-    routing::adapters::MySqlRoadMapRepository             maps;
-    audit::adapters::MySqlAuditLog                        audit;
-    shared::adapters::MySqlIdempotencyStore               idempotency;
-    logistics::application::PendingShipmentsProjector     m_projector;
-    logistics::application::ShipmentPersistenceSubscriber m_shipmentPersistence;
-    routing::application::RoutePersistenceSubscriber      m_routePersistence;
-    identity::application::UserPersistenceSubscriber      m_userPersistence;
-    logistics::application::CatalogPersistenceSubscriber  m_catalogPersistence;
-    routing::application::RoadMapPersistenceSubscriber    m_roadMapPersistence;
-    routing::application::RoutePlanExportSubscriber       m_routeExport;
-    audit::application::AuditLogSubscriber                m_auditLog;
-    identity::application::SignIn                         m_signIn;
-    identity::application::Authenticate                   m_authenticate;
-    identity::application::RegisterUser                   m_registerUser;
-    identity::application::UpdateUser                     m_updateUser;
-    identity::application::ListUsers                      m_listUsers;
-    identity::application::ListCouriers                   m_listCouriers;
-    identity::application::FindUser                       m_findUser;
-    audit::application::ListAuditEvents                   m_listAuditEvents;
-    audit::application::CountAuditEvents                  m_countAuditEvents;
-    logistics::application::RegisterShipment              m_registerShipment;
-    logistics::application::ClassifyShipment              m_classifyShipment;
-    logistics::application::RescheduleShipment            m_rescheduleShipment;
-    logistics::application::DeliverShipment               m_deliverShipment;
-    logistics::application::DispatchNextShipment          m_dispatchNextShipment;
-    logistics::application::ListPendingShipments          m_listPendingShipments;
-    logistics::application::ListShipments                 m_listShipments;
-    logistics::application::FindShipment                  m_findShipment;
-    logistics::application::GetShipment                   m_getShipment;
-    logistics::application::SummarizeZone                 m_summarizeZone;
-    logistics::application::FindHeaviestShipment          m_findHeaviestShipment;
-    logistics::application::GetOperationsMetrics          m_getOperationsMetrics;
-    logistics::application::CreateZone                    m_createZone;
-    logistics::application::UpdateZone                    m_updateZone;
-    logistics::application::ListZones                     m_listZones;
-    logistics::application::CreateServiceLevel            m_createServiceLevel;
-    logistics::application::UpdateServiceLevel            m_updateServiceLevel;
-    logistics::application::ListServiceLevels             m_listServiceLevels;
-    logistics::application::CreateShipmentFeature         m_createShipmentFeature;
-    logistics::application::UpdateShipmentFeature         m_updateShipmentFeature;
-    logistics::application::ListShipmentFeatures          m_listShipmentFeatures;
-    sorting::application::OpenSortingBatch                m_openSortingBatch;
-    sorting::application::SortSortingBatch                m_sortSortingBatch;
-    sorting::application::PrepareSortingBatch             m_prepareSortingBatch;
-    sorting::application::ProcessSortingBatchItem         m_processSortingBatchItem;
-    sorting::application::ReturnProcessedItem             m_returnProcessedItem;
-    sorting::application::GetActiveSortingBatch           m_getActiveSortingBatch;
-    sorting::application::GetSortingBatch                 m_getSortingBatch;
-    sorting::application::LinearSearchInSortingBatch      m_linearSearchInSortingBatch;
-    sorting::application::BinarySearchInSortingBatch      m_binarySearchInSortingBatch;
-    sorting::application::CompareSortingBatchSearches     m_compareSortingBatchSearches;
-    routing::application::AssignDeliveryRoute             m_assignDeliveryRoute;
-    routing::application::ResolveRouteStop                m_resolveRouteStop;
-    routing::application::ReassignDeliveryRoute           m_reassignDeliveryRoute;
-    routing::application::AddRoadNode                     m_addRoadNode;
-    routing::application::UpdateRoadNode                  m_updateRoadNode;
-    routing::application::GetRoadMap                      m_getRoadMap;
-    routing::application::PreviewRoute                    m_previewRoute;
-    routing::application::ListRoutes                      m_listRoutes;
-    routing::adapters::LogisticsStopShipments             m_stopShipments;
-    routing::application::GetRoute                        m_getRoute;
-    routing::application::GetCourierRouteSheet            m_getCourierRouteSheet;
-    insights::application::LookupInBst                    m_lookupInBst;
-    insights::application::GetBst                         m_getBst;
-    insights::application::LookupInBPlusTree              m_lookupInBPlusTree;
-    insights::application::RangeInBPlusTree               m_rangeInBPlusTree;
-    insights::application::GetBPlusTree                   m_getBPlusTree;
-    insights::application::CompareShipmentStates          m_compareShipmentStates;
-    insights::application::GetCodeSet                     m_getCodeSet;
-    insights::application::CombineCodeSets                m_combineCodeSets;
-    DatasetSeeder                                         seeder;
-    httplib::Server                                       server;
-    std::mutex                                            mutex;
-    std::unique_ptr<platform::ApiRouter>                  router;
-    std::vector<std::unique_ptr<platform::Controller>>    controllers;
+    platform::Settings                                             settings;
+    platform::MySqlConnection                                      connection;
+    shared::adapters::SystemClock                                  clock;
+    identity::adapters::Argon2PasswordHasher                       hasher;
+    identity::adapters::JwtTokenIssuer                             tokens;
+    routing::adapters::JsonFileRoutePlanExporter                   fileExporter;
+    routing::adapters::FailureTolerantRoutePlanExporter            exporter;
+    shared::application::EventBus                                  bus;
+    shared::adapters::UuidV7IdentityGenerator                      identities;
+    logistics::application::LogisticsModel                         logistics;
+    routing::application::RoutingModel                             routing;
+    sorting::domain::SortingDesk                                   desk;
+    logistics::adapters::RoadMapDeliveryPoints                     deliveryPoints;
+    logistics::adapters::RoutingPlantOccupancy                     occupancy;
+    routing::adapters::LogisticsZoneDirectory                      zoneDirectory;
+    identity::adapters::RoutingCourierWorkload                     courierWorkload;
+    identity::domain::AccessPolicy                                 policy;
+    logistics::adapters::MySqlShipmentRepository                   shipments;
+    logistics::adapters::MySqlShipmentGroupRepository              shipmentGroups;
+    logistics::adapters::MySqlCatalogRepository                    catalogs;
+    routing::adapters::MySqlRouteRepository                        routes;
+    identity::adapters::MySqlUserRepository                        users;
+    identity::adapters::MySqlRolePermissionRepository              rolePermissions;
+    routing::adapters::MySqlRoadMapRepository                      maps;
+    audit::adapters::MySqlAuditLog                                 audit;
+    shared::adapters::MySqlIdempotencyStore                        idempotency;
+    logistics::application::PendingShipmentsProjector              m_projector;
+    logistics::application::ShipmentPersistenceSubscriber          m_shipmentPersistence;
+    logistics::application::ShipmentGroupPersistenceSubscriber     m_shipmentGroupPersistence;
+    routing::application::RoutePersistenceSubscriber               m_routePersistence;
+    identity::application::UserPersistenceSubscriber               m_userPersistence;
+    logistics::application::CatalogPersistenceSubscriber           m_catalogPersistence;
+    routing::application::RoadMapPersistenceSubscriber             m_roadMapPersistence;
+    routing::application::RoutePlanExportSubscriber                m_routeExport;
+    audit::application::AuditLogSubscriber                         m_auditLog;
+    identity::application::SignIn                                  m_signIn;
+    identity::application::Authenticate                            m_authenticate;
+    identity::application::RegisterUser                            m_registerUser;
+    identity::application::UpdateUser                              m_updateUser;
+    identity::application::ListUsers                               m_listUsers;
+    identity::application::ListCouriers                            m_listCouriers;
+    identity::application::FindUser                                m_findUser;
+    audit::application::ListAuditEvents                            m_listAuditEvents;
+    audit::application::CountAuditEvents                           m_countAuditEvents;
+    std::unique_ptr<logistics::application::TrackingCodeGenerator> spTrackingCodes;
+    logistics::application::RegisterShipment                       m_registerShipment;
+    logistics::application::ClassifyShipment                       m_classifyShipment;
+    logistics::application::RescheduleShipment                     m_rescheduleShipment;
+    logistics::application::DeliverShipment                        m_deliverShipment;
+    logistics::application::DispatchNextShipment                   m_dispatchNextShipment;
+    logistics::application::ListPendingShipments                   m_listPendingShipments;
+    logistics::application::FormShipmentGroup                      m_formShipmentGroup;
+    logistics::application::DissolveShipmentGroup                  m_dissolveShipmentGroup;
+    logistics::application::ListShipmentGroups                     m_listShipmentGroups;
+    logistics::application::GetShipmentGroup                       m_getShipmentGroup;
+    logistics::application::FindShipmentGroupOfShipment            m_findShipmentGroupOfShipment;
+    logistics::application::ListShipments                          m_listShipments;
+    logistics::application::FindShipment                           m_findShipment;
+    logistics::application::GetShipment                            m_getShipment;
+    logistics::application::SummarizeZone                          m_summarizeZone;
+    logistics::application::FindHeaviestShipment                   m_findHeaviestShipment;
+    logistics::application::GetOperationsMetrics                   m_getOperationsMetrics;
+    logistics::application::CreateZone                             m_createZone;
+    logistics::application::UpdateZone                             m_updateZone;
+    logistics::application::ListZones                              m_listZones;
+    logistics::application::CreateServiceLevel                     m_createServiceLevel;
+    logistics::application::UpdateServiceLevel                     m_updateServiceLevel;
+    logistics::application::ListServiceLevels                      m_listServiceLevels;
+    logistics::application::CreateShipmentFeature                  m_createShipmentFeature;
+    logistics::application::UpdateShipmentFeature                  m_updateShipmentFeature;
+    logistics::application::ListShipmentFeatures                   m_listShipmentFeatures;
+    sorting::application::OpenSortingBatch                         m_openSortingBatch;
+    sorting::application::SortSortingBatch                         m_sortSortingBatch;
+    sorting::application::PrepareSortingBatch                      m_prepareSortingBatch;
+    sorting::application::ProcessSortingBatchItem                  m_processSortingBatchItem;
+    sorting::application::ReturnProcessedItem                      m_returnProcessedItem;
+    sorting::application::GetActiveSortingBatch                    m_getActiveSortingBatch;
+    sorting::application::GetSortingBatch                          m_getSortingBatch;
+    sorting::application::LinearSearchInSortingBatch               m_linearSearchInSortingBatch;
+    sorting::application::BinarySearchInSortingBatch               m_binarySearchInSortingBatch;
+    sorting::application::CompareSortingBatchSearches              m_compareSortingBatchSearches;
+    routing::application::AssignDeliveryRoute                      m_assignDeliveryRoute;
+    routing::application::ResolveRouteStop                         m_resolveRouteStop;
+    routing::application::ConfirmStopParcel                        m_confirmStopParcel;
+    routing::application::ReassignDeliveryRoute                    m_reassignDeliveryRoute;
+    routing::application::AddRoadNode                              m_addRoadNode;
+    routing::application::UpdateRoadNode                           m_updateRoadNode;
+    routing::application::GetRoadMap                               m_getRoadMap;
+    routing::application::PreviewRoute                             m_previewRoute;
+    routing::application::ListRoutes                               m_listRoutes;
+    routing::adapters::LogisticsStopShipments                      m_stopShipments;
+    routing::application::GetRoute                                 m_getRoute;
+    routing::application::GetCourierRouteSheet                     m_getCourierRouteSheet;
+    insights::application::LookupInBst                             m_lookupInBst;
+    insights::application::GetBst                                  m_getBst;
+    insights::application::LookupInBPlusTree                       m_lookupInBPlusTree;
+    insights::application::RangeInBPlusTree                        m_rangeInBPlusTree;
+    insights::application::GetBPlusTree                            m_getBPlusTree;
+    insights::application::CompareShipmentStates                   m_compareShipmentStates;
+    insights::application::GetCodeSet                              m_getCodeSet;
+    insights::application::CombineCodeSets                         m_combineCodeSets;
+    DatasetSeeder                                                  seeder;
+    httplib::Server                                                server;
+    std::mutex                                                     mutex;
+    std::unique_ptr<platform::ApiRouter>                           router;
+    std::vector<std::unique_ptr<platform::Controller>>             controllers;
 };
 
 void Application::Parts::wire()
@@ -398,8 +451,12 @@ void Application::Parts::wire()
     controllers.push_back(std::make_unique<identity::adapters::UserController>(
         identity::adapters::UserUseCases {m_registerUser, m_updateUser, m_listUsers, m_listCouriers, m_findUser}));
     controllers.push_back(std::make_unique<audit::adapters::AuditController>(m_listAuditEvents, m_countAuditEvents));
-    controllers.push_back(std::make_unique<logistics::adapters::ShipmentController>(
-        logistics::adapters::ShipmentUseCases {m_registerShipment, m_listShipments, m_findShipment, m_getShipment}));
+    controllers.push_back(
+        std::make_unique<logistics::adapters::ShipmentController>(logistics::adapters::ShipmentUseCases {
+            m_registerShipment, m_listShipments, m_findShipment, m_getShipment, m_findShipmentGroupOfShipment}));
+    controllers.push_back(
+        std::make_unique<logistics::adapters::ShipmentGroupController>(logistics::adapters::ShipmentGroupUseCases {
+            m_formShipmentGroup, m_dissolveShipmentGroup, m_listShipmentGroups, m_getShipmentGroup}));
     controllers.push_back(
         std::make_unique<logistics::adapters::MovementController>(logistics::adapters::MovementUseCases {
             m_classifyShipment, m_rescheduleShipment, m_deliverShipment, m_getShipment}));
@@ -431,6 +488,7 @@ void Application::Parts::wire()
     controllers.push_back(std::make_unique<routing::adapters::RouteController>(
         routing::adapters::RouteUseCases {m_assignDeliveryRoute,
                                           m_resolveRouteStop,
+                                          m_confirmStopParcel,
                                           m_reassignDeliveryRoute,
                                           m_listRoutes,
                                           m_getRoute,

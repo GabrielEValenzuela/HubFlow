@@ -16,8 +16,10 @@ public:
     DeliverShipment(LogisticsModel& model, shared::application::EventBus& bus, const shared::application::Clock& clock);
 
 private:
-    const domain::Shipment&
-    execute(const shared::application::Principal& principal, const std::string& code, const std::string& note) override;
+    const domain::Shipment& execute(const shared::application::Principal& principal,
+                                    const std::string&                    code,
+                                    const std::string&                    note,
+                                    bool                                  confirmAllParcels) override;
 
     LogisticsModel&                   m_model;
     shared::application::EventBus&    m_bus;

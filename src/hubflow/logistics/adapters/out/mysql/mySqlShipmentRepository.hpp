@@ -7,7 +7,7 @@
 namespace hubflow::logistics::adapters
 {
 
-/// @brief Envíos y movimientos en las tablas @c shipments y @c movements.
+/// @brief Envíos, bultos y movimientos en las tablas @c shipments, @c parcels y @c movements.
 class MySqlShipmentRepository final : public application::ShipmentRepository
 {
 public:

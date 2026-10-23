@@ -38,6 +38,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-hubflow-dev-pass}
       HUBFLOW_JWT_SECRET: ${HUBFLOW_JWT_SECRET:?defina HUBFLOW_JWT_SECRET en .env}
       HUBFLOW_SEED_PASSWORD: ${HUBFLOW_SEED_PASSWORD:-hubflow123}
+      HUBFLOW_TRACKING_CODES: ${HUBFLOW_TRACKING_CODES:-public}
     ports:
       - "${HUBFLOW_HTTP_PORT:-8480}:8080"
     volumes:

@@ -17,8 +17,22 @@ using platform::SqlColumns;
 using shared::application::Vocabulary;
 
 constexpr const char* INSERT_SHIPMENT {R"SQL(
-    INSERT INTO shipments (code, recipient, zone, weight_kg, service, delivery_point, status, attempts, state_bits, queue_ticket)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO shipments (id, tracking_code, recipient, zone, weight_kg, service, delivery_point, status, attempts, state_bits, queue_ticket)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+)SQL"};
+
+constexpr const char* INSERT_PARCEL {R"SQL(
+    INSERT INTO parcels (shipment_id, ordinal, weight_kg, length_cm, width_cm, height_cm, delivered)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+)SQL"};
+
+constexpr const char* UPDATE_PARCEL {R"SQL(
+    UPDATE parcels SET delivered = ? WHERE shipment_id = ? AND ordinal = ?
+)SQL"};
+
+constexpr const char* SELECT_PARCELS {R"SQL(
+    SELECT shipment_id, ordinal, weight_kg, length_cm, width_cm, height_cm, delivered
+    FROM parcels ORDER BY shipment_id, ordinal
 )SQL"};
 
 constexpr const char* INSERT_FEATURE_LINK {R"SQL(
@@ -30,7 +44,7 @@ constexpr const char* SELECT_FEATURE_LINKS {R"SQL(
 )SQL"};
 
 constexpr const char* UPDATE_SHIPMENT {R"SQL(
-    UPDATE shipments SET status = ?, attempts = ?, state_bits = ?, queue_ticket = ? WHERE code = ?
+    UPDATE shipments SET status = ?, attempts = ?, state_bits = ?, queue_ticket = ? WHERE id = ?
 )SQL"};
 
 constexpr const char* INSERT_MOVEMENT {R"SQL(
@@ -38,7 +52,7 @@ constexpr const char* INSERT_MOVEMENT {R"SQL(
 )SQL"};
 
 constexpr const char* SELECT_SHIPMENTS {R"SQL(
-    SELECT code, recipient, zone, weight_kg, service, delivery_point, status, attempts, state_bits, queue_ticket
+    SELECT id, tracking_code, recipient, zone, service, delivery_point, status, attempts, state_bits, queue_ticket
     FROM shipments
 )SQL"};
 
@@ -54,11 +68,17 @@ MySqlShipmentRepository::MySqlShipmentRepository(platform::MySqlConnection& conn
 
 void MySqlShipmentRepository::add(const ShipmentState& state)
 {
+    double totalKg {0.0};
+    for (std::size_t i = 0; i < state.draft.parcels.size(); ++i)
+    {
+        totalKg += state.draft.parcels[i].weightKg;
+    }
     m_connection.execute(INSERT_SHIPMENT,
-                         {state.draft.code,
+                         {state.draft.id,
+                          state.draft.code,
                           state.draft.recipient,
                           state.draft.zone,
-                          state.draft.weightKg,
+                          totalKg,
                           state.draft.service,
                           state.draft.deliveryPoint,
                           Vocabulary::name(state.status),
@@ -69,6 +89,18 @@ void MySqlShipmentRepository::add(const ShipmentState& state)
     {
         m_connection.execute(INSERT_FEATURE_LINK, {state.draft.code, state.draft.features[i]});
     }
+    for (std::size_t i = 0; i < state.draft.parcels.size(); ++i)
+    {
+        const auto& parcel = state.draft.parcels[i];
+        m_connection.execute(INSERT_PARCEL,
+                             {state.draft.id,
+                              std::uint64_t {i + 1},
+                              parcel.weightKg,
+                              parcel.lengthCm,
+                              parcel.widthCm,
+                              parcel.heightCm,
+                              std::uint64_t {parcel.delivered ? 1U : 0U}});
+    }
 }
 
 void MySqlShipmentRepository::update(const ShipmentState& state)
@@ -78,7 +110,13 @@ void MySqlShipmentRepository::update(const ShipmentState& state)
                           std::uint64_t {state.attempts},
                           std::uint64_t {state.stateBits},
                           state.ticket,
-                          state.draft.code});
+                          state.draft.id});
+    for (std::size_t i = 0; i < state.draft.parcels.size(); ++i)
+    {
+        m_connection.execute(
+            UPDATE_PARCEL,
+            {std::uint64_t {state.draft.parcels[i].delivered ? 1U : 0U}, state.draft.id, std::uint64_t {i + 1}});
+    }
 }
 
 void MySqlShipmentRepository::appendMovement(const std::string& code, const Movement& movement)
@@ -99,13 +137,22 @@ void MySqlShipmentRepository::loadAll(application::ShipmentRestorer& restorer) c
     {
         featuresByShipment[SqlColumns::text(row, 0)].push_back(SqlColumns::text(row, 1));
     }
+    std::map<std::string, std::vector<domain::ParcelData>> parcelsByShipment;
+    for (const auto& row : m_connection.query(SELECT_PARCELS))
+    {
+        parcelsByShipment[SqlColumns::text(row, 0)].push_back(domain::ParcelData {SqlColumns::decimal(row, 2),
+                                                                                  SqlColumns::decimal(row, 3),
+                                                                                  SqlColumns::decimal(row, 4),
+                                                                                  SqlColumns::decimal(row, 5),
+                                                                                  SqlColumns::flag(row, 6)});
+    }
     for (const auto& row : m_connection.query(SELECT_SHIPMENTS))
     {
         ShipmentState state;
-        state.draft.code          = SqlColumns::text(row, 0);
-        state.draft.recipient     = SqlColumns::text(row, 1);
-        state.draft.zone          = SqlColumns::text(row, 2);
-        state.draft.weightKg      = SqlColumns::decimal(row, 3);
+        state.draft.id            = SqlColumns::text(row, 0);
+        state.draft.code          = SqlColumns::text(row, 1);
+        state.draft.recipient     = SqlColumns::text(row, 2);
+        state.draft.zone          = SqlColumns::text(row, 3);
         state.draft.service       = SqlColumns::text(row, 4);
         state.draft.deliveryPoint = SqlColumns::text(row, 5);
         state.status              = SqlColumns::term(Vocabulary::shipmentStatus(SqlColumns::text(row, 6)), "status");
@@ -115,6 +162,10 @@ void MySqlShipmentRepository::loadAll(application::ShipmentRestorer& restorer) c
         for (const auto& feature : featuresByShipment[state.draft.code])
         {
             state.draft.features.pushBack(feature);
+        }
+        for (const auto& parcel : parcelsByShipment[state.draft.id])
+        {
+            state.draft.parcels.pushBack(parcel);
         }
         restorer.restoreShipment(state);
     }

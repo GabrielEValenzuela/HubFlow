@@ -8,10 +8,18 @@ LogisticsHydrator::LogisticsHydrator(LogisticsModel& model)
 {
 }
 
-void LogisticsHydrator::hydrate(const CatalogRepository& catalogs, const ShipmentRepository& shipments)
+void LogisticsHydrator::hydrate(const CatalogRepository&       catalogs,
+                                const ShipmentRepository&      shipments,
+                                const ShipmentGroupRepository& groups)
 {
     catalogs.loadAll(*this);
     shipments.loadAll(*this);
+    groups.loadAll(*this);
+}
+
+void LogisticsHydrator::restoreGroup(const domain::ShipmentGroupState& state)
+{
+    m_model.groups.adopt(domain::ShipmentGroup::restore(state));
 }
 
 void LogisticsHydrator::restoreZone(const domain::ZoneState& state)
