@@ -57,6 +57,8 @@ Json LogisticsJsonPresenter::shipmentSummary(const domain::Shipment& shipment)
     return Json {{"id", shipment.id()},
                  {"code", shipment.code()},
                  {"recipient", shipment.recipient()},
+                 {"recipientPhone", shipment.contact().phone().digits()},
+                 {"recipientPostalCode", shipment.contact().postalCode().value()},
                  {"zone", shipment.zone()},
                  {"weightKg", rounded(shipment.weightKg())},
                  {"realWeightKg", rounded(shipment.realWeightKg())},

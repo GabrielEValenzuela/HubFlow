@@ -17,8 +17,8 @@ using platform::SqlColumns;
 using shared::application::Vocabulary;
 
 constexpr const char* INSERT_SHIPMENT {R"SQL(
-    INSERT INTO shipments (id, tracking_code, recipient, zone, weight_kg, service, delivery_point, status, attempts, state_bits, queue_ticket)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO shipments (id, tracking_code, recipient, recipient_phone, recipient_postal_code, zone, weight_kg, service, delivery_point, status, attempts, state_bits, queue_ticket)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 )SQL"};
 
 constexpr const char* INSERT_PARCEL {R"SQL(
@@ -52,7 +52,8 @@ constexpr const char* INSERT_MOVEMENT {R"SQL(
 )SQL"};
 
 constexpr const char* SELECT_SHIPMENTS {R"SQL(
-    SELECT id, tracking_code, recipient, zone, service, delivery_point, status, attempts, state_bits, queue_ticket
+    SELECT id, tracking_code, recipient, recipient_phone, recipient_postal_code, zone, service, delivery_point, status,
+           attempts, state_bits, queue_ticket
     FROM shipments
 )SQL"};
 
@@ -77,6 +78,8 @@ void MySqlShipmentRepository::add(const ShipmentState& state)
                          {state.draft.id,
                           state.draft.code,
                           state.draft.recipient,
+                          state.draft.recipientPhone,
+                          state.draft.recipientPostalCode,
                           state.draft.zone,
                           totalKg,
                           state.draft.service,
@@ -149,16 +152,18 @@ void MySqlShipmentRepository::loadAll(application::ShipmentRestorer& restorer) c
     for (const auto& row : m_connection.query(SELECT_SHIPMENTS))
     {
         ShipmentState state;
-        state.draft.id            = SqlColumns::text(row, 0);
-        state.draft.code          = SqlColumns::text(row, 1);
-        state.draft.recipient     = SqlColumns::text(row, 2);
-        state.draft.zone          = SqlColumns::text(row, 3);
-        state.draft.service       = SqlColumns::text(row, 4);
-        state.draft.deliveryPoint = SqlColumns::text(row, 5);
-        state.status              = SqlColumns::term(Vocabulary::shipmentStatus(SqlColumns::text(row, 6)), "status");
-        state.attempts            = static_cast<std::uint32_t>(SqlColumns::unsignedNumber(row, 7));
-        state.stateBits           = static_cast<std::uint32_t>(SqlColumns::unsignedNumber(row, 8));
-        state.ticket              = SqlColumns::unsignedNumber(row, 9);
+        state.draft.id                  = SqlColumns::text(row, 0);
+        state.draft.code                = SqlColumns::text(row, 1);
+        state.draft.recipient           = SqlColumns::text(row, 2);
+        state.draft.recipientPhone      = SqlColumns::text(row, 3);
+        state.draft.recipientPostalCode = SqlColumns::text(row, 4);
+        state.draft.zone                = SqlColumns::text(row, 5);
+        state.draft.service             = SqlColumns::text(row, 6);
+        state.draft.deliveryPoint       = SqlColumns::text(row, 7);
+        state.status    = SqlColumns::term(Vocabulary::shipmentStatus(SqlColumns::text(row, 8)), "status");
+        state.attempts  = static_cast<std::uint32_t>(SqlColumns::unsignedNumber(row, 9));
+        state.stateBits = static_cast<std::uint32_t>(SqlColumns::unsignedNumber(row, 10));
+        state.ticket    = SqlColumns::unsignedNumber(row, 11);
         for (const auto& feature : featuresByShipment[state.draft.code])
         {
             state.draft.features.pushBack(feature);

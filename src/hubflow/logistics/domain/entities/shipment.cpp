@@ -13,7 +13,7 @@ constexpr const char* RECEPTION_NOTE {"Ingreso al centro de distribución"};
 Shipment::Shipment(const ShipmentDraft& draft, const QueueTicket& ticket)
     : m_id {draft.id}
     , m_code {draft.code}
-    , m_recipient {draft.recipient}
+    , m_recipient {draft.recipient, draft.recipientPhone, draft.recipientPostalCode}
     , m_zone {draft.zone}
     , m_service {draft.service}
     , m_deliveryPoint {draft.deliveryPoint}
@@ -185,6 +185,11 @@ const std::string& Shipment::recipient() const noexcept
     return m_recipient.name();
 }
 
+const Recipient& Shipment::contact() const noexcept
+{
+    return m_recipient;
+}
+
 const std::string& Shipment::zone() const noexcept
 {
     return m_zone.value();
@@ -298,7 +303,16 @@ ShipmentState Shipment::state() const
         parcels.pushBack(m_parcels[i]->data());
     }
     return ShipmentState {
-        ShipmentDraft {id(), code(), recipient(), zone(), service(), deliveryPoint(), m_features, parcels},
+        ShipmentDraft {id(),
+                       code(),
+                       recipient(),
+                       m_recipient.phone().digits(),
+                       m_recipient.postalCode().value(),
+                       zone(),
+                       service(),
+                       deliveryPoint(),
+                       m_features,
+                       parcels},
         m_status,
         m_attempts,
         m_stateHistory.raw(),

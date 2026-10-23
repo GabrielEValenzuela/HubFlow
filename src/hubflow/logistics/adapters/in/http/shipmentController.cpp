@@ -103,10 +103,12 @@ platform::HttpResponse ShipmentController::registerShipment(const RequestContext
 {
     auto                  input = InputValidator::body(context.request);
     domain::ShipmentDraft draft;
-    draft.recipient     = input.requiredText("recipient", 2, 80);
-    draft.zone          = input.code("zone");
-    draft.service       = input.code("service");
-    draft.deliveryPoint = input.requiredText("deliveryPoint", 1, 16);
+    draft.recipient           = input.requiredText("recipient", 2, 80);
+    draft.recipientPhone      = input.phone("recipientPhone");
+    draft.recipientPostalCode = input.postalCode("recipientPostalCode");
+    draft.zone                = input.code("zone");
+    draft.service             = input.code("service");
+    draft.deliveryPoint       = input.requiredText("deliveryPoint", 1, 16);
     for (const auto& feature : input.optionalCodes("features"))
     {
         draft.features.pushBack(feature);

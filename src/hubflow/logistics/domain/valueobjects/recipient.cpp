@@ -25,8 +25,10 @@ std::string trim(const std::string& text)
 }
 } // namespace
 
-Recipient::Recipient(const std::string& name)
+Recipient::Recipient(const std::string& name, const std::string& phone, const std::string& postalCode)
     : m_name {trim(name)}
+    , m_phone {phone}
+    , m_postalCode {postalCode}
 {
     if (m_name.size() < MIN_NAME_LENGTH || m_name.size() > MAX_NAME_LENGTH)
     {
@@ -39,6 +41,21 @@ Recipient::Recipient(const std::string& name)
 const std::string& Recipient::name() const noexcept
 {
     return m_name;
+}
+
+const Phone& Recipient::phone() const noexcept
+{
+    return m_phone;
+}
+
+const PostalCode& Recipient::postalCode() const noexcept
+{
+    return m_postalCode;
+}
+
+std::string Recipient::firstName() const
+{
+    return m_name.substr(0, m_name.find(' '));
 }
 
 } // namespace hubflow::logistics::domain

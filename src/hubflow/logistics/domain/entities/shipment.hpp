@@ -22,13 +22,16 @@ namespace hubflow::logistics::domain
  * @brief Datos de alta de un envío. Zona, servicio y características se indican por su código de catálogo.
  *
  * @c id es la identidad interna (UUID versión 7) y @c code el código de seguimiento público; ambos los asigna el
- * sistema al registrar. El envío tiene de 1 a 20 bultos y su peso es el de sus bultos.
+ * sistema al registrar. El destinatario se indica con nombre, teléfono y código postal. El envío tiene de 1 a 20 bultos
+ * y su peso es el de sus bultos.
  */
 struct ShipmentDraft
 {
     std::string                   id;
     std::string                   code;
     std::string                   recipient;
+    std::string                   recipientPhone;
+    std::string                   recipientPostalCode;
     std::string                   zone;
     std::string                   service;
     std::string                   deliveryPoint;
@@ -111,6 +114,10 @@ public:
     const std::string& id() const noexcept;
     const std::string& code() const noexcept;
     const std::string& recipient() const noexcept;
+
+    /// @brief El destinatario completo: nombre, teléfono y código postal.
+    const Recipient& contact() const noexcept;
+
     const std::string& zone() const noexcept;
 
     /// @brief Peso con el que se ordena, resume y factura el envío: la suma del peso facturable de sus bultos.
