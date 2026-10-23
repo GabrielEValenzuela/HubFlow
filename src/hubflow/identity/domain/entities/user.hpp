@@ -1,6 +1,7 @@
 #ifndef HUBFLOW_IDENTITY_DOMAIN_ENTITIES_USER_HPP
 #define HUBFLOW_IDENTITY_DOMAIN_ENTITIES_USER_HPP
 
+#include "hubflow/identity/domain/services/courierWorkload.hpp"
 #include "hubflow/identity/domain/services/passwordHasher.hpp"
 #include "hubflow/identity/domain/valueobjects/email.hpp"
 #include "hubflow/identity/domain/valueobjects/role.hpp"
@@ -48,8 +49,19 @@ public:
     bool authenticates(const std::string& plainPassword, const PasswordHasher& hasher) const;
 
     void rename(const std::string& name, const shared::domain::ActorContext& context);
-    void assignRole(Role role, const shared::domain::ActorContext& context);
-    void activate(bool active, const shared::domain::ActorContext& context);
+
+    /**
+     * @brief Cambia el rol.
+     * @throws business_error (Conflict) si es un chofer con un reparto en curso y el nuevo rol deja de ser chofer.
+     */
+    void assignRole(Role role, const CourierWorkload& workload, const shared::domain::ActorContext& context);
+
+    /**
+     * @brief Habilita o desactiva al usuario.
+     * @throws business_error (Conflict) si se desactiva a sí mismo, o si es un chofer con un reparto en curso: primero
+     * hay que pasar su ruta a otro chofer.
+     */
+    void activate(bool active, const CourierWorkload& workload, const shared::domain::ActorContext& context);
     void changePassword(const std::string&                  plainPassword,
                         const PasswordHasher&               hasher,
                         const shared::domain::ActorContext& context);
@@ -65,6 +77,7 @@ private:
     explicit User(UserState state);
 
     static std::string validName(const std::string& name);
+    void               ensureNoRouteInProgress(const CourierWorkload& workload) const;
     static std::string validPassword(const std::string& plainPassword);
 
     void announceChange(const shared::domain::ActorContext& context);

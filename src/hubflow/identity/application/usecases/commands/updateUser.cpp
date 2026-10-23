@@ -9,10 +9,12 @@ namespace hubflow::identity::application
 
 UpdateUser::UpdateUser(const UserRepository&             users,
                        const domain::PasswordHasher&     hasher,
+                       const domain::CourierWorkload&    workload,
                        shared::application::EventBus&    bus,
                        const shared::application::Clock& clock)
     : m_users {users}
     , m_hasher {hasher}
+    , m_workload {workload}
     , m_bus {bus}
     , m_clock {clock}
 {
@@ -38,11 +40,11 @@ domain::UserState UpdateUser::execute(const shared::application::Principal& prin
     }
     if (request.role.has_value())
     {
-        user.assignRole(*request.role, context);
+        user.assignRole(*request.role, m_workload, context);
     }
     if (request.active.has_value())
     {
-        user.activate(*request.active, context);
+        user.activate(*request.active, m_workload, context);
     }
     if (request.password.has_value())
     {

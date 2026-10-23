@@ -5,21 +5,36 @@
 namespace hubflow::identity::domain
 {
 
-bool AccessPolicy::allows(const Role role, const Permission permission) noexcept
+void AccessPolicy::grant(const Role role, const Permission permission)
 {
-    const bool operatorAllowed {role == Role::Operador && permission != Permission::ManageUsers &&
-                                permission != Permission::ViewAudit};
-    const bool courierAllowed {role == Role::Pum && permission == Permission::ResolveStops};
-    return role == Role::Admin || operatorAllowed || courierAllowed;
+    if (!allows(role, permission))
+    {
+        m_grants.pushBack(Grant {role, permission});
+    }
 }
 
-void AccessPolicy::require(const Role role, const Permission permission)
+bool AccessPolicy::allows(const Role role, const Permission permission) const
+{
+    bool found {false};
+    for (std::size_t i = 0; i < m_grants.size() && !found; ++i)
+    {
+        found = m_grants[i].role == role && m_grants[i].permission == permission;
+    }
+    return found;
+}
+
+void AccessPolicy::require(const Role role, const Permission permission) const
 {
     if (!allows(role, permission))
     {
         throw shared::domain::business_error {
             shared::domain::ErrorKind::Forbidden, "auth.forbidden", "No tenés permiso para esta operación"};
     }
+}
+
+std::size_t AccessPolicy::grantCount() const noexcept
+{
+    return m_grants.size();
 }
 
 } // namespace hubflow::identity::domain

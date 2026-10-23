@@ -30,7 +30,8 @@ struct UpdateUserRequest
  * @par Errores
  * - Forbidden: el solicitante no es ADMIN.
  * - NotFound: el usuario no existe.
- * - Conflict: un administrador no puede desactivarse a sí mismo.
+ * - Conflict: un administrador no puede desactivarse a sí mismo, y un chofer con un reparto en curso no se puede
+ *   desactivar ni cambiar de puesto hasta que su ruta se pase a otro chofer.
  * - Validation: datos inválidos.
  *
  * @par Idempotencia

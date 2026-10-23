@@ -50,18 +50,26 @@ void User::rename(const std::string& name, const shared::domain::ActorContext& c
     announceChange(context);
 }
 
-void User::assignRole(const Role role, const shared::domain::ActorContext& context)
+void User::assignRole(const Role role, const CourierWorkload& workload, const shared::domain::ActorContext& context)
 {
+    if (role != Role::Pum)
+    {
+        ensureNoRouteInProgress(workload);
+    }
     m_state.role = role;
     announceChange(context);
 }
 
-void User::activate(const bool active, const shared::domain::ActorContext& context)
+void User::activate(const bool active, const CourierWorkload& workload, const shared::domain::ActorContext& context)
 {
     if (!active && context.userId == m_state.id)
     {
         throw shared::domain::business_error {
             shared::domain::ErrorKind::Conflict, "user.self_deactivation", "No podés desactivar tu propio usuario"};
+    }
+    if (!active)
+    {
+        ensureNoRouteInProgress(workload);
     }
     m_state.active = active;
     announceChange(context);
@@ -73,6 +81,17 @@ void User::changePassword(const std::string&                  plainPassword,
 {
     m_state.passwordHash = hasher.hash(validPassword(plainPassword));
     announceChange(context);
+}
+
+void User::ensureNoRouteInProgress(const CourierWorkload& workload) const
+{
+    if (m_state.role == Role::Pum && workload.hasRouteInProgress(m_state.id))
+    {
+        throw shared::domain::business_error {
+            shared::domain::ErrorKind::Conflict,
+            "user.has_route_in_progress",
+            "Tiene un reparto en curso: pasá su ruta a otro chofer antes de desactivarlo o cambiarle el puesto"};
+    }
 }
 
 std::string User::validName(const std::string& name)

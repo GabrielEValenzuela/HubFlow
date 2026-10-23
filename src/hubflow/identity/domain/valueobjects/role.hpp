@@ -12,7 +12,7 @@ enum class Role
     Pum
 };
 
-/// @brief Acciones del negocio sujetas a autorización.
+/// @brief Acciones del negocio sujetas a autorización. Qué rol puede cada una es un dato (ver AccessPolicy).
 enum class Permission
 {
     ManageUsers,
@@ -21,7 +21,8 @@ enum class Permission
     AssignRoutes,
     ResolveStops,
     ViewIndexes,
-    ViewAudit
+    ViewAudit,
+    ManageCatalogs
 };
 
 } // namespace hubflow::identity::domain
