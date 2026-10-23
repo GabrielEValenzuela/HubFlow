@@ -1,14 +1,16 @@
-#include "infrastructure/persistence/mysql/mySqlUserRepository.hpp"
+#include "hubflow/identity/adapters/out/mysql/mySqlUserRepository.hpp"
 
-#include "application/shared/vocabulary.hpp"
-#include "infrastructure/persistence/mysql/sqlConversions.hpp"
+#include "hubflow/platform/mysql/sqlColumns.hpp"
+#include "hubflow/shared/application/vocabulary.hpp"
 
-namespace hubflow::infrastructure
+namespace hubflow::identity::adapters
 {
 namespace
 {
-using application::Vocabulary;
-using domain::identity::UserState;
+using domain::UserState;
+using platform::SqlColumns;
+using platform::SqlRow;
+using shared::application::Vocabulary;
 
 constexpr const char* USER_COLUMNS {"SELECT id, email, name, role, password_hash, active FROM users"};
 
@@ -23,17 +25,6 @@ constexpr const char* UPDATE_USER {R"SQL(
 )SQL"};
 
 constexpr const char* COUNT_USERS {"SELECT COUNT(*) FROM users"};
-
-constexpr const char* INSERT_AUDIT {R"SQL(
-    INSERT INTO audit_events (occurred_at, actor_id, actor_name, type, subject, detail) VALUES (?, ?, ?, ?, ?, ?)
-)SQL"};
-
-constexpr const char* SELECT_AUDIT {R"SQL(
-    SELECT id, occurred_at, actor_id, actor_name, type, subject, detail
-    FROM audit_events ORDER BY id DESC LIMIT ? OFFSET ?
-)SQL"};
-
-constexpr const char* COUNT_AUDIT {"SELECT COUNT(*) FROM audit_events"};
 
 UserState toUser(const SqlRow& row)
 {
@@ -51,7 +42,7 @@ std::optional<UserState> firstUser(const std::vector<SqlRow>& rows)
 }
 } // namespace
 
-MySqlUserRepository::MySqlUserRepository(MySqlConnection& connection)
+MySqlUserRepository::MySqlUserRepository(platform::MySqlConnection& connection)
     : m_connection {connection}
 {
 }
@@ -89,7 +80,7 @@ std::optional<UserState> MySqlUserRepository::byEmail(const std::string& email) 
     return firstUser(m_connection.query(std::string {USER_COLUMNS} + " WHERE email = ?", {email}));
 }
 
-void MySqlUserRepository::forEach(domain::identity::UserVisitor& visitor) const
+void MySqlUserRepository::forEach(application::UserVisitor& visitor) const
 {
     for (const auto& row : m_connection.query(std::string {USER_COLUMNS} + " ORDER BY id"))
     {
@@ -102,41 +93,4 @@ std::size_t MySqlUserRepository::count() const
     return SqlColumns::unsignedNumber(m_connection.query(COUNT_USERS).front(), 0);
 }
 
-MySqlAuditTrail::MySqlAuditTrail(MySqlConnection& connection)
-    : m_connection {connection}
-{
-}
-
-void MySqlAuditTrail::append(const application::AuditEntry& entry)
-{
-    m_connection.execute(INSERT_AUDIT,
-                         {std::int64_t {entry.occurredAt},
-                          entry.actorId,
-                          entry.actorName,
-                          entry.type,
-                          entry.subject,
-                          entry.detail});
-}
-
-void MySqlAuditTrail::forEachRecent(const std::size_t               limit,
-                                    const std::size_t               offset,
-                                    application::AuditEntryVisitor& visitor) const
-{
-    for (const auto& row : m_connection.query(SELECT_AUDIT, {std::uint64_t {limit}, std::uint64_t {offset}}))
-    {
-        visitor.visit(application::AuditEntry {SqlColumns::unsignedNumber(row, 0),
-                                               SqlColumns::signedNumber(row, 1),
-                                               SqlColumns::unsignedNumber(row, 2),
-                                               SqlColumns::text(row, 3),
-                                               SqlColumns::text(row, 4),
-                                               SqlColumns::text(row, 5),
-                                               SqlColumns::text(row, 6)});
-    }
-}
-
-std::size_t MySqlAuditTrail::count() const
-{
-    return SqlColumns::unsignedNumber(m_connection.query(COUNT_AUDIT).front(), 0);
-}
-
-} // namespace hubflow::infrastructure
+} // namespace hubflow::identity::adapters

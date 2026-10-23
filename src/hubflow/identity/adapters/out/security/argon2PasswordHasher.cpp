@@ -1,10 +1,9 @@
-#include "infrastructure/security/argon2PasswordHasher.hpp"
+#include "hubflow/identity/adapters/out/security/argon2PasswordHasher.hpp"
 
 #include <sodium.h>
-
 #include <stdexcept>
 
-namespace hubflow::infrastructure
+namespace hubflow::identity::adapters
 {
 
 Argon2PasswordHasher::Argon2PasswordHasher()
@@ -35,4 +34,4 @@ bool Argon2PasswordHasher::verify(const std::string& plainPassword, const std::s
            crypto_pwhash_str_verify(storedHash.c_str(), plainPassword.c_str(), plainPassword.size()) == 0;
 }
 
-} // namespace hubflow::infrastructure
+} // namespace hubflow::identity::adapters

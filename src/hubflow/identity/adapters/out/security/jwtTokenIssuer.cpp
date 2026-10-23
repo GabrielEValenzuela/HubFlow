@@ -1,16 +1,15 @@
-#include "infrastructure/security/jwtTokenService.hpp"
+#include "hubflow/identity/adapters/out/security/jwtTokenIssuer.hpp"
 
-#include "application/shared/vocabulary.hpp"
+#include "hubflow/shared/application/vocabulary.hpp"
 
+#include <array>
 #include <nlohmann/json.hpp>
 #include <openssl/crypto.h>
 #include <openssl/evp.h>
-
-#include <array>
 #include <stdexcept>
 #include <utility>
 
-namespace hubflow::infrastructure
+namespace hubflow::identity::adapters
 {
 namespace
 {
@@ -70,22 +69,22 @@ bool constantTimeEquals(const std::string& a, const std::string& b)
 }
 } // namespace
 
-JwtTokenService::JwtTokenService(std::string secret)
+JwtTokenIssuer::JwtTokenIssuer(std::string secret)
     : m_secret {std::move(secret)}
 {
 }
 
-std::string JwtTokenService::issue(const application::TokenClaims& claims) const
+std::string JwtTokenIssuer::issue(const application::TokenClaims& claims) const
 {
     const nlohmann::json payload {{"sub", std::to_string(claims.userId)},
                                   {"name", claims.name},
-                                  {"role", application::Vocabulary::name(claims.role)},
+                                  {"role", shared::application::Vocabulary::name(claims.role)},
                                   {"exp", claims.expiresAt}};
-    const std::string signingInput {base64UrlEncode(JWT_HEADER) + "." + base64UrlEncode(payload.dump())};
+    const std::string    signingInput {base64UrlEncode(JWT_HEADER) + "." + base64UrlEncode(payload.dump())};
     return signingInput + "." + sign(signingInput);
 }
 
-std::optional<application::TokenClaims> JwtTokenService::verify(const std::string& token, const std::int64_t now) const
+std::optional<application::TokenClaims> JwtTokenIssuer::verify(const std::string& token, const std::int64_t now) const
 {
     std::optional<application::TokenClaims> claims;
     const auto                              firstDot  = token.find('.');
@@ -97,22 +96,25 @@ std::optional<application::TokenClaims> JwtTokenService::verify(const std::strin
         if (constantTimeEquals(sign(signingInput), token.substr(secondDot + 1)) && payload.has_value())
         {
             const auto json = nlohmann::json::parse(*payload, nullptr, false);
-            const auto role = json.is_object() ? application::Vocabulary::role(json.value("role", "")) : std::nullopt;
+            const auto role =
+                json.is_object() ? shared::application::Vocabulary::role(json.value("role", "")) : std::nullopt;
             if (role.has_value() && json.value("exp", std::int64_t {0}) > now)
             {
-                claims = application::TokenClaims {
-                    std::stoull(json.value("sub", "0")), json.value("name", ""), *role, json.value("exp", std::int64_t {0})};
+                claims = application::TokenClaims {std::stoull(json.value("sub", "0")),
+                                                   json.value("name", ""),
+                                                   *role,
+                                                   json.value("exp", std::int64_t {0})};
             }
         }
     }
     return claims;
 }
 
-std::string JwtTokenService::sign(const std::string& signingInput) const
+std::string JwtTokenIssuer::sign(const std::string& signingInput) const
 {
     std::array<unsigned char, EVP_MAX_MD_SIZE> digest {};
     std::size_t                                length {0};
-    const unsigned char* pResult = EVP_Q_mac(nullptr,
+    const unsigned char*                       pResult = EVP_Q_mac(nullptr,
                                              "HMAC",
                                              nullptr,
                                              "SHA256",
@@ -131,4 +133,4 @@ std::string JwtTokenService::sign(const std::string& signingInput) const
     return base64UrlEncode(std::string {reinterpret_cast<const char*>(digest.data()), length});
 }
 
-} // namespace hubflow::infrastructure
+} // namespace hubflow::identity::adapters
