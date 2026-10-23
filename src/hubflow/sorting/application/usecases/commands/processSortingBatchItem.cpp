@@ -5,16 +5,21 @@
 namespace hubflow::sorting::application
 {
 
-ProcessSortingBatchItem::ProcessSortingBatchItem(domain::SortingDesk& desk)
+ProcessSortingBatchItem::ProcessSortingBatchItem(domain::SortingDesk&                        desk,
+                                                 const logistics::domain::ShipmentGroupBook& groups)
     : m_desk {desk}
+    , m_groups {groups}
 {
 }
 
-const logistics::domain::Shipment& ProcessSortingBatchItem::execute(const shared::application::Principal& principal,
-                                                                    std::uint64_t                         batchId)
+ds::DynamicArray<logistics::domain::Shipment*>
+ProcessSortingBatchItem::execute(const shared::application::Principal& principal,
+                                 const std::uint64_t                   batchId,
+                                 const ds::DynamicArray<std::string>&  codes)
 {
     principal.require(identity::domain::Permission::OperateSortingDesk);
-    return m_desk.require(batchId).processNext();
+    domain::SortingBatch& batch = m_desk.require(batchId);
+    return codes.empty() ? batch.processNext(m_groups) : batch.process(codes, m_groups);
 }
 
 } // namespace hubflow::sorting::application

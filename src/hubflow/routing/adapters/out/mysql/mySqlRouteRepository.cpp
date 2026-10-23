@@ -20,6 +20,14 @@ constexpr const char* INSERT_STOP {R"SQL(
     INSERT INTO route_stops (route_id, stop_order, shipment_code, node_id, outcome) VALUES (?, ?, ?, ?, ?)
 )SQL"};
 
+constexpr const char* INSERT_COMPANION {R"SQL(
+    INSERT INTO route_stop_companions (route_id, stop_order, shipment_code) VALUES (?, ?, ?)
+)SQL"};
+
+constexpr const char* SELECT_COMPANIONS {R"SQL(
+    SELECT route_id, stop_order, shipment_code FROM route_stop_companions ORDER BY route_id, stop_order, shipment_code
+)SQL"};
+
 constexpr const char* UPDATE_STOP {R"SQL(
     UPDATE route_stops SET outcome = ? WHERE route_id = ? AND stop_order = ?
 )SQL"};
@@ -56,6 +64,10 @@ void MySqlRouteRepository::add(const domain::RouteRecord& record)
         m_connection.execute(
             INSERT_STOP,
             {record.id, std::uint64_t {stop.order}, stop.shipmentCode, stop.nodeId, Vocabulary::name(stop.outcome)});
+        for (std::size_t j = 0; j < stop.companions.size(); ++j)
+        {
+            m_connection.execute(INSERT_COMPANION, {record.id, std::uint64_t {stop.order}, stop.companions[j]});
+        }
     }
 }
 
@@ -90,6 +102,12 @@ void MySqlRouteRepository::loadAll(application::RouteRestorer& restorer) const
                                    SqlColumns::text(row, 2),
                                    SqlColumns::text(row, 3),
                                    SqlColumns::term(Vocabulary::stopOutcome(SqlColumns::text(row, 4)), "outcome")});
+    }
+    for (const auto& row : m_connection.query(SELECT_COMPANIONS))
+    {
+        auto&             stops = records.at(SqlColumns::unsignedNumber(row, 0)).stops;
+        const std::size_t order {static_cast<std::size_t>(SqlColumns::unsignedNumber(row, 1))};
+        stops[order - 1].companions.pushBack(SqlColumns::text(row, 2));
     }
     for (const auto& [id, record] : records)
     {

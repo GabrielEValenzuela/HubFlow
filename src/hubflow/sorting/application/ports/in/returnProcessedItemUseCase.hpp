@@ -1,6 +1,7 @@
 #ifndef HUBFLOW_SORTING_APPLICATION_PORTS_IN_RETURN_PROCESSED_ITEM_USE_CASE_HPP
 #define HUBFLOW_SORTING_APPLICATION_PORTS_IN_RETURN_PROCESSED_ITEM_USE_CASE_HPP
 
+#include "datastructures/dynamicArray.hpp"
 #include "hubflow/logistics/domain/entities/shipment.hpp"
 #include "hubflow/shared/application/principal.hpp"
 #include "hubflow/shared/application/useCase.hpp"
@@ -14,6 +15,7 @@ namespace hubflow::sorting::application
 
 /**
  * @brief Devuelve a la mesa el último envío procesado, indicado por su código, para corregir una carga equivocada.
+ * Si viaja junto con otros, vuelven también los compañeros de su grupo que se cargaron con él.
  *
  * @par Quién puede ejecutarlo
  * ADMIN y OPERADOR.
@@ -33,7 +35,7 @@ public:
 
     virtual ~ReturnProcessedItemUseCase() = default;
 
-    virtual const logistics::domain::Shipment&
+    virtual ds::DynamicArray<logistics::domain::Shipment*>
     execute(const shared::application::Principal& principal, std::uint64_t batchId, const std::string& code) = 0;
 };
 

@@ -16,7 +16,13 @@ CourierRouteSheet GetCourierRouteSheet::execute(const shared::application::Princ
     CourierRouteSheet            sheet {route, {}};
     for (std::size_t i = 0; i < route.stops().size(); ++i)
     {
-        sheet.stopDetails.push_back(m_directory.detailsOf(route.stops()[i].shipmentCode));
+        std::vector<std::optional<StopShipmentDetails>> details;
+        const auto                                      codes = route.stops()[i].shipmentCodes();
+        for (std::size_t j = 0; j < codes.size(); ++j)
+        {
+            details.push_back(m_directory.detailsOf(codes[j]));
+        }
+        sheet.stopDetails.push_back(details);
     }
     return sheet;
 }

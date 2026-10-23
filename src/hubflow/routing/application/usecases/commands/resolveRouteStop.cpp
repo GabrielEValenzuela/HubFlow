@@ -10,6 +10,14 @@ namespace
 {
 constexpr const char* DEFAULT_DELIVERY_NOTE {"Entrega confirmada"};
 constexpr const char* DEFAULT_RESCHEDULE_NOTE {"Destinatario ausente"};
+
+std::string partialNote(const std::string& note, const logistics::domain::Shipment& shipment)
+{
+    const std::size_t delivered {shipment.parcelCount() - shipment.pendingParcelCount()};
+    return delivered == 0 ? note
+                          : note + " (entrega parcial: " + std::to_string(delivered) + " de " +
+                                std::to_string(shipment.parcelCount()) + " bultos entregados)";
+}
 } // namespace
 
 ResolveRouteStop::ResolveRouteStop(logistics::application::LogisticsModel& logistics,
@@ -47,21 +55,41 @@ const domain::DeliveryRoute& ResolveRouteStop::execute(const shared::application
     }
     if (stop.outcome == domain::StopOutcome::Pending)
     {
-        const auto                   context  = principal.contextAt(m_clock);
-        logistics::domain::Shipment& shipment = m_logistics.catalog.require(stop.shipmentCode);
-        const bool                   delivered {request.outcome == domain::StopOutcome::Delivered};
-        const std::string            fallback {delivered ? DEFAULT_DELIVERY_NOTE : DEFAULT_RESCHEDULE_NOTE};
-        const std::string            note {request.note.empty() ? fallback : request.note};
-        if (delivered)
+        const auto        context = principal.contextAt(m_clock);
+        const bool        delivered {request.outcome == domain::StopOutcome::Delivered};
+        const std::string fallback {delivered ? DEFAULT_DELIVERY_NOTE : DEFAULT_RESCHEDULE_NOTE};
+        const std::string note {request.note.empty() ? fallback : request.note};
+        const auto        codes = stop.shipmentCodes();
+        ds::DynamicArray<logistics::domain::Shipment*> shipments;
+        for (std::size_t i = 0; i < codes.size(); ++i)
         {
-            shipment.deliver(note, context);
+            logistics::domain::Shipment& shipment = m_logistics.catalog.require(codes[i]);
+            if (delivered && !request.confirmAllParcels && shipment.pendingParcelCount() > 0)
+            {
+                throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
+                                                      "shipment.parcels_pending",
+                                                      "Faltan confirmar bultos del paquete " + shipment.code() +
+                                                          ": confirmalos o entregá todo"};
+            }
+            shipments.pushBack(&shipment);
         }
-        else
+        for (std::size_t i = 0; i < shipments.size(); ++i)
         {
-            shipment.reschedule(note, m_logistics.tickets.next(), context);
+            if (delivered)
+            {
+                shipments[i]->confirmAllParcels(context);
+                shipments[i]->deliver(note, context);
+            }
+            else
+            {
+                shipments[i]->reschedule(partialNote(note, *shipments[i]), m_logistics.tickets.next(), context);
+            }
         }
         route.resolveStop(request.order, request.outcome, context);
-        shipment.publishEvents(m_bus);
+        for (std::size_t i = 0; i < shipments.size(); ++i)
+        {
+            shipments[i]->publishEvents(m_bus);
+        }
         route.publishEvents(m_bus);
     }
     return route;

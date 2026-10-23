@@ -18,6 +18,17 @@ using shared::application::Vocabulary;
 
 constexpr const char* CRITERIA {"CODE_ASC, WEIGHT_DESC"};
 constexpr const char* ALGORITHMS {"linear, binary, both"};
+constexpr std::size_t MAX_CODES {100};
+
+Json shipmentList(const ds::DynamicArray<logistics::domain::Shipment*>& shipments)
+{
+    Json items = Json::array();
+    for (std::size_t i = 0; i < shipments.size(); ++i)
+    {
+        items.push_back(LogisticsJsonPresenter::shipmentSummary(*shipments[i]));
+    }
+    return items;
+}
 
 enum class SearchMode
 {
@@ -144,12 +155,23 @@ platform::HttpResponse SortingBatchController::sort(const RequestContext& contex
 
 platform::HttpResponse SortingBatchController::processNext(const RequestContext& context) const
 {
-    const std::uint64_t id {batchId(context)};
-    const auto&         shipment = m_useCases.process.execute(context.user(), id);
+    const std::uint64_t           id {batchId(context)};
+    auto                          input = InputValidator::body(context.request);
+    ds::DynamicArray<std::string> codes;
+    if (input.has("codes"))
+    {
+        for (const auto& code : input.trackingCodes("codes", 1, MAX_CODES))
+        {
+            codes.pushBack(code);
+        }
+    }
+    input.validate();
+    const auto loaded = m_useCases.process.execute(context.user(), id, codes);
     return platform::HttpResponse::created(
-        Json {{"shipment", LogisticsJsonPresenter::shipmentSummary(shipment)},
+        Json {{"shipment", LogisticsJsonPresenter::shipmentSummary(*loaded[0])},
+              {"shipments", shipmentList(loaded)},
               {"batch", SortingJsonPresenter::sortingBatch(m_useCases.batch.execute(context.user(), id))}},
-        locationOf("/sorting-batches/" + std::to_string(id) + "/processed-items/" + shipment.code()));
+        locationOf("/sorting-batches/" + std::to_string(id) + "/processed-items/" + loaded[0]->code()));
 }
 
 platform::HttpResponse SortingBatchController::giveBack(const RequestContext& context) const
@@ -158,9 +180,10 @@ platform::HttpResponse SortingBatchController::giveBack(const RequestContext& co
     const std::uint64_t id {input.requiredIdentifier("id")};
     const std::string   code {input.trackingCode("code")};
     input.validate();
-    const auto& shipment = m_useCases.giveBack.execute(context.user(), id, code);
+    const auto returned = m_useCases.giveBack.execute(context.user(), id, code);
     return platform::HttpResponse::ok(
-        Json {{"shipment", LogisticsJsonPresenter::shipmentSummary(shipment)},
+        Json {{"shipment", LogisticsJsonPresenter::shipmentSummary(*returned[0])},
+              {"shipments", shipmentList(returned)},
               {"batch", SortingJsonPresenter::sortingBatch(m_useCases.batch.execute(context.user(), id))}});
 }
 

@@ -5,6 +5,7 @@
 #include "datastructures/queue.hpp"
 #include "datastructures/stack.hpp"
 #include "hubflow/logistics/domain/services/pendingShipments.hpp"
+#include "hubflow/logistics/domain/services/shipmentGroupBook.hpp"
 #include "hubflow/sorting/domain/services/insertionSort.hpp"
 
 #include <cstdint>
@@ -46,19 +47,35 @@ public:
     void prepare();
 
     /**
-     * @brief Saca el siguiente envío de la cola de preparación y lo apila como procesado. O(1).
-     * @throws business_error (Conflict) si la cola está vacía.
+     * @brief Saca el siguiente envío de la cola de preparación y lo apila como procesado. O(1) si no viaja en grupo.
+     *
+     * Si el envío viaja junto con otros, se cargan todos los del grupo a la vez, uno detrás de otro, para que queden
+     * juntos en el vehículo.
+     * @return los envíos cargados, en el orden en que quedaron apilados.
+     * @throws business_error (Conflict) si la cola está vacía o falta cargable algún envío de su grupo.
      */
-    logistics::domain::Shipment& processNext();
+    ds::DynamicArray<logistics::domain::Shipment*> processNext(const logistics::domain::ShipmentGroupBook& groups);
 
     /**
-     * @brief Devuelve a la mesa el envío @p code, siempre que sea el último que se procesó.
+     * @brief Carga al vehículo los envíos indicados por código, en ese orden.
+     *
+     * La mesa no carga un envío de un grupo sin los demás: si falta alguno de sus compañeros en @p codes se rechaza
+     * todo sin cargar nada.
+     * @throws business_error NotFound (un código no está por cargar) o Conflict (grupo incompleto).
+     */
+    ds::DynamicArray<logistics::domain::Shipment*> process(const ds::DynamicArray<std::string>&        codes,
+                                                           const logistics::domain::ShipmentGroupBook& groups);
+
+    /**
+     * @brief Devuelve a la mesa el envío @p code, siempre que sea el último que se procesó, junto con los
+     * compañeros de su grupo que se cargaron con él.
      *
      * Repetir la operación es seguro: una vez devuelto el envío ya no está en el tope y el
-     * segundo intento falla sin modificar el lote. O(1).
+     * segundo intento falla sin modificar el lote.
      * @throws business_error (NotFound) si @p code no es el tope de la pila de procesados.
      */
-    logistics::domain::Shipment& returnProcessed(const std::string& code);
+    ds::DynamicArray<logistics::domain::Shipment*> returnProcessed(const std::string&                          code,
+                                                                   const logistics::domain::ShipmentGroupBook& groups);
 
     /**
      * @brief Descarga la pila de procesados en orden LIFO: lo último cargado al vehículo es lo
@@ -76,6 +93,9 @@ public:
 
 private:
     bool isProcessed(const logistics::domain::Shipment* pShipment) const;
+
+    ds::DynamicArray<logistics::domain::Shipment*> load(const ds::DynamicArray<logistics::domain::Shipment*>& selection,
+                                                        const logistics::domain::ShipmentGroupBook&           groups);
 
     std::uint64_t                           m_id;
     std::string                             m_zone;

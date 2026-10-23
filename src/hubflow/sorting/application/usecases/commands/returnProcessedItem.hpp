@@ -11,13 +11,14 @@ namespace hubflow::sorting::application
 class ReturnProcessedItem final : public ReturnProcessedItemUseCase
 {
 public:
-    explicit ReturnProcessedItem(domain::SortingDesk& desk);
+    ReturnProcessedItem(domain::SortingDesk& desk, const logistics::domain::ShipmentGroupBook& groups);
 
 private:
-    const logistics::domain::Shipment&
+    ds::DynamicArray<logistics::domain::Shipment*>
     execute(const shared::application::Principal& principal, std::uint64_t batchId, const std::string& code) override;
 
-    domain::SortingDesk& m_desk;
+    domain::SortingDesk&                        m_desk;
+    const logistics::domain::ShipmentGroupBook& m_groups;
 };
 
 } // namespace hubflow::sorting::application

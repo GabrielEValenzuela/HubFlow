@@ -1,6 +1,7 @@
 #ifndef HUBFLOW_ROUTING_DOMAIN_ENTITIES_DELIVERY_ROUTE_HPP
 #define HUBFLOW_ROUTING_DOMAIN_ENTITIES_DELIVERY_ROUTE_HPP
 
+#include "datastructures/dynamicArray.hpp"
 #include "hubflow/routing/domain/services/pumAgent.hpp"
 #include "hubflow/routing/domain/valueobjects/stopOutcome.hpp"
 #include "hubflow/shared/domain/aggregateRoot.hpp"
@@ -17,13 +18,42 @@ struct Courier
     std::string   name;
 };
 
-/// @brief Parada: envío (por código, no por puntero) y nodo del mapa donde se entrega.
+/**
+ * @brief Parada: envío (por código, no por puntero) y nodo del mapa donde se entrega.
+ *
+ * Los envíos que viajan juntos comparten una única parada: @c shipmentCode es el primero y @c companions los demás.
+ * Todos se entregan o se reprograman a la vez.
+ */
 struct RouteStop
 {
-    std::size_t order {0};
-    std::string shipmentCode;
-    std::string nodeId;
-    StopOutcome outcome {StopOutcome::Pending};
+    std::size_t                   order {0};
+    std::string                   shipmentCode;
+    std::string                   nodeId;
+    StopOutcome                   outcome {StopOutcome::Pending};
+    ds::DynamicArray<std::string> companions {};
+
+    /// @brief Códigos de todos los envíos de la parada, el principal primero.
+    ds::DynamicArray<std::string> shipmentCodes() const
+    {
+        ds::DynamicArray<std::string> codes;
+        codes.pushBack(shipmentCode);
+        for (std::size_t i = 0; i < companions.size(); ++i)
+        {
+            codes.pushBack(companions[i]);
+        }
+        return codes;
+    }
+
+    /// @brief Indica si el envío con código @p code pertenece a esta parada.
+    bool includes(const std::string& code) const
+    {
+        bool found {shipmentCode == code};
+        for (std::size_t i = 0; i < companions.size() && !found; ++i)
+        {
+            found = companions[i] == code;
+        }
+        return found;
+    }
 };
 
 /// @brief Datos persistidos de una ruta para reconstituirla.

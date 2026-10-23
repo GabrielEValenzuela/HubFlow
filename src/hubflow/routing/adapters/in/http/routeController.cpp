@@ -82,6 +82,11 @@ void RouteController::registerRoutes(platform::ApiRouter& router)
                  {
                      return resolveStop(context);
                  });
+    router.put("/routes/:id/stops/:order/shipments/:code/parcels/:ordinal",
+               [this](const RequestContext& context)
+               {
+                   return confirmParcel(context);
+               });
     router.get("/routes/:id/initial-state",
                [this](const RequestContext& context)
                {
@@ -117,12 +122,28 @@ platform::HttpResponse RouteController::resolveStop(const RequestContext& contex
     path.validate();
     auto                            input = InputValidator::body(context.request);
     application::ResolveStopRequest request;
-    request.routeId = id;
-    request.order   = static_cast<std::size_t>(order);
-    request.outcome = input.requiredTerm<domain::StopOutcome>("outcome", resolvedOutcome, OUTCOMES);
-    request.note    = input.optionalText("note", MAX_NOTE).value_or("");
+    request.routeId           = id;
+    request.order             = static_cast<std::size_t>(order);
+    request.outcome           = input.requiredTerm<domain::StopOutcome>("outcome", resolvedOutcome, OUTCOMES);
+    request.note              = input.optionalText("note", MAX_NOTE).value_or("");
+    request.confirmAllParcels = input.optionalFlag("confirmAllParcels").value_or(false);
     input.validate();
     m_useCases.resolveStop.execute(context.user(), request);
+    return platform::HttpResponse::ok(
+        RoutingJsonPresenter::courierSheet(m_useCases.sheet.execute(context.user(), id), m_useCases.roadMap.execute()));
+}
+
+platform::HttpResponse RouteController::confirmParcel(const RequestContext& context) const
+{
+    auto                              path = InputValidator::parameters(context);
+    const std::uint64_t               id {path.requiredIdentifier("id")};
+    application::ConfirmParcelRequest request;
+    request.routeId       = id;
+    request.order         = static_cast<std::size_t>(path.requiredIdentifier("order"));
+    request.shipmentCode  = path.trackingCode("code");
+    request.parcelOrdinal = static_cast<std::size_t>(path.requiredIdentifier("ordinal"));
+    path.validate();
+    m_useCases.confirmParcel.execute(context.user(), request);
     return platform::HttpResponse::ok(
         RoutingJsonPresenter::courierSheet(m_useCases.sheet.execute(context.user(), id), m_useCases.roadMap.execute()));
 }

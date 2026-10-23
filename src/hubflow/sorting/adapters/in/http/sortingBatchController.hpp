@@ -38,9 +38,11 @@ struct SortingUseCases
  * - @c GET /sorting-batches/current, @c GET /sorting-batches/:id: consulta del lote.
  * - @c PATCH /sorting-batches/:id {sortBy}: ordena el lote; mismo criterio, mismo orden.
  * - @c PUT /sorting-batches/:id/preparation-queue: recarga la cola de preparación desde el lote.
- * - @c POST /sorting-batches/:id/processed-items: procesa el siguiente envío de la cola (acepta @c Idempotency-Key).
- * - @c DELETE /sorting-batches/:id/processed-items/:code: devuelve el último procesado; sólo si @c code es el
- *   tope de la pila, y repetirlo responde 404 sin efecto.
+ * - @c POST /sorting-batches/:id/processed-items {codes?}: carga al vehículo los envíos indicados o, sin cuerpo, el
+ *   siguiente de la cola con los de su grupo (acepta @c Idempotency-Key). Un envío que viaja con otros no se carga sin
+ *   ellos: 409.
+ * - @c DELETE /sorting-batches/:id/processed-items/:code: devuelve el último procesado (con su grupo); sólo si
+ *   @c code es el tope de la pila, y repetirlo responde 404 sin efecto.
  * - @c GET /sorting-batches/:id/searches?code=&algorithm=linear|binary|both: busca un envío en el lote.
  */
 class SortingBatchController final : public platform::Controller

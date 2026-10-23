@@ -15,7 +15,13 @@ std::optional<application::StopShipmentDetails> LogisticsStopShipments::detailsO
     {
         const auto& shipment = m_model.catalog.require(shipmentCode);
         details              = application::StopShipmentDetails {
-            shipment.recipient(), shipment.service(), shipment.zone(), shipment.weightKg()};
+            shipment.code(), shipment.recipient(), shipment.service(), shipment.zone(), shipment.weightKg(), {}};
+        for (std::size_t i = 0; i < shipment.parcelCount(); ++i)
+        {
+            const auto& parcel = shipment.parcel(i);
+            details->parcels.push_back(application::StopParcelDetails {
+                parcel.ordinal(), parcel.label(), parcel.billableWeightKg(), parcel.delivered()});
+        }
     }
     return details;
 }

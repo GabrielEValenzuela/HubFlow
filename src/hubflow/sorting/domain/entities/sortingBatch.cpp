@@ -78,19 +78,116 @@ void SortingBatch::prepare()
     }
 }
 
-logistics::domain::Shipment& SortingBatch::processNext()
+ds::DynamicArray<logistics::domain::Shipment*>
+SortingBatch::processNext(const logistics::domain::ShipmentGroupBook& groups)
 {
     if (m_preparation.isEmpty())
     {
         throw shared::domain::business_error {
             shared::domain::ErrorKind::Conflict, "sorting.queue_empty", "La cola de preparación está vacía"};
     }
-    logistics::domain::Shipment* pShipment = m_preparation.dequeue();
-    m_processed.push(pShipment);
-    return *pShipment;
+    ds::DynamicArray<logistics::domain::Shipment*> selection;
+    selection.pushBack(m_preparation.front());
+    const logistics::domain::ShipmentGroup* pGroup = groups.groupOf(m_preparation.front()->code());
+    if (pGroup != nullptr)
+    {
+        m_preparation.forEach(
+            [&selection, pGroup](logistics::domain::Shipment* pQueued)
+            {
+                if (pQueued != selection[0] && pGroup->includes(pQueued->code()))
+                {
+                    selection.pushBack(pQueued);
+                }
+            });
+    }
+    return load(selection, groups);
 }
 
-logistics::domain::Shipment& SortingBatch::returnProcessed(const std::string& code)
+ds::DynamicArray<logistics::domain::Shipment*> SortingBatch::process(const ds::DynamicArray<std::string>&        codes,
+                                                                     const logistics::domain::ShipmentGroupBook& groups)
+{
+    ds::DynamicArray<logistics::domain::Shipment*> selection;
+    for (std::size_t i = 0; i < codes.size(); ++i)
+    {
+        logistics::domain::Shipment* pFound = nullptr;
+        m_preparation.forEach(
+            [&pFound, &codes, i](logistics::domain::Shipment* pQueued)
+            {
+                pFound = pQueued->code() == codes[i] ? pQueued : pFound;
+            });
+        if (pFound == nullptr)
+        {
+            throw shared::domain::business_error {shared::domain::ErrorKind::NotFound,
+                                                  "sorting.not_in_queue",
+                                                  "El paquete " + codes[i] + " no está en la lista por cargar"};
+        }
+        bool repeated {false};
+        for (std::size_t j = 0; j < selection.size(); ++j)
+        {
+            repeated = repeated || selection[j] == pFound;
+        }
+        if (!repeated)
+        {
+            selection.pushBack(pFound);
+        }
+    }
+    return load(selection, groups);
+}
+
+ds::DynamicArray<logistics::domain::Shipment*>
+SortingBatch::load(const ds::DynamicArray<logistics::domain::Shipment*>& selection,
+                   const logistics::domain::ShipmentGroupBook&           groups)
+{
+    if (selection.empty())
+    {
+        throw shared::domain::business_error {
+            shared::domain::ErrorKind::Validation, "sorting.nothing_selected", "Indicá qué paquetes cargar"};
+    }
+    for (std::size_t i = 0; i < selection.size(); ++i)
+    {
+        const logistics::domain::ShipmentGroup* pGroup = groups.groupOf(selection[i]->code());
+        for (std::size_t j = 0; pGroup != nullptr && j < pGroup->codes().size(); ++j)
+        {
+            bool selected {false};
+            for (std::size_t k = 0; k < selection.size(); ++k)
+            {
+                selected = selected || selection[k]->code() == pGroup->codes()[j];
+            }
+            if (!selected)
+            {
+                throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
+                                                      "sorting.group_incomplete",
+                                                      "El paquete " + selection[i]->code() + " viaja junto con " +
+                                                          pGroup->codes()[j] + ": hay que cargarlos todos juntos"};
+            }
+        }
+    }
+    ds::DynamicArray<logistics::domain::Shipment*> waiting;
+    while (!m_preparation.isEmpty())
+    {
+        waiting.pushBack(m_preparation.dequeue());
+    }
+    for (std::size_t i = 0; i < waiting.size(); ++i)
+    {
+        bool selected {false};
+        for (std::size_t k = 0; k < selection.size(); ++k)
+        {
+            selected = selected || selection[k] == waiting[i];
+        }
+        if (!selected)
+        {
+            m_preparation.enqueue(waiting[i]);
+        }
+    }
+    for (std::size_t i = 0; i < selection.size(); ++i)
+    {
+        m_processed.push(selection[i]);
+    }
+    return selection;
+}
+
+ds::DynamicArray<logistics::domain::Shipment*>
+SortingBatch::returnProcessed(const std::string& code, const logistics::domain::ShipmentGroupBook& groups)
 {
     if (m_processed.isEmpty() || m_processed.top()->code() != code)
     {
@@ -98,7 +195,14 @@ logistics::domain::Shipment& SortingBatch::returnProcessed(const std::string& co
                                               "sorting.not_last_processed",
                                               "El envío no es el último procesado del lote"};
     }
-    return *m_processed.pop();
+    ds::DynamicArray<logistics::domain::Shipment*> returned;
+    returned.pushBack(m_processed.pop());
+    const logistics::domain::ShipmentGroup* pGroup = groups.groupOf(code);
+    while (pGroup != nullptr && !m_processed.isEmpty() && pGroup->includes(m_processed.top()->code()))
+    {
+        returned.pushBack(m_processed.pop());
+    }
+    return returned;
 }
 
 ds::DynamicArray<logistics::domain::Shipment*> SortingBatch::unloadProcessed()

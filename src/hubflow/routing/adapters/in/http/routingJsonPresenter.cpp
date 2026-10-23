@@ -64,9 +64,15 @@ Json RoutingJsonPresenter::route(const domain::DeliveryRoute& route, const domai
     Json stops = Json::array();
     for (std::size_t i = 0; i < route.stops().size(); ++i)
     {
-        const auto& stop = route.stops()[i];
+        const auto& stop  = route.stops()[i];
+        Json        codes = Json::array();
+        for (std::size_t j = 0; j < stop.shipmentCodes().size(); ++j)
+        {
+            codes.push_back(stop.shipmentCodes()[j]);
+        }
         stops.push_back(Json {{"order", stop.order},
                               {"shipmentCode", stop.shipmentCode},
+                              {"shipmentCodes", codes},
                               {"nodeId", stop.nodeId},
                               {"outcome", Vocabulary::name(stop.outcome)}});
     }
@@ -81,13 +87,34 @@ Json RoutingJsonPresenter::courierSheet(const application::CourierRouteSheet& sh
     Json body = route(sheet.route, map);
     for (std::size_t i = 0; i < sheet.stopDetails.size(); ++i)
     {
-        if (sheet.stopDetails[i].has_value())
+        Json shipments = Json::array();
+        for (const auto& details : sheet.stopDetails[i])
         {
-            const auto& details           = *sheet.stopDetails[i];
-            body["stops"][i]["recipient"] = details.recipient;
-            body["stops"][i]["service"]   = details.service;
-            body["stops"][i]["zone"]      = details.zone;
-            body["stops"][i]["weightKg"]  = details.weightKg;
+            if (details.has_value())
+            {
+                Json parcels = Json::array();
+                for (const auto& parcel : details->parcels)
+                {
+                    parcels.push_back(Json {{"ordinal", parcel.ordinal},
+                                            {"label", parcel.label},
+                                            {"billableWeightKg", rounded(parcel.billableWeightKg)},
+                                            {"delivered", parcel.delivered}});
+                }
+                shipments.push_back(Json {{"code", details->code},
+                                          {"recipient", details->recipient},
+                                          {"service", details->service},
+                                          {"zone", details->zone},
+                                          {"weightKg", rounded(details->weightKg)},
+                                          {"parcels", parcels}});
+            }
+        }
+        body["stops"][i]["shipments"] = shipments;
+        if (!shipments.empty())
+        {
+            body["stops"][i]["recipient"] = shipments[0]["recipient"];
+            body["stops"][i]["service"]   = shipments[0]["service"];
+            body["stops"][i]["zone"]      = shipments[0]["zone"];
+            body["stops"][i]["weightKg"]  = shipments[0]["weightKg"];
         }
     }
     return body;

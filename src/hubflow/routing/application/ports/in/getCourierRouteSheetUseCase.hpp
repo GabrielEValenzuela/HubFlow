@@ -13,15 +13,17 @@
 namespace hubflow::routing::application
 {
 
-/// @brief Hoja de ruta lista para el repartidor: la ruta y, por cada parada, los datos de su paquete.
+/// @brief Hoja de ruta lista para el repartidor: la ruta y, por cada parada, los datos de cada paquete que entrega
+/// (con sus bultos).
 struct CourierRouteSheet
 {
-    const domain::DeliveryRoute&                    route;
-    std::vector<std::optional<StopShipmentDetails>> stopDetails;
+    const domain::DeliveryRoute&                                 route;
+    std::vector<std::vector<std::optional<StopShipmentDetails>>> stopDetails;
 };
 
 /**
- * @brief Devuelve la hoja de ruta con el destinatario, el servicio, el peso y la zona de cada parada.
+ * @brief Devuelve la hoja de ruta con el destinatario, el servicio, el peso, la zona y los bultos de cada paquete de
+ * cada parada.
  *
  * Es la única vía por la que un PUM conoce datos de los paquetes, y sólo de los de su propia ruta.
  *

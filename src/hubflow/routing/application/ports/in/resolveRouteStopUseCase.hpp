@@ -19,11 +19,18 @@ struct ResolveStopRequest
     std::size_t         order {0};
     domain::StopOutcome outcome {domain::StopOutcome::Delivered};
     std::string         note;
+    bool                confirmAllParcels {false};
 };
 
 /**
  * @brief El PUM informa el resultado de una parada de su ruta (entregado o reprogramado); se actualiza el envío y la
  * hoja de ruta.
+ *
+ * La parada se puede dar por entregada sólo si todos los bultos de sus paquetes fueron confirmados; con
+ * @c confirmAllParcels el repartidor entrega todo en un solo paso y los bultos que faltan se confirman junto con la
+ * parada. Si algunos bultos se entregaron y otros no, la parada se informa como reprogramada: los bultos entregados
+ * quedan registrados y los demás vuelven a la planta con el paquete. Una parada con paquetes que viajan juntos se
+ * resuelve completa.
  *
  * @par Quién puede ejecutarlo
  * ADMIN, OPERADOR y PUM; un PUM sólo puede resolver paradas de sus propias rutas.
@@ -32,7 +39,8 @@ struct ResolveStopRequest
  * - Forbidden: el rol no puede resolver paradas o la ruta pertenece a otro PUM.
  * - NotFound: la ruta o la parada no existen.
  * - Validation: el resultado no es ENTREGADO ni REPROGRAMADO.
- * - Conflict: la parada ya tiene registrado un resultado distinto.
+ * - Conflict: la parada ya tiene registrado un resultado distinto, o se pidió dar la parada por entregada con bultos
+ *   sin confirmar.
  *
  * @par Idempotencia
  * Sí. Informar el mismo resultado que ya está registrado no cambia nada, no emite eventos y responde igual que la

@@ -21,7 +21,7 @@ struct AssignRouteRequest
 
 /**
  * @brief Carga el vehículo de un PUM con los envíos procesados del lote, planifica el recorrido completo y despacha
- * todos los envíos.
+ * todos los envíos. Los paquetes que viajan juntos forman una única parada.
  *
  * @par Quién puede ejecutarlo
  * ADMIN y OPERADOR.
@@ -30,7 +30,8 @@ struct AssignRouteRequest
  * - Forbidden: el rol no puede asignar rutas.
  * - Validation: el repartidor no es un PUM activo.
  * - NotFound: el lote no es el activo.
- * - Conflict: el lote no tiene envíos procesados o alguno ya no está pendiente.
+ * - Conflict: el lote no tiene envíos procesados, alguno ya no está pendiente o falta cargar algún compañero de un
+ *   grupo.
  * - InvalidState: algún tramo no tiene camino en el mapa (no se modifica nada).
  *
  * @par Idempotencia

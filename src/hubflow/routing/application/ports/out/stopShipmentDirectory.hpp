@@ -1,19 +1,32 @@
 #ifndef HUBFLOW_ROUTING_APPLICATION_PORTS_OUT_STOP_SHIPMENT_DIRECTORY_HPP
 #define HUBFLOW_ROUTING_APPLICATION_PORTS_OUT_STOP_SHIPMENT_DIRECTORY_HPP
 
+#include <cstddef>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace hubflow::routing::application
 {
 
+/// @brief Un bulto de un paquete de la parada: su etiqueta, su peso facturable y si ya se entregó.
+struct StopParcelDetails
+{
+    std::size_t ordinal {0};
+    std::string label;
+    double      billableWeightKg {0.0};
+    bool        delivered {false};
+};
+
 /// @brief Lo que el repartidor necesita saber del paquete de una parada para entregarlo.
 struct StopShipmentDetails
 {
-    std::string recipient;
-    std::string service;
-    std::string zone;
-    double      weightKg {0.0};
+    std::string                    code;
+    std::string                    recipient;
+    std::string                    service;
+    std::string                    zone;
+    double                         weightKg {0.0};
+    std::vector<StopParcelDetails> parcels;
 };
 
 /**
