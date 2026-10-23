@@ -1,19 +1,20 @@
-#ifndef HUBFLOW_INFRASTRUCTURE_PERSISTENCE_MYSQL_CONNECTION_HPP
-#define HUBFLOW_INFRASTRUCTURE_PERSISTENCE_MYSQL_CONNECTION_HPP
+#ifndef HUBFLOW_PLATFORM_MYSQL_MY_SQL_CONNECTION_HPP
+#define HUBFLOW_PLATFORM_MYSQL_MY_SQL_CONNECTION_HPP
 
-#include "infrastructure/config/settings.hpp"
+#include "hubflow/platform/config/settings.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <variant>
 #include <vector>
 
 struct MYSQL;
 
-namespace hubflow::infrastructure
+namespace hubflow::platform
 {
 
 /// @brief Valor de un parámetro de sentencia preparada.
@@ -68,6 +69,6 @@ private:
     std::unique_ptr<MYSQL, HandleCloser> m_spHandle;
 };
 
-} // namespace hubflow::infrastructure
+} // namespace hubflow::platform
 
-#endif // HUBFLOW_INFRASTRUCTURE_PERSISTENCE_MYSQL_CONNECTION_HPP
+#endif // HUBFLOW_PLATFORM_MYSQL_MY_SQL_CONNECTION_HPP

@@ -1,12 +1,12 @@
-#ifndef HUBFLOW_INFRASTRUCTURE_PERSISTENCE_MYSQL_SQL_CONVERSIONS_HPP
-#define HUBFLOW_INFRASTRUCTURE_PERSISTENCE_MYSQL_SQL_CONVERSIONS_HPP
+#ifndef HUBFLOW_PLATFORM_MYSQL_SQL_COLUMNS_HPP
+#define HUBFLOW_PLATFORM_MYSQL_SQL_COLUMNS_HPP
 
-#include "infrastructure/persistence/mysql/mySqlConnection.hpp"
+#include "hubflow/platform/mysql/mySqlConnection.hpp"
 
 #include <optional>
 #include <string>
 
-namespace hubflow::infrastructure
+namespace hubflow::platform
 {
 
 /// @brief Lectura tipada de columnas de un SqlRow.
@@ -23,7 +23,7 @@ public:
      * @brief Traduce un nombre del vocabulario a su enumerado.
      * @throws database_error si el valor almacenado no es válido.
      */
-    template<typename Enum>
+    template <typename Enum>
     static Enum term(const std::optional<Enum>& parsed, const std::string& column)
     {
         if (!parsed.has_value())
@@ -34,6 +34,6 @@ public:
     }
 };
 
-} // namespace hubflow::infrastructure
+} // namespace hubflow::platform
 
-#endif // HUBFLOW_INFRASTRUCTURE_PERSISTENCE_MYSQL_SQL_CONVERSIONS_HPP
+#endif // HUBFLOW_PLATFORM_MYSQL_SQL_COLUMNS_HPP

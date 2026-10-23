@@ -1,12 +1,11 @@
-#include "infrastructure/persistence/mysql/mySqlConnection.hpp"
-
-#include <mysql.h>
+#include "hubflow/platform/mysql/mySqlConnection.hpp"
 
 #include <chrono>
+#include <mysql.h>
 #include <thread>
 #include <utility>
 
-namespace hubflow::infrastructure
+namespace hubflow::platform
 {
 namespace
 {
@@ -110,11 +109,11 @@ std::vector<SqlRow> fetchAll(MYSQL_STMT* pStatement)
     MYSQL_RES*          pMetadata = mysql_stmt_result_metadata(pStatement);
     if (pMetadata != nullptr)
     {
-        const unsigned int                  columns {mysql_num_fields(pMetadata)};
-        std::vector<MYSQL_BIND>             binds(columns);
-        std::vector<std::vector<char>>      buffers(columns, std::vector<char>(COLUMN_BUFFER_SIZE));
-        std::vector<unsigned long>          lengths(columns);
-        auto                                spNulls = std::make_unique<bool[]>(columns);
+        const unsigned int             columns {mysql_num_fields(pMetadata)};
+        std::vector<MYSQL_BIND>        binds(columns);
+        std::vector<std::vector<char>> buffers(columns, std::vector<char>(COLUMN_BUFFER_SIZE));
+        std::vector<unsigned long>     lengths(columns);
+        auto                           spNulls = std::make_unique<bool[]>(columns);
         for (unsigned int i = 0; i < columns; ++i)
         {
             binds[i].buffer_type   = MYSQL_TYPE_STRING;
@@ -236,4 +235,4 @@ void MySqlConnection::executeScript(const std::string& script)
     }
 }
 
-} // namespace hubflow::infrastructure
+} // namespace hubflow::platform

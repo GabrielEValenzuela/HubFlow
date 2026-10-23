@@ -1,6 +1,6 @@
-#include "infrastructure/persistence/mysql/sqlConversions.hpp"
+#include "hubflow/platform/mysql/sqlColumns.hpp"
 
-namespace hubflow::infrastructure
+namespace hubflow::platform
 {
 
 std::string SqlColumns::text(const SqlRow& row, const std::size_t column)
@@ -28,4 +28,4 @@ bool SqlColumns::flag(const SqlRow& row, const std::size_t column)
     return row.at(column).value_or("0") != "0";
 }
 
-} // namespace hubflow::infrastructure
+} // namespace hubflow::platform

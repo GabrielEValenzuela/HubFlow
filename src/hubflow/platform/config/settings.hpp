@@ -1,10 +1,10 @@
-#ifndef HUBFLOW_INFRASTRUCTURE_CONFIG_SETTINGS_HPP
-#define HUBFLOW_INFRASTRUCTURE_CONFIG_SETTINGS_HPP
+#ifndef HUBFLOW_PLATFORM_CONFIG_SETTINGS_HPP
+#define HUBFLOW_PLATFORM_CONFIG_SETTINGS_HPP
 
 #include <cstdint>
 #include <string>
 
-namespace hubflow::infrastructure
+namespace hubflow::platform
 {
 
 /// @brief Parámetros de conexión a MySQL.
@@ -37,6 +37,6 @@ struct Settings
     static Settings fromEnvironment();
 };
 
-} // namespace hubflow::infrastructure
+} // namespace hubflow::platform
 
-#endif // HUBFLOW_INFRASTRUCTURE_CONFIG_SETTINGS_HPP
+#endif // HUBFLOW_PLATFORM_CONFIG_SETTINGS_HPP
