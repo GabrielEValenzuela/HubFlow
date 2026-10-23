@@ -14,7 +14,8 @@ public:
     explicit FindHeaviestShipment(const LogisticsModel& model);
 
 private:
-    const domain::Shipment* execute(const shared::application::Principal& principal, domain::Zone zone) const override;
+    const domain::Shipment* execute(const shared::application::Principal& principal,
+                                    const std::string&                    zoneCode) const override;
 
     const LogisticsModel& m_model;
 };

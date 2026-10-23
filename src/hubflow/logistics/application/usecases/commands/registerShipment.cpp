@@ -21,8 +21,9 @@ const domain::Shipment& RegisterShipment::execute(const shared::application::Pri
                                                   const domain::ShipmentDraft&          draft)
 {
     principal.require(identity::domain::Permission::OperateShipments);
-    domain::ReceptionService reception {m_model.catalog, m_model.tickets, m_deliveryPoints};
-    domain::Shipment&        shipment = reception.receive(draft, principal.contextAt(m_clock));
+    domain::ReceptionService reception {
+        m_model.catalog, m_model.tickets, m_deliveryPoints, m_model.zones, m_model.services, m_model.features};
+    domain::Shipment& shipment = reception.receive(draft, principal.contextAt(m_clock));
     shipment.publishEvents(m_bus);
     return shipment;
 }

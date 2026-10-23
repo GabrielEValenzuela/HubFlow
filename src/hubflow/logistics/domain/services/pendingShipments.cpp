@@ -3,6 +3,11 @@
 namespace hubflow::logistics::domain
 {
 
+PendingShipments::PendingShipments(const PriorityPolicy& policy) noexcept
+    : m_policy {policy}
+{
+}
+
 PendingShipments::~PendingShipments()
 {
     while (m_pHead != nullptr)
@@ -13,11 +18,12 @@ PendingShipments::~PendingShipments()
     }
 }
 
-bool PendingShipments::goesBefore(const Shipment* pCandidate, const Shipment* pExisting) noexcept
+bool PendingShipments::goesBefore(const Shipment* pCandidate, const Shipment* pExisting) const
 {
-    const bool higherPriority {pCandidate->priority() > pExisting->priority()};
-    const bool samePriorityEarlier {pCandidate->priority() == pExisting->priority() &&
-                                    pCandidate->ticket() < pExisting->ticket()};
+    const unsigned candidate {m_policy.priorityOf(*pCandidate)};
+    const unsigned existing {m_policy.priorityOf(*pExisting)};
+    const bool     higherPriority {candidate > existing};
+    const bool     samePriorityEarlier {candidate == existing && pCandidate->ticket() < pExisting->ticket()};
     return higherPriority || samePriorityEarlier;
 }
 

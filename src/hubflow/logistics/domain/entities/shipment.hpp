@@ -1,14 +1,14 @@
 #ifndef HUBFLOW_LOGISTICS_DOMAIN_ENTITIES_SHIPMENT_HPP
 #define HUBFLOW_LOGISTICS_DOMAIN_ENTITIES_SHIPMENT_HPP
 
+#include "datastructures/dynamicArray.hpp"
 #include "hubflow/logistics/domain/entities/movementHistory.hpp"
+#include "hubflow/logistics/domain/valueobjects/catalogCode.hpp"
 #include "hubflow/logistics/domain/valueobjects/deliveryPoint.hpp"
 #include "hubflow/logistics/domain/valueobjects/queueTicket.hpp"
 #include "hubflow/logistics/domain/valueobjects/recipient.hpp"
-#include "hubflow/logistics/domain/valueobjects/serviceLevel.hpp"
 #include "hubflow/logistics/domain/valueobjects/trackingCode.hpp"
 #include "hubflow/logistics/domain/valueobjects/weight.hpp"
-#include "hubflow/logistics/domain/valueobjects/zone.hpp"
 #include "hubflow/shared/domain/aggregateRoot.hpp"
 
 #include <cstdint>
@@ -17,15 +17,16 @@
 namespace hubflow::logistics::domain
 {
 
-/// @brief Datos de alta de un envío.
+/// @brief Datos de alta de un envío. Zona, servicio y características se indican por su código de catálogo.
 struct ShipmentDraft
 {
-    std::string  code;
-    std::string  recipient;
-    Zone         zone {Zone::Centro};
-    double       weightKg {0.0};
-    ServiceLevel service {ServiceLevel::Estandar};
-    std::string  deliveryPoint;
+    std::string                   code;
+    std::string                   recipient;
+    std::string                   zone;
+    double                        weightKg {0.0};
+    std::string                   service;
+    std::string                   deliveryPoint;
+    ds::DynamicArray<std::string> features {};
 };
 
 /// @brief Estado completo del envío, usado para persistir, restaurar y describir eventos.
@@ -44,6 +45,9 @@ struct ShipmentState
  * Encapsula la máquina de estados: cada comportamiento valida la transición, agrega el
  * movimiento al final de su historial, enciende el bit en su StateHistory y registra el evento
  * de dominio correspondiente. Es dueño de su MovementHistory.
+ *
+ * La zona, el nivel de servicio y las características son datos de catálogo: el envío sólo guarda sus códigos. Qué
+ * tan prioritario es un envío no lo decide el envío sino la política de prioridad de la planta.
  *
  * La copia está prohibida: cada envío existe una sola vez y el resto del sistema lo referencia
  * mediante punteros no propietarios.
@@ -77,20 +81,21 @@ public:
     /// @brief Restaura un movimiento persistido en el historial.
     void restoreMovement(const Movement& movement);
 
-    const std::string&     code() const noexcept;
-    const std::string&     recipient() const noexcept;
-    Zone                   zone() const noexcept;
-    double                 weightKg() const noexcept;
-    ServiceLevel           service() const noexcept;
-    unsigned               priority() const noexcept;
-    ShipmentStatus         status() const noexcept;
-    std::uint32_t          attempts() const noexcept;
-    const std::string&     deliveryPoint() const noexcept;
-    const StateHistory&    stateHistory() const noexcept;
-    const MovementHistory& history() const noexcept;
-    const QueueTicket&     ticket() const noexcept;
-    bool                   isAwaitingDispatch() const noexcept;
-    ShipmentState          state() const;
+    const std::string&                   code() const noexcept;
+    const std::string&                   recipient() const noexcept;
+    const std::string&                   zone() const noexcept;
+    double                               weightKg() const noexcept;
+    const std::string&                   service() const noexcept;
+    const ds::DynamicArray<std::string>& features() const noexcept;
+    bool                                 hasFeature(const std::string& code) const noexcept;
+    ShipmentStatus                       status() const noexcept;
+    std::uint32_t                        attempts() const noexcept;
+    const std::string&                   deliveryPoint() const noexcept;
+    const StateHistory&                  stateHistory() const noexcept;
+    const MovementHistory&               history() const noexcept;
+    const QueueTicket&                   ticket() const noexcept;
+    bool                                 isAwaitingDispatch() const noexcept;
+    ShipmentState                        state() const;
 
 private:
     Shipment(const ShipmentDraft& draft, const QueueTicket& ticket);
@@ -98,17 +103,18 @@ private:
     const Movement&
     transition(ShipmentStatus target, const std::string& note, const shared::domain::ActorContext& context);
 
-    TrackingCode    m_code;
-    Recipient       m_recipient;
-    Zone            m_zone;
-    Weight          m_weight;
-    ServiceLevel    m_service;
-    DeliveryPoint   m_deliveryPoint;
-    ShipmentStatus  m_status {ShipmentStatus::Recibido};
-    std::uint32_t   m_attempts {0};
-    QueueTicket     m_ticket;
-    StateHistory    m_stateHistory;
-    MovementHistory m_history;
+    TrackingCode                  m_code;
+    Recipient                     m_recipient;
+    CatalogCode                   m_zone;
+    Weight                        m_weight;
+    CatalogCode                   m_service;
+    DeliveryPoint                 m_deliveryPoint;
+    ds::DynamicArray<std::string> m_features;
+    ShipmentStatus                m_status {ShipmentStatus::Recibido};
+    std::uint32_t                 m_attempts {0};
+    QueueTicket                   m_ticket;
+    StateHistory                  m_stateHistory;
+    MovementHistory               m_history;
 };
 
 } // namespace hubflow::logistics::domain

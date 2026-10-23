@@ -7,9 +7,7 @@ namespace hubflow::shared::application
 namespace
 {
 using identity::domain::Role;
-using logistics::domain::ServiceLevel;
 using logistics::domain::ShipmentStatus;
-using logistics::domain::Zone;
 using routing::domain::RouteStatus;
 using routing::domain::SearchAlgorithm;
 using routing::domain::StopOutcome;
@@ -22,15 +20,6 @@ struct Term
     const char* text;
 };
 
-constexpr Term<logistics::domain::Zone> ZONE_TERMS[] {{logistics::domain::Zone::Centro, "CENTRO"},
-                                                      {logistics::domain::Zone::Norte, "NORTE"},
-                                                      {logistics::domain::Zone::Sur, "SUR"}};
-
-constexpr Term<logistics::domain::ServiceLevel> SERVICE_TERMS[] {
-    {logistics::domain::ServiceLevel::Express, "EXPRESS"},
-    {logistics::domain::ServiceLevel::Prioritario, "PRIORITARIO"},
-    {logistics::domain::ServiceLevel::Estandar, "ESTANDAR"}};
-
 constexpr Term<logistics::domain::ShipmentStatus> STATUS_TERMS[] {
     {logistics::domain::ShipmentStatus::Recibido, "RECIBIDO"},
     {logistics::domain::ShipmentStatus::Clasificado, "CLASIFICADO"},
@@ -41,6 +30,16 @@ constexpr Term<logistics::domain::ShipmentStatus> STATUS_TERMS[] {
 constexpr Term<identity::domain::Role> ROLE_TERMS[] {{identity::domain::Role::Admin, "ADMIN"},
                                                      {identity::domain::Role::Operador, "OPERADOR"},
                                                      {identity::domain::Role::Pum, "PUM"}};
+
+constexpr Term<identity::domain::Permission> PERMISSION_TERMS[] {
+    {identity::domain::Permission::ManageUsers, "MANAGE_USERS"},
+    {identity::domain::Permission::OperateShipments, "OPERATE_SHIPMENTS"},
+    {identity::domain::Permission::OperateSortingDesk, "OPERATE_SORTING_DESK"},
+    {identity::domain::Permission::AssignRoutes, "ASSIGN_ROUTES"},
+    {identity::domain::Permission::ResolveStops, "RESOLVE_STOPS"},
+    {identity::domain::Permission::ViewIndexes, "VIEW_INDEXES"},
+    {identity::domain::Permission::ViewAudit, "VIEW_AUDIT"},
+    {identity::domain::Permission::ManageCatalogs, "MANAGE_CATALOGS"}};
 
 constexpr Term<routing::domain::SearchAlgorithm> ALGORITHM_TERMS[] {
     {routing::domain::SearchAlgorithm::BreadthFirst, "BFS"},
@@ -91,16 +90,6 @@ std::optional<Enum> valueOf(const Term<Enum> (&terms)[N], const std::string& tex
 }
 } // namespace
 
-std::string Vocabulary::name(const logistics::domain::Zone zone)
-{
-    return textOf(ZONE_TERMS, zone);
-}
-
-std::string Vocabulary::name(const logistics::domain::ServiceLevel service)
-{
-    return textOf(SERVICE_TERMS, service);
-}
-
 std::string Vocabulary::name(const logistics::domain::ShipmentStatus status)
 {
     return textOf(STATUS_TERMS, status);
@@ -109,6 +98,11 @@ std::string Vocabulary::name(const logistics::domain::ShipmentStatus status)
 std::string Vocabulary::name(const identity::domain::Role role)
 {
     return textOf(ROLE_TERMS, role);
+}
+
+std::string Vocabulary::name(const identity::domain::Permission permission)
+{
+    return textOf(PERMISSION_TERMS, permission);
 }
 
 std::string Vocabulary::name(const routing::domain::SearchAlgorithm algorithm)
@@ -131,16 +125,6 @@ std::string Vocabulary::name(const sorting::domain::SortCriteria criteria)
     return textOf(CRITERIA_TERMS, criteria);
 }
 
-std::optional<logistics::domain::Zone> Vocabulary::zone(const std::string& text)
-{
-    return valueOf(ZONE_TERMS, text);
-}
-
-std::optional<logistics::domain::ServiceLevel> Vocabulary::serviceLevel(const std::string& text)
-{
-    return valueOf(SERVICE_TERMS, text);
-}
-
 std::optional<logistics::domain::ShipmentStatus> Vocabulary::shipmentStatus(const std::string& text)
 {
     return valueOf(STATUS_TERMS, text);
@@ -149,6 +133,11 @@ std::optional<logistics::domain::ShipmentStatus> Vocabulary::shipmentStatus(cons
 std::optional<identity::domain::Role> Vocabulary::role(const std::string& text)
 {
     return valueOf(ROLE_TERMS, text);
+}
+
+std::optional<identity::domain::Permission> Vocabulary::permission(const std::string& text)
+{
+    return valueOf(PERMISSION_TERMS, text);
 }
 
 std::optional<routing::domain::SearchAlgorithm> Vocabulary::searchAlgorithm(const std::string& text)

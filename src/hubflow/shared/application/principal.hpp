@@ -17,7 +17,10 @@ struct Principal
     std::string            name;
     identity::domain::Role role {identity::domain::Role::Operador};
 
-    /// @throws business_error (Forbidden) si el rol no tiene @p permission.
+    /// @brief Política con la que se evalúan los permisos; debe sobrevivir al Principal.
+    const identity::domain::AccessPolicy* pPolicy {nullptr};
+
+    /// @throws business_error (Forbidden) si el rol no tiene @p permission según la política (o si no hay política).
     void require(identity::domain::Permission permission) const;
 
     /// @brief Contexto de dominio (autor + instante) para la operación actual.

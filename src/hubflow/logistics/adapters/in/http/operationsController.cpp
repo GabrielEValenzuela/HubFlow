@@ -2,7 +2,6 @@
 
 #include "hubflow/logistics/adapters/in/http/logisticsJsonPresenter.hpp"
 #include "hubflow/platform/http/inputValidator.hpp"
-#include "hubflow/shared/application/vocabulary.hpp"
 #include "hubflow/shared/domain/businessError.hpp"
 
 namespace hubflow::logistics::adapters
@@ -11,14 +10,11 @@ namespace
 {
 using platform::InputValidator;
 using platform::RequestContext;
-using shared::application::Vocabulary;
 
-constexpr const char* ZONES {"CENTRO, NORTE, SUR"};
-
-domain::Zone zoneOf(const RequestContext& context)
+std::string zoneOf(const RequestContext& context)
 {
     auto       input = InputValidator::parameters(context);
-    const auto zone  = input.requiredTerm<domain::Zone>("zone", Vocabulary::zone, ZONES);
+    const auto zone  = input.code("zone");
     input.validate();
     return zone;
 }

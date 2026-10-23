@@ -2,6 +2,7 @@
 #define HUBFLOW_LOGISTICS_DOMAIN_SERVICES_PENDING_SHIPMENTS_HPP
 
 #include "hubflow/logistics/domain/entities/shipment.hpp"
+#include "hubflow/logistics/domain/services/priorityPolicy.hpp"
 
 namespace hubflow::logistics::domain
 {
@@ -16,8 +17,8 @@ struct PendingNode
 /**
  * @brief Lista simplemente enlazada de envíos que esperan despacho.
  *
- * Funciona como cola de prioridad estable: mayor prioridad primero y, a igual prioridad, menor
- * QueueTicket primero. Como los tickets crecen con cada llegada, insertar equivale a ubicar el
+ * Funciona como cola de prioridad estable: mayor prioridad primero (según la PriorityPolicy recibida) y, a igual
+ * prioridad, menor QueueTicket primero. Como los tickets crecen con cada llegada, insertar equivale a ubicar el
  * nodo detrás del último con prioridad mayor o igual.
  *
  * Ownership: crea y destruye sólo sus PendingNode; nunca ejecuta @c delete sobre un Shipment.
@@ -31,7 +32,8 @@ struct PendingNode
 class PendingShipments final
 {
 public:
-    PendingShipments() = default;
+    /// @brief La política debe sobrevivir a la lista.
+    explicit PendingShipments(const PriorityPolicy& policy) noexcept;
 
     ~PendingShipments();
 
@@ -63,10 +65,11 @@ public:
     }
 
 private:
-    static bool goesBefore(const Shipment* pCandidate, const Shipment* pExisting) noexcept;
+    bool goesBefore(const Shipment* pCandidate, const Shipment* pExisting) const;
 
-    PendingNode* m_pHead {nullptr};
-    std::size_t  m_size {0};
+    const PriorityPolicy& m_policy;
+    PendingNode*          m_pHead {nullptr};
+    std::size_t           m_size {0};
 };
 
 } // namespace hubflow::logistics::domain

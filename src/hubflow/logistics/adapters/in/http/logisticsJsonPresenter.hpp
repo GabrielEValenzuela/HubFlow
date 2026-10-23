@@ -33,8 +33,8 @@ public:
     /// @brief Estados por los que pasó el envío, como bits, valor numérico y nombres.
     static platform::Json stateHistory(const domain::StateHistory& history);
 
-    /// @brief Cantidad, peso total y envíos express de una zona.
-    static platform::Json zoneSummary(domain::Zone zone, const domain::ZoneSummary& summary);
+    /// @brief Cantidad, peso total y envíos urgentes (de la mayor prioridad) de una zona.
+    static platform::Json zoneSummary(const std::string& zoneCode, const domain::ZoneSummary& summary);
 
     /// @brief Totales de la operación por estado y por zona.
     static platform::Json metrics(const application::OperationsMetrics& metrics);

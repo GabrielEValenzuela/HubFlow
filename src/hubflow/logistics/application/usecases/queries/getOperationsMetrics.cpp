@@ -21,11 +21,15 @@ OperationsMetrics GetOperationsMetrics::execute(const shared::application::Princ
             ++metrics.byStatus[domain::bitOf(shipment.status())];
             metrics.totalAttempts += shipment.attempts();
         });
-    std::size_t index {0};
-    for (const auto zone : domain::ALL_ZONES)
-    {
-        metrics.pendingByZone[index++] = domain::summarizeZone(m_model.pending.head(), zone);
-    }
+    m_model.zones.forEach(
+        [this, &metrics](const domain::Zone& zone)
+        {
+            metrics.pendingByZone.pushBack(OperationsMetrics::ZoneEntry {
+                zone.code(),
+                zone.name(),
+                zone.active(),
+                domain::summarizeZone(m_model.pending.head(), zone.code(), m_model.priorityPolicy)});
+        });
     return metrics;
 }
 

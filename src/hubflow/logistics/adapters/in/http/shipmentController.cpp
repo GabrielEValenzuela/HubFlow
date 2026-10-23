@@ -2,7 +2,6 @@
 
 #include "hubflow/logistics/adapters/in/http/logisticsJsonPresenter.hpp"
 #include "hubflow/platform/http/inputValidator.hpp"
-#include "hubflow/shared/application/vocabulary.hpp"
 #include "hubflow/shared/domain/businessError.hpp"
 
 namespace hubflow::logistics::adapters
@@ -13,10 +12,7 @@ using application::LookupIndex;
 using platform::InputValidator;
 using platform::Json;
 using platform::RequestContext;
-using shared::application::Vocabulary;
 
-constexpr const char* ZONES {"CENTRO, NORTE, SUR"};
-constexpr const char* SERVICES {"EXPRESS, PRIORITARIO, ESTANDAR"};
 constexpr const char* INDEXES {"list, bst, bplus"};
 
 struct IndexName
@@ -109,10 +105,14 @@ platform::HttpResponse ShipmentController::registerShipment(const RequestContext
     domain::ShipmentDraft draft;
     draft.code          = input.trackingCode("code");
     draft.recipient     = input.requiredText("recipient", 2, 80);
-    draft.zone          = input.requiredTerm<domain::Zone>("zone", Vocabulary::zone, ZONES);
+    draft.zone          = input.code("zone");
     draft.weightKg      = input.requiredNumber("weightKg", 0.01, domain::Weight::MAX_KILOGRAMS);
-    draft.service       = input.requiredTerm<domain::ServiceLevel>("service", Vocabulary::serviceLevel, SERVICES);
+    draft.service       = input.code("service");
     draft.deliveryPoint = input.requiredText("deliveryPoint", 1, 16);
+    for (const auto& feature : input.optionalCodes("features"))
+    {
+        draft.features.pushBack(feature);
+    }
     input.validate();
     const auto& shipment = m_useCases.registerShipment.execute(context.user(), draft);
     return platform::HttpResponse::created(LogisticsJsonPresenter::shipment(shipment),

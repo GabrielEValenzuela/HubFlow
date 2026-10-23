@@ -3,24 +3,24 @@
 namespace hubflow::logistics::domain
 {
 
-ZoneSummary summarizeZone(const PendingNode* pNode, const Zone zone)
+ZoneSummary summarizeZone(const PendingNode* pNode, const std::string& zone, const PriorityPolicy& policy)
 {
     ZoneSummary summary;
     if (pNode != nullptr)
     {
-        summary                  = summarizeZone(pNode->pNext, zone);
+        summary                  = summarizeZone(pNode->pNext, zone, policy);
         const Shipment& shipment = *pNode->pShipment;
         if (shipment.zone() == zone)
         {
             summary.count += 1;
             summary.totalWeightKg += shipment.weightKg();
-            summary.expressCount += shipment.service() == ServiceLevel::Express ? 1 : 0;
+            summary.urgentCount += policy.priorityOf(shipment) == policy.highest() ? 1 : 0;
         }
     }
     return summary;
 }
 
-const Shipment* heaviestInZone(const PendingNode* pNode, const Zone zone)
+const Shipment* heaviestInZone(const PendingNode* pNode, const std::string& zone)
 {
     const Shipment* pHeaviest = nullptr;
     if (pNode != nullptr)

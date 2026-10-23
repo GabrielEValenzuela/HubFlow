@@ -5,12 +5,26 @@
 namespace hubflow::logistics::domain
 {
 
+namespace
+{
+[[noreturn]] void invalid(const char* reason, const char* message)
+{
+    throw shared::domain::business_error {shared::domain::ErrorKind::Validation, reason, message};
+}
+} // namespace
+
 ReceptionService::ReceptionService(ShipmentCatalog&            catalog,
                                    TicketDispenser&            dispenser,
-                                   const DeliveryPointCatalog& deliveryPoints)
+                                   const DeliveryPointCatalog& deliveryPoints,
+                                   const ZoneCatalog&          zones,
+                                   const ServiceLevelCatalog&  services,
+                                   const FeatureCatalog&       features)
     : m_catalog {catalog}
     , m_dispenser {dispenser}
     , m_deliveryPoints {deliveryPoints}
+    , m_zones {zones}
+    , m_services {services}
+    , m_features {features}
 {
 }
 
@@ -20,6 +34,24 @@ Shipment& ReceptionService::receive(const ShipmentDraft& draft, const shared::do
     {
         throw shared::domain::business_error {
             shared::domain::ErrorKind::Conflict, "shipment.duplicate", "Ya existe un envío con ese código"};
+    }
+    const Zone* pZone = m_zones.find(draft.zone);
+    if (pZone == nullptr || !pZone->active())
+    {
+        invalid("shipment.zone_unavailable", "La zona no existe o está desactivada");
+    }
+    const ServiceLevel* pService = m_services.find(draft.service);
+    if (pService == nullptr || !pService->active())
+    {
+        invalid("shipment.service_unavailable", "El servicio no existe o está desactivado");
+    }
+    for (std::size_t i = 0; i < draft.features.size(); ++i)
+    {
+        const ShipmentFeature* pFeature = m_features.find(draft.features[i]);
+        if (pFeature == nullptr || !pFeature->active())
+        {
+            invalid("shipment.feature_unavailable", "Una característica del paquete no existe o está desactivada");
+        }
     }
     if (!m_deliveryPoints.isServiceable(draft.deliveryPoint, draft.zone))
     {

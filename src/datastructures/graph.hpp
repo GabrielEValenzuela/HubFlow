@@ -127,6 +127,12 @@ public:
         return m_vertices[index].data;
     }
 
+    /// @brief Reemplaza los datos del vértice sin tocar sus aristas. O(1).
+    void replaceVertex(const std::size_t index, const VertexData& data)
+    {
+        m_vertices[index].data = data;
+    }
+
     std::size_t degree(const std::size_t index) const
     {
         return m_vertices[index].degree;

@@ -31,6 +31,16 @@ Json stateNames(const domain::StateHistory& history)
     return states;
 }
 
+Json featureCodes(const domain::Shipment& shipment)
+{
+    Json codes = Json::array();
+    for (std::size_t i = 0; i < shipment.features().size(); ++i)
+    {
+        codes.push_back(shipment.features()[i]);
+    }
+    return codes;
+}
+
 std::string binary(const domain::StateHistory& history)
 {
     std::string text;
@@ -46,9 +56,10 @@ Json LogisticsJsonPresenter::shipmentSummary(const domain::Shipment& shipment)
 {
     return Json {{"code", shipment.code()},
                  {"recipient", shipment.recipient()},
-                 {"zone", Vocabulary::name(shipment.zone())},
+                 {"zone", shipment.zone()},
                  {"weightKg", rounded(shipment.weightKg())},
-                 {"service", Vocabulary::name(shipment.service())},
+                 {"service", shipment.service()},
+                 {"features", featureCodes(shipment)},
                  {"status", Vocabulary::name(shipment.status())},
                  {"attempts", shipment.attempts()},
                  {"deliveryPoint", shipment.deliveryPoint()}};
@@ -101,12 +112,12 @@ Json LogisticsJsonPresenter::stateHistory(const domain::StateHistory& history)
                  {"everRescheduled", history.test(domain::bitOf(domain::ShipmentStatus::Reprogramado))}};
 }
 
-Json LogisticsJsonPresenter::zoneSummary(const domain::Zone zone, const domain::ZoneSummary& summary)
+Json LogisticsJsonPresenter::zoneSummary(const std::string& zoneCode, const domain::ZoneSummary& summary)
 {
-    return Json {{"zone", Vocabulary::name(zone)},
+    return Json {{"zone", zoneCode},
                  {"count", summary.count},
                  {"totalWeightKg", rounded(summary.totalWeightKg)},
-                 {"expressCount", summary.expressCount}};
+                 {"urgentCount", summary.urgentCount}};
 }
 
 Json LogisticsJsonPresenter::metrics(const application::OperationsMetrics& metrics)
@@ -116,11 +127,14 @@ Json LogisticsJsonPresenter::metrics(const application::OperationsMetrics& metri
     {
         byStatus[Vocabulary::name(status)] = metrics.byStatus[domain::bitOf(status)];
     }
-    Json        zones = Json::array();
-    std::size_t index {0};
-    for (const auto zone : domain::ALL_ZONES)
+    Json zones = Json::array();
+    for (std::size_t i = 0; i < metrics.pendingByZone.size(); ++i)
     {
-        zones.push_back(zoneSummary(zone, metrics.pendingByZone[index++]));
+        const auto& entry = metrics.pendingByZone[i];
+        Json        item  = zoneSummary(entry.code, entry.summary);
+        item["name"]      = entry.name;
+        item["active"]    = entry.active;
+        zones.push_back(item);
     }
     return Json {{"totalShipments", metrics.totalShipments},
                  {"byStatus", byStatus},

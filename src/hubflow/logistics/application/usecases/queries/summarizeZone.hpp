@@ -14,7 +14,8 @@ public:
     explicit SummarizeZone(const LogisticsModel& model);
 
 private:
-    domain::ZoneSummary execute(const shared::application::Principal& principal, domain::Zone zone) const override;
+    domain::ZoneSummary execute(const shared::application::Principal& principal,
+                                const std::string&                    zoneCode) const override;
 
     const LogisticsModel& m_model;
 };

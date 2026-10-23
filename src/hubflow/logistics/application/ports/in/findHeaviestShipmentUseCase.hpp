@@ -16,6 +16,7 @@ namespace hubflow::logistics::application
  *
  * @par Errores
  * - Forbidden: el rol no puede operar envíos.
+ * - NotFound: la zona no existe.
  *
  * @par Idempotencia
  * Sí. Es una lectura sin efectos.
@@ -28,7 +29,7 @@ public:
     virtual ~FindHeaviestShipmentUseCase() = default;
 
     virtual const domain::Shipment* execute(const shared::application::Principal& principal,
-                                            domain::Zone                          zone) const = 0;
+                                            const std::string&                    zoneCode) const = 0;
 };
 
 } // namespace hubflow::logistics::application

@@ -8,9 +8,25 @@ LogisticsHydrator::LogisticsHydrator(LogisticsModel& model)
 {
 }
 
-void LogisticsHydrator::hydrate(const ShipmentRepository& repository)
+void LogisticsHydrator::hydrate(const CatalogRepository& catalogs, const ShipmentRepository& shipments)
 {
-    repository.loadAll(*this);
+    catalogs.loadAll(*this);
+    shipments.loadAll(*this);
+}
+
+void LogisticsHydrator::restoreZone(const domain::ZoneState& state)
+{
+    m_model.zones.adopt(domain::Zone::restore(state));
+}
+
+void LogisticsHydrator::restoreServiceLevel(const domain::ServiceLevelState& state)
+{
+    m_model.services.adopt(domain::ServiceLevel::restore(state));
+}
+
+void LogisticsHydrator::restoreFeature(const domain::ShipmentFeatureState& state)
+{
+    m_model.features.adopt(domain::ShipmentFeature::restore(state));
 }
 
 void LogisticsHydrator::restoreShipment(const domain::ShipmentState& state)

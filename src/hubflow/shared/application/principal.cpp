@@ -1,11 +1,18 @@
 #include "hubflow/shared/application/principal.hpp"
 
+#include "hubflow/shared/domain/businessError.hpp"
+
 namespace hubflow::shared::application
 {
 
 void Principal::require(const identity::domain::Permission permission) const
 {
-    identity::domain::AccessPolicy::require(role, permission);
+    if (pPolicy == nullptr)
+    {
+        throw domain::business_error {
+            domain::ErrorKind::Forbidden, "auth.forbidden", "No tenés permiso para esta operación"};
+    }
+    pPolicy->require(role, permission);
 }
 
 domain::ActorContext Principal::contextAt(const Clock& clock) const

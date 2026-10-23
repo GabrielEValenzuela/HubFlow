@@ -11,10 +11,11 @@ FindHeaviestShipment::FindHeaviestShipment(const LogisticsModel& model)
 }
 
 const domain::Shipment* FindHeaviestShipment::execute(const shared::application::Principal& principal,
-                                                      domain::Zone                          zone) const
+                                                      const std::string&                    zoneCode) const
 {
     principal.require(identity::domain::Permission::OperateShipments);
-    return domain::heaviestInZone(m_model.pending.head(), zone);
+    m_model.zones.require(zoneCode);
+    return domain::heaviestInZone(m_model.pending.head(), zoneCode);
 }
 
 } // namespace hubflow::logistics::application

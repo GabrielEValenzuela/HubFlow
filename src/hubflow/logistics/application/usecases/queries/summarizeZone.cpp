@@ -10,10 +10,12 @@ SummarizeZone::SummarizeZone(const LogisticsModel& model)
 {
 }
 
-domain::ZoneSummary SummarizeZone::execute(const shared::application::Principal& principal, domain::Zone zone) const
+domain::ZoneSummary SummarizeZone::execute(const shared::application::Principal& principal,
+                                           const std::string&                    zoneCode) const
 {
     principal.require(identity::domain::Permission::OperateShipments);
-    return domain::summarizeZone(m_model.pending.head(), zone);
+    m_model.zones.require(zoneCode);
+    return domain::summarizeZone(m_model.pending.head(), zoneCode, m_model.priorityPolicy);
 }
 
 } // namespace hubflow::logistics::application

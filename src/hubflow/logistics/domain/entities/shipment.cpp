@@ -19,6 +19,13 @@ Shipment::Shipment(const ShipmentDraft& draft, const QueueTicket& ticket)
     , m_deliveryPoint {draft.deliveryPoint}
     , m_ticket {ticket}
 {
+    for (std::size_t i = 0; i < draft.features.size(); ++i)
+    {
+        if (!hasFeature(draft.features[i]))
+        {
+            m_features.pushBack(CatalogCode {draft.features[i]}.value());
+        }
+    }
 }
 
 Shipment*
@@ -102,9 +109,9 @@ const std::string& Shipment::recipient() const noexcept
     return m_recipient.name();
 }
 
-Zone Shipment::zone() const noexcept
+const std::string& Shipment::zone() const noexcept
 {
-    return m_zone;
+    return m_zone.value();
 }
 
 double Shipment::weightKg() const noexcept
@@ -112,14 +119,24 @@ double Shipment::weightKg() const noexcept
     return m_weight.kilograms();
 }
 
-ServiceLevel Shipment::service() const noexcept
+const std::string& Shipment::service() const noexcept
 {
-    return m_service;
+    return m_service.value();
 }
 
-unsigned Shipment::priority() const noexcept
+const ds::DynamicArray<std::string>& Shipment::features() const noexcept
 {
-    return priorityOf(m_service);
+    return m_features;
+}
+
+bool Shipment::hasFeature(const std::string& code) const noexcept
+{
+    bool found {false};
+    for (std::size_t i = 0; i < m_features.size() && !found; ++i)
+    {
+        found = m_features[i] == code;
+    }
+    return found;
 }
 
 ShipmentStatus Shipment::status() const noexcept
@@ -160,7 +177,7 @@ bool Shipment::isAwaitingDispatch() const noexcept
 ShipmentState Shipment::state() const
 {
     return ShipmentState {
-        ShipmentDraft {code(), recipient(), m_zone, weightKg(), m_service, deliveryPoint()},
+        ShipmentDraft {code(), recipient(), zone(), weightKg(), service(), deliveryPoint(), m_features},
         m_status,
         m_attempts,
         m_stateHistory.raw(),

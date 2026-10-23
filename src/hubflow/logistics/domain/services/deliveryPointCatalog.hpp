@@ -1,8 +1,6 @@
 #ifndef HUBFLOW_LOGISTICS_DOMAIN_SERVICES_DELIVERY_POINT_CATALOG_HPP
 #define HUBFLOW_LOGISTICS_DOMAIN_SERVICES_DELIVERY_POINT_CATALOG_HPP
 
-#include "hubflow/logistics/domain/valueobjects/zone.hpp"
-
 #include <string>
 
 namespace hubflow::logistics::domain
@@ -20,8 +18,8 @@ class DeliveryPointCatalog
 public:
     virtual ~DeliveryPointCatalog() = default;
 
-    /// @brief true si @p nodeId es un punto de entrega válido de la zona @p zone.
-    virtual bool isServiceable(const std::string& nodeId, Zone zone) const = 0;
+    /// @brief true si @p nodeId es un punto de entrega habilitado de la zona @p zone.
+    virtual bool isServiceable(const std::string& nodeId, const std::string& zone) const = 0;
 };
 
 } // namespace hubflow::logistics::domain

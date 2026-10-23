@@ -1,6 +1,7 @@
 #ifndef HUBFLOW_LOGISTICS_APPLICATION_PORTS_IN_GET_OPERATIONS_METRICS_USE_CASE_HPP
 #define HUBFLOW_LOGISTICS_APPLICATION_PORTS_IN_GET_OPERATIONS_METRICS_USE_CASE_HPP
 
+#include "datastructures/dynamicArray.hpp"
 #include "hubflow/logistics/domain/entities/shipment.hpp"
 #include "hubflow/logistics/domain/services/zoneReport.hpp"
 #include "hubflow/logistics/domain/valueobjects/shipmentStatus.hpp"
@@ -13,15 +14,24 @@ namespace hubflow::logistics::application
 /// @brief Indicadores operativos del centro de distribución.
 struct OperationsMetrics
 {
-    std::size_t         totalShipments {0};
-    std::size_t         byStatus[domain::STATUS_COUNT] {};
-    std::size_t         totalAttempts {0};
-    domain::ZoneSummary pendingByZone[domain::ZONE_COUNT] {};
+    /// @brief Resumen de pendientes de una zona del catálogo.
+    struct ZoneEntry
+    {
+        std::string         code;
+        std::string         name;
+        bool                active {true};
+        domain::ZoneSummary summary;
+    };
+
+    std::size_t                 totalShipments {0};
+    std::size_t                 byStatus[domain::STATUS_COUNT] {};
+    std::size_t                 totalAttempts {0};
+    ds::DynamicArray<ZoneEntry> pendingByZone;
 };
 
 /**
  * @brief Calcula los indicadores operativos del centro: total de envíos, envíos por estado, intentos acumulados y
- * pendientes por zona.
+ * pendientes por cada zona del catálogo.
  *
  * @par Quién puede ejecutarlo
  * ADMIN y OPERADOR.
