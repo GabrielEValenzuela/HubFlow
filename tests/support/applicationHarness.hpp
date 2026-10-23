@@ -1,0 +1,250 @@
+#ifndef HUBFLOW_TESTS_SUPPORT_APPLICATION_HARNESS_HPP
+#define HUBFLOW_TESTS_SUPPORT_APPLICATION_HARNESS_HPP
+
+#include "support/inMemoryRepositories.hpp"
+
+#include "hubflow/audit/application/ports/in/countAuditEventsUseCase.hpp"
+#include "hubflow/audit/application/ports/in/listAuditEventsUseCase.hpp"
+#include "hubflow/audit/application/subscribers/auditLogSubscriber.hpp"
+#include "hubflow/audit/application/usecases/queries/countAuditEvents.hpp"
+#include "hubflow/audit/application/usecases/queries/listAuditEvents.hpp"
+#include "hubflow/identity/application/ports/in/authenticateUseCase.hpp"
+#include "hubflow/identity/application/ports/in/findUserUseCase.hpp"
+#include "hubflow/identity/application/ports/in/listCouriersUseCase.hpp"
+#include "hubflow/identity/application/ports/in/listUsersUseCase.hpp"
+#include "hubflow/identity/application/ports/in/registerUserUseCase.hpp"
+#include "hubflow/identity/application/ports/in/signInUseCase.hpp"
+#include "hubflow/identity/application/ports/in/updateUserUseCase.hpp"
+#include "hubflow/identity/application/subscribers/userPersistenceSubscriber.hpp"
+#include "hubflow/identity/application/usecases/commands/registerUser.hpp"
+#include "hubflow/identity/application/usecases/commands/signIn.hpp"
+#include "hubflow/identity/application/usecases/commands/updateUser.hpp"
+#include "hubflow/identity/application/usecases/queries/authenticate.hpp"
+#include "hubflow/identity/application/usecases/queries/findUser.hpp"
+#include "hubflow/identity/application/usecases/queries/listCouriers.hpp"
+#include "hubflow/identity/application/usecases/queries/listUsers.hpp"
+#include "hubflow/insights/application/ports/in/combineCodeSetsUseCase.hpp"
+#include "hubflow/insights/application/ports/in/compareShipmentStatesUseCase.hpp"
+#include "hubflow/insights/application/ports/in/getBPlusTreeUseCase.hpp"
+#include "hubflow/insights/application/ports/in/getBstUseCase.hpp"
+#include "hubflow/insights/application/ports/in/getCodeSetUseCase.hpp"
+#include "hubflow/insights/application/ports/in/lookupInBPlusTreeUseCase.hpp"
+#include "hubflow/insights/application/ports/in/lookupInBstUseCase.hpp"
+#include "hubflow/insights/application/ports/in/rangeInBPlusTreeUseCase.hpp"
+#include "hubflow/insights/application/usecases/queries/combineCodeSets.hpp"
+#include "hubflow/insights/application/usecases/queries/compareShipmentStates.hpp"
+#include "hubflow/insights/application/usecases/queries/getBPlusTree.hpp"
+#include "hubflow/insights/application/usecases/queries/getBst.hpp"
+#include "hubflow/insights/application/usecases/queries/getCodeSet.hpp"
+#include "hubflow/insights/application/usecases/queries/lookupInBPlusTree.hpp"
+#include "hubflow/insights/application/usecases/queries/lookupInBst.hpp"
+#include "hubflow/insights/application/usecases/queries/rangeInBPlusTree.hpp"
+#include "hubflow/logistics/adapters/out/routing/roadMapDeliveryPoints.hpp"
+#include "hubflow/logistics/application/hydration/logisticsHydrator.hpp"
+#include "hubflow/logistics/application/ports/in/classifyShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/deliverShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/dispatchNextShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/findHeaviestShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/findShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/getOperationsMetricsUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/getShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/listPendingShipmentsUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/listShipmentsUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/registerShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/rescheduleShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/summarizeZoneUseCase.hpp"
+#include "hubflow/logistics/application/subscribers/pendingShipmentsProjector.hpp"
+#include "hubflow/logistics/application/subscribers/shipmentPersistenceSubscriber.hpp"
+#include "hubflow/logistics/application/usecases/commands/classifyShipment.hpp"
+#include "hubflow/logistics/application/usecases/commands/deliverShipment.hpp"
+#include "hubflow/logistics/application/usecases/commands/dispatchNextShipment.hpp"
+#include "hubflow/logistics/application/usecases/commands/registerShipment.hpp"
+#include "hubflow/logistics/application/usecases/commands/rescheduleShipment.hpp"
+#include "hubflow/logistics/application/usecases/queries/findHeaviestShipment.hpp"
+#include "hubflow/logistics/application/usecases/queries/findShipment.hpp"
+#include "hubflow/logistics/application/usecases/queries/getOperationsMetrics.hpp"
+#include "hubflow/logistics/application/usecases/queries/getShipment.hpp"
+#include "hubflow/logistics/application/usecases/queries/listPendingShipments.hpp"
+#include "hubflow/logistics/application/usecases/queries/listShipments.hpp"
+#include "hubflow/logistics/application/usecases/queries/summarizeZone.hpp"
+#include "hubflow/routing/application/hydration/routingHydrator.hpp"
+#include "hubflow/routing/application/ports/in/assignDeliveryRouteUseCase.hpp"
+#include "hubflow/routing/application/ports/in/getRoadMapUseCase.hpp"
+#include "hubflow/routing/application/ports/in/getRouteUseCase.hpp"
+#include "hubflow/routing/application/ports/in/listRoutesUseCase.hpp"
+#include "hubflow/routing/application/ports/in/previewRouteUseCase.hpp"
+#include "hubflow/routing/application/ports/in/resolveRouteStopUseCase.hpp"
+#include "hubflow/routing/application/subscribers/routePersistenceSubscriber.hpp"
+#include "hubflow/routing/application/usecases/commands/assignDeliveryRoute.hpp"
+#include "hubflow/routing/application/usecases/commands/resolveRouteStop.hpp"
+#include "hubflow/routing/application/usecases/queries/getRoadMap.hpp"
+#include "hubflow/routing/application/usecases/queries/getRoute.hpp"
+#include "hubflow/routing/application/usecases/queries/listRoutes.hpp"
+#include "hubflow/routing/application/usecases/queries/previewRoute.hpp"
+#include "hubflow/sorting/application/ports/in/binarySearchInSortingBatchUseCase.hpp"
+#include "hubflow/sorting/application/ports/in/compareSortingBatchSearchesUseCase.hpp"
+#include "hubflow/sorting/application/ports/in/getActiveSortingBatchUseCase.hpp"
+#include "hubflow/sorting/application/ports/in/getSortingBatchUseCase.hpp"
+#include "hubflow/sorting/application/ports/in/linearSearchInSortingBatchUseCase.hpp"
+#include "hubflow/sorting/application/ports/in/openSortingBatchUseCase.hpp"
+#include "hubflow/sorting/application/ports/in/prepareSortingBatchUseCase.hpp"
+#include "hubflow/sorting/application/ports/in/processSortingBatchItemUseCase.hpp"
+#include "hubflow/sorting/application/ports/in/returnProcessedItemUseCase.hpp"
+#include "hubflow/sorting/application/ports/in/sortSortingBatchUseCase.hpp"
+#include "hubflow/sorting/application/usecases/commands/openSortingBatch.hpp"
+#include "hubflow/sorting/application/usecases/commands/prepareSortingBatch.hpp"
+#include "hubflow/sorting/application/usecases/commands/processSortingBatchItem.hpp"
+#include "hubflow/sorting/application/usecases/commands/returnProcessedItem.hpp"
+#include "hubflow/sorting/application/usecases/commands/sortSortingBatch.hpp"
+#include "hubflow/sorting/application/usecases/queries/binarySearchInSortingBatch.hpp"
+#include "hubflow/sorting/application/usecases/queries/compareSortingBatchSearches.hpp"
+#include "hubflow/sorting/application/usecases/queries/getActiveSortingBatch.hpp"
+#include "hubflow/sorting/application/usecases/queries/getSortingBatch.hpp"
+#include "hubflow/sorting/application/usecases/queries/linearSearchInSortingBatch.hpp"
+
+namespace hubflow::test
+{
+
+/// @brief Repositorios compartidos entre instancias del harness (simulan la base de datos).
+struct Storage
+{
+    InMemoryShipmentRepository shipments;
+    InMemoryRouteRepository    routes;
+    InMemoryUserRepository     users;
+    InMemoryAuditLog           audit;
+    FixtureRoadMapRepository   maps;
+};
+
+/**
+ * @brief Composición completa de la aplicación con adaptadores en memoria.
+ *
+ * Los casos de uso se exponen sólo a través de sus puertos de entrada, igual que los consume el
+ * borde HTTP.
+ */
+class ApplicationHarness
+{
+public:
+    explicit ApplicationHarness(Storage& storage);
+
+    shared::application::Principal admin() const;
+    shared::application::Principal operador() const;
+    shared::application::Principal pum(std::uint64_t userId) const;
+
+    void seedDataset();
+
+    /// @brief Alta de usuario sin control de permisos, como hace el arranque del sistema.
+    identity::domain::UserState bootstrapUser(const identity::application::RegisterUserRequest& request);
+
+    Storage&                                   storage;
+    FixedClock                                 clock;
+    PlainHasher                                hasher;
+    PlainTokenIssuer                           tokens;
+    shared::application::EventBus              bus;
+    logistics::application::LogisticsModel     logistics;
+    routing::application::RoutingModel         routing;
+    sorting::domain::SortingDesk               desk;
+    logistics::adapters::RoadMapDeliveryPoints deliveryPoints;
+
+private:
+    logistics::application::PendingShipmentsProjector     m_projector;
+    logistics::application::ShipmentPersistenceSubscriber m_shipmentPersistence;
+    routing::application::RoutePersistenceSubscriber      m_routePersistence;
+    identity::application::UserPersistenceSubscriber      m_userPersistence;
+    audit::application::AuditLogSubscriber                m_auditLog;
+    identity::application::SignIn                         m_signIn;
+    identity::application::Authenticate                   m_authenticate;
+    identity::application::RegisterUser                   m_registerUser;
+    identity::application::UpdateUser                     m_updateUser;
+    identity::application::ListUsers                      m_listUsers;
+    identity::application::ListCouriers                   m_listCouriers;
+    identity::application::FindUser                       m_findUser;
+    audit::application::ListAuditEvents                   m_listAuditEvents;
+    audit::application::CountAuditEvents                  m_countAuditEvents;
+    logistics::application::RegisterShipment              m_registerShipment;
+    logistics::application::ClassifyShipment              m_classifyShipment;
+    logistics::application::RescheduleShipment            m_rescheduleShipment;
+    logistics::application::DeliverShipment               m_deliverShipment;
+    logistics::application::DispatchNextShipment          m_dispatchNextShipment;
+    logistics::application::ListPendingShipments          m_listPendingShipments;
+    logistics::application::ListShipments                 m_listShipments;
+    logistics::application::FindShipment                  m_findShipment;
+    logistics::application::GetShipment                   m_getShipment;
+    logistics::application::SummarizeZone                 m_summarizeZone;
+    logistics::application::FindHeaviestShipment          m_findHeaviestShipment;
+    logistics::application::GetOperationsMetrics          m_getOperationsMetrics;
+    sorting::application::OpenSortingBatch                m_openSortingBatch;
+    sorting::application::SortSortingBatch                m_sortSortingBatch;
+    sorting::application::PrepareSortingBatch             m_prepareSortingBatch;
+    sorting::application::ProcessSortingBatchItem         m_processSortingBatchItem;
+    sorting::application::ReturnProcessedItem             m_returnProcessedItem;
+    sorting::application::GetActiveSortingBatch           m_getActiveSortingBatch;
+    sorting::application::GetSortingBatch                 m_getSortingBatch;
+    sorting::application::LinearSearchInSortingBatch      m_linearSearchInSortingBatch;
+    sorting::application::BinarySearchInSortingBatch      m_binarySearchInSortingBatch;
+    sorting::application::CompareSortingBatchSearches     m_compareSortingBatchSearches;
+    routing::application::AssignDeliveryRoute             m_assignDeliveryRoute;
+    routing::application::ResolveRouteStop                m_resolveRouteStop;
+    routing::application::GetRoadMap                      m_getRoadMap;
+    routing::application::PreviewRoute                    m_previewRoute;
+    routing::application::ListRoutes                      m_listRoutes;
+    routing::application::GetRoute                        m_getRoute;
+    insights::application::LookupInBst                    m_lookupInBst;
+    insights::application::GetBst                         m_getBst;
+    insights::application::LookupInBPlusTree              m_lookupInBPlusTree;
+    insights::application::RangeInBPlusTree               m_rangeInBPlusTree;
+    insights::application::GetBPlusTree                   m_getBPlusTree;
+    insights::application::CompareShipmentStates          m_compareShipmentStates;
+    insights::application::GetCodeSet                     m_getCodeSet;
+    insights::application::CombineCodeSets                m_combineCodeSets;
+
+public:
+    identity::application::SignInUseCase&                     signIn;
+    identity::application::AuthenticateUseCase&               authenticate;
+    identity::application::RegisterUserUseCase&               registerUser;
+    identity::application::UpdateUserUseCase&                 updateUser;
+    identity::application::ListUsersUseCase&                  listUsers;
+    identity::application::ListCouriersUseCase&               listCouriers;
+    identity::application::FindUserUseCase&                   findUser;
+    audit::application::ListAuditEventsUseCase&               listAuditEvents;
+    audit::application::CountAuditEventsUseCase&              countAuditEvents;
+    logistics::application::RegisterShipmentUseCase&          registerShipment;
+    logistics::application::ClassifyShipmentUseCase&          classifyShipment;
+    logistics::application::RescheduleShipmentUseCase&        rescheduleShipment;
+    logistics::application::DeliverShipmentUseCase&           deliverShipment;
+    logistics::application::DispatchNextShipmentUseCase&      dispatchNextShipment;
+    logistics::application::ListPendingShipmentsUseCase&      listPendingShipments;
+    logistics::application::ListShipmentsUseCase&             listShipments;
+    logistics::application::FindShipmentUseCase&              findShipment;
+    logistics::application::GetShipmentUseCase&               getShipment;
+    logistics::application::SummarizeZoneUseCase&             summarizeZone;
+    logistics::application::FindHeaviestShipmentUseCase&      findHeaviestShipment;
+    logistics::application::GetOperationsMetricsUseCase&      getOperationsMetrics;
+    sorting::application::OpenSortingBatchUseCase&            openSortingBatch;
+    sorting::application::SortSortingBatchUseCase&            sortSortingBatch;
+    sorting::application::PrepareSortingBatchUseCase&         prepareSortingBatch;
+    sorting::application::ProcessSortingBatchItemUseCase&     processSortingBatchItem;
+    sorting::application::ReturnProcessedItemUseCase&         returnProcessedItem;
+    sorting::application::GetActiveSortingBatchUseCase&       getActiveSortingBatch;
+    sorting::application::GetSortingBatchUseCase&             getSortingBatch;
+    sorting::application::LinearSearchInSortingBatchUseCase&  linearSearchInSortingBatch;
+    sorting::application::BinarySearchInSortingBatchUseCase&  binarySearchInSortingBatch;
+    sorting::application::CompareSortingBatchSearchesUseCase& compareSortingBatchSearches;
+    routing::application::AssignDeliveryRouteUseCase&         assignDeliveryRoute;
+    routing::application::ResolveRouteStopUseCase&            resolveRouteStop;
+    routing::application::GetRoadMapUseCase&                  getRoadMap;
+    routing::application::PreviewRouteUseCase&                previewRoute;
+    routing::application::ListRoutesUseCase&                  listRoutes;
+    routing::application::GetRouteUseCase&                    getRoute;
+    insights::application::LookupInBstUseCase&                lookupInBst;
+    insights::application::GetBstUseCase&                     getBst;
+    insights::application::LookupInBPlusTreeUseCase&          lookupInBPlusTree;
+    insights::application::RangeInBPlusTreeUseCase&           rangeInBPlusTree;
+    insights::application::GetBPlusTreeUseCase&               getBPlusTree;
+    insights::application::CompareShipmentStatesUseCase&      compareShipmentStates;
+    insights::application::GetCodeSetUseCase&                 getCodeSet;
+    insights::application::CombineCodeSetsUseCase&            combineCodeSets;
+};
+
+} // namespace hubflow::test
+
+#endif // HUBFLOW_TESTS_SUPPORT_APPLICATION_HARNESS_HPP
