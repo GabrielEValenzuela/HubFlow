@@ -1,3 +1,4 @@
+SET NAMES utf8mb4;
 -- Esquema de HubFlow. MySQL es la fuente de verdad durable; las consultas del negocio se
 -- resuelven con las estructuras de datos propias en memoria, hidratadas al iniciar.
 

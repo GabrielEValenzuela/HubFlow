@@ -1,3 +1,4 @@
+SET NAMES utf8mb4;
 -- Mapa de referencia de la ciudad. Coordenadas en km; el costo de cada arista es mayor o igual
 -- a la distancia en línea recta, por lo que la heurística euclídea de A* es admisible.
 

@@ -1,3 +1,4 @@
+SET NAMES utf8mb4;
 -- Respuestas ya entregadas para reintentos seguros de operaciones no idempotentes.
 
 CREATE TABLE IF NOT EXISTS idempotency_keys (
