@@ -1,11 +1,11 @@
-#include "infrastructure/http/validation/inputValidator.hpp"
+#include "hubflow/platform/http/inputValidator.hpp"
 
-#include "domain/logistics/valueobjects/trackingCode.hpp"
+#include "hubflow/logistics/domain/valueobjects/trackingCode.hpp"
 
 #include <regex>
 #include <utility>
 
-namespace hubflow::infrastructure
+namespace hubflow::platform
 {
 namespace
 {
@@ -27,9 +27,9 @@ std::optional<double> numberFrom(const Json& value)
     {
         try
         {
-            std::size_t   consumed {0};
-            const auto&   text = value.get_ref<const std::string&>();
-            const double  parsed {std::stod(text, &consumed)};
+            std::size_t  consumed {0};
+            const auto&  text = value.get_ref<const std::string&>();
+            const double parsed {std::stod(text, &consumed)};
             if (consumed == text.size())
             {
                 number = parsed;
@@ -45,7 +45,7 @@ std::optional<double> numberFrom(const Json& value)
 } // namespace
 
 InputValidator::InputValidator(Json source)
-    : m_source {std::move(source)}
+    : m_source(std::move(source))
 {
 }
 
@@ -83,7 +83,8 @@ void InputValidator::fail(const std::string& field, const std::string& message)
     m_errors.push_back(FieldError {field, message});
 }
 
-std::string InputValidator::requiredText(const std::string& field, const std::size_t minLength, const std::size_t maxLength)
+std::string
+InputValidator::requiredText(const std::string& field, const std::size_t minLength, const std::size_t maxLength)
 {
     std::string text;
     if (!has(field) || !m_source.at(field).is_string())
@@ -95,7 +96,8 @@ std::string InputValidator::requiredText(const std::string& field, const std::si
         text = m_source.at(field).get<std::string>();
         if (text.size() < minLength || text.size() > maxLength)
         {
-            fail(field, "Debe tener entre " + std::to_string(minLength) + " y " + std::to_string(maxLength) + " caracteres");
+            fail(field,
+                 "Debe tener entre " + std::to_string(minLength) + " y " + std::to_string(maxLength) + " caracteres");
         }
     }
     return text;
@@ -148,7 +150,7 @@ std::optional<bool> InputValidator::optionalFlag(const std::string& field)
 std::string InputValidator::trackingCode(const std::string& field)
 {
     const std::string code {requiredText(field, 8, 8)};
-    if (!code.empty() && !domain::logistics::TrackingCode::isValid(code))
+    if (!code.empty() && !logistics::domain::TrackingCode::isValid(code))
     {
         fail(field, "Debe tener el formato PKG-NNNN");
     }
@@ -181,4 +183,4 @@ void InputValidator::validate() const
     }
 }
 
-} // namespace hubflow::infrastructure
+} // namespace hubflow::platform

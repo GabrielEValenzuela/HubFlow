@@ -1,8 +1,8 @@
-#include "infrastructure/http/httpTypes.hpp"
+#include "hubflow/platform/http/httpTypes.hpp"
 
 #include <utility>
 
-namespace hubflow::infrastructure
+namespace hubflow::platform
 {
 
 HttpResponse HttpResponse::ok(Json body)
@@ -21,28 +21,17 @@ HttpResponse HttpResponse::attachment(Json body, const std::string& fileName)
         HttpStatus::Ok, std::move(body), {{"Content-Disposition", "attachment; filename=\"" + fileName + "\""}}};
 }
 
-const application::Principal& RequestContext::user() const
+const shared::application::Principal& RequestContext::user() const
 {
     if (!principal.has_value())
     {
-        throw std::logic_error("Handler protegido sin principal");
+        throw std::logic_error("Protected endpoint without an authenticated user");
     }
     return *principal;
 }
 
-std::string RequestContext::path(const std::string& name) const
-{
-    const auto found = request.path_params.find(name);
-    return found == request.path_params.end() ? std::string {} : found->second;
-}
-
-std::optional<std::string> RequestContext::query(const std::string& name) const
-{
-    return request.has_param(name) ? std::optional<std::string> {request.get_param_value(name)} : std::nullopt;
-}
-
 validation_error::validation_error(const HttpStatus status, std::vector<FieldError> errors)
-    : std::runtime_error {"Entrada inválida"}
+    : std::runtime_error {"Invalid input"}
     , m_status {status}
     , m_errors {std::move(errors)}
 {
@@ -58,4 +47,4 @@ const std::vector<FieldError>& validation_error::errors() const noexcept
     return m_errors;
 }
 
-} // namespace hubflow::infrastructure
+} // namespace hubflow::platform

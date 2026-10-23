@@ -1,14 +1,14 @@
-#ifndef HUBFLOW_INFRASTRUCTURE_HTTP_INPUT_VALIDATOR_HPP
-#define HUBFLOW_INFRASTRUCTURE_HTTP_INPUT_VALIDATOR_HPP
+#ifndef HUBFLOW_PLATFORM_HTTP_INPUT_VALIDATOR_HPP
+#define HUBFLOW_PLATFORM_HTTP_INPUT_VALIDATOR_HPP
 
-#include "infrastructure/http/httpTypes.hpp"
+#include "hubflow/platform/http/httpTypes.hpp"
 
 #include <cstdint>
 #include <optional>
 #include <string>
 #include <vector>
 
-namespace hubflow::infrastructure
+namespace hubflow::platform
 {
 
 /**
@@ -26,22 +26,22 @@ public:
     /// @brief Valida los parámetros de query y de ruta del pedido.
     static InputValidator parameters(const RequestContext& context);
 
-    std::string requiredText(const std::string& field, std::size_t minLength, std::size_t maxLength);
+    std::string                requiredText(const std::string& field, std::size_t minLength, std::size_t maxLength);
     std::optional<std::string> optionalText(const std::string& field, std::size_t maxLength);
-    double requiredNumber(const std::string& field, double minimum, double maximum);
-    std::uint64_t requiredIdentifier(const std::string& field);
-    std::optional<bool> optionalFlag(const std::string& field);
-    std::string trackingCode(const std::string& field);
-    std::string email(const std::string& field);
+    double                     requiredNumber(const std::string& field, double minimum, double maximum);
+    std::uint64_t              requiredIdentifier(const std::string& field);
+    std::optional<bool>        optionalFlag(const std::string& field);
+    std::string                trackingCode(const std::string& field);
+    std::string                email(const std::string& field);
 
     /**
      * @brief Valida que el campo sea uno de los valores admitidos por @p parse.
      * @param allowed lista legible de valores (para el mensaje de error).
      */
-    template<typename Enum, typename Parser>
+    template <typename Enum, typename Parser>
     Enum requiredTerm(const std::string& field, Parser parse, const std::string& allowed)
     {
-        const std::string    text {requiredText(field, 1, 32)};
+        const std::string   text {requiredText(field, 1, 32)};
         std::optional<Enum> parsed {parse(text)};
         if (!parsed.has_value() && !text.empty())
         {
@@ -51,7 +51,7 @@ public:
     }
 
     /// @brief Variante opcional de @c requiredTerm.
-    template<typename Enum, typename Parser>
+    template <typename Enum, typename Parser>
     std::optional<Enum> optionalTerm(const std::string& field, Parser parse, const std::string& allowed)
     {
         std::optional<Enum> result;
@@ -79,6 +79,6 @@ private:
     std::vector<FieldError> m_errors;
 };
 
-} // namespace hubflow::infrastructure
+} // namespace hubflow::platform
 
-#endif // HUBFLOW_INFRASTRUCTURE_HTTP_INPUT_VALIDATOR_HPP
+#endif // HUBFLOW_PLATFORM_HTTP_INPUT_VALIDATOR_HPP
