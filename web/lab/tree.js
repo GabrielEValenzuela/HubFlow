@@ -1,4 +1,4 @@
-import { svg } from "../ui.js";
+import { svg } from "../js/ui.js";
 
 const short = (c) => c.replace(/^PKG-/, "");
 

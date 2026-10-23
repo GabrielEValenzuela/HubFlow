@@ -1,6 +1,6 @@
-import { h } from "../ui.js";
-import { icon } from "../icons.js";
-import { MapView } from "./mapview.js";
+import { h } from "../js/ui.js";
+import { icon } from "../js/icons.js";
+import { MapView } from "../js/lib/mapview.js";
 import { Replay, buildFrames } from "./replay.js";
 
 const GLOSS = {
