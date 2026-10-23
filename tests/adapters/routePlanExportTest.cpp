@@ -45,7 +45,7 @@ const routing::domain::DeliveryRoute& assignNorthRoute(test::ApplicationHarness&
                      identity::application::RegisterUserRequest {
                          "pum1@hubflow.local", "Repartidor", identity::domain::Role::Pum, "clave-segura"})
             .id;
-    const auto& batch = app.openSortingBatch.execute(app.operador(), logistics::domain::Zone::Norte);
+    const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
     app.prepareSortingBatch.execute(app.operador(), batch.id());
     for (int i = 0; i < 3; ++i)
     {

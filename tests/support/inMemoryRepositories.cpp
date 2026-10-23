@@ -96,9 +96,124 @@ void InMemoryRouteRepository::loadAll(routing::application::RouteRestorer& resto
     }
 }
 
+void InMemoryRouteRepository::updateCourier(const std::uint64_t routeId, const routing::domain::Courier& courier)
+{
+    records.at(routeId).courier = courier;
+}
+
 void FixtureRoadMapRepository::loadInto(routing::domain::RoadMap& map) const
 {
-    buildReferenceCity(map);
+    buildReferenceCity(map, changed);
+    for (const auto& entry : added)
+    {
+        const auto found = changed.find(entry.node.id);
+        map.addNode(found == changed.end() ? entry.node : found->second);
+        for (std::size_t i = 0; i < entry.links.size(); ++i)
+        {
+            map.connect(entry.node.id, entry.links[i].toId, entry.links[i].costKm);
+        }
+    }
+}
+
+void FixtureRoadMapRepository::addNode(const routing::domain::RoadNode&                   node,
+                                       const ds::DynamicArray<routing::domain::RoadLink>& links)
+{
+    added.push_back(AddedNode {node, links});
+}
+
+void FixtureRoadMapRepository::updateNode(const routing::domain::RoadNode& node)
+{
+    changed[node.id] = node;
+}
+
+InMemoryCatalogRepository::InMemoryCatalogRepository()
+    : zones {{"CENTRO", "Centro", true}, {"NORTE", "Norte", true}, {"SUR", "Sur", true}}
+    , services {{"EXPRESS", "Express", 3, true},
+                {"PRIORITARIO", "Prioritario", 2, true},
+                {"ESTANDAR", "Estándar", 1, true}}
+    , features {{"FRAGIL", "Frágil", true}, {"REFRIGERADO", "Refrigerado", true}, {"VOLUMINOSO", "Voluminoso", true}}
+{
+}
+
+void InMemoryCatalogRepository::saveZone(const logistics::domain::ZoneState& state)
+{
+    for (auto& stored : zones)
+    {
+        if (stored.code == state.code)
+        {
+            stored = state;
+            return;
+        }
+    }
+    zones.push_back(state);
+}
+
+void InMemoryCatalogRepository::saveServiceLevel(const logistics::domain::ServiceLevelState& state)
+{
+    for (auto& stored : services)
+    {
+        if (stored.code == state.code)
+        {
+            stored = state;
+            return;
+        }
+    }
+    services.push_back(state);
+}
+
+void InMemoryCatalogRepository::saveFeature(const logistics::domain::ShipmentFeatureState& state)
+{
+    for (auto& stored : features)
+    {
+        if (stored.code == state.code)
+        {
+            stored = state;
+            return;
+        }
+    }
+    features.push_back(state);
+}
+
+void InMemoryCatalogRepository::loadAll(logistics::application::CatalogRestorer& restorer) const
+{
+    for (const auto& state : zones)
+    {
+        restorer.restoreZone(state);
+    }
+    for (const auto& state : services)
+    {
+        restorer.restoreServiceLevel(state);
+    }
+    for (const auto& state : features)
+    {
+        restorer.restoreFeature(state);
+    }
+}
+
+InMemoryRolePermissionRepository::InMemoryRolePermissionRepository()
+{
+    identity::domain::AccessPolicy defaults;
+    grantDefaultPermissions(defaults);
+    for (const auto role :
+         {identity::domain::Role::Admin, identity::domain::Role::Operador, identity::domain::Role::Pum})
+    {
+        for (int permission = 0; permission <= static_cast<int>(identity::domain::Permission::ManageCatalogs);
+             ++permission)
+        {
+            if (defaults.allows(role, static_cast<identity::domain::Permission>(permission)))
+            {
+                grants.push_back({role, static_cast<identity::domain::Permission>(permission)});
+            }
+        }
+    }
+}
+
+void InMemoryRolePermissionRepository::loadAll(identity::application::GrantRestorer& restorer) const
+{
+    for (const auto& grant : grants)
+    {
+        restorer.restoreGrant(grant.role, grant.permission);
+    }
 }
 
 std::uint64_t InMemoryUserRepository::nextIdentity()

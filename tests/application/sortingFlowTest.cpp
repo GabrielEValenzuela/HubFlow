@@ -12,7 +12,7 @@ namespace
 {
 std::uint64_t openPreparedNorthBatch(test::ApplicationHarness& app)
 {
-    const auto& batch = app.openSortingBatch.execute(app.operador(), logistics::domain::Zone::Norte);
+    const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
     app.sortSortingBatch.execute(app.operador(), batch.id(), sorting::domain::SortCriteria::CodeAscending);
     app.prepareSortingBatch.execute(app.operador(), batch.id());
     return batch.id();
@@ -63,7 +63,7 @@ TEST(SortingFlow, SortingTwiceWithTheSameCriteriaKeepsTheSameOrder)
     test::Storage            storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
-    const auto& batch = app.openSortingBatch.execute(app.operador(), logistics::domain::Zone::Norte);
+    const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
 
     app.sortSortingBatch.execute(app.operador(), batch.id(), sorting::domain::SortCriteria::WeightDescending);
     const std::string firstOrder {batch.at(0).code() + batch.at(1).code() + batch.at(2).code()};

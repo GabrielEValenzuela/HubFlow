@@ -22,7 +22,7 @@ std::uint64_t createCourier(test::ApplicationHarness& app, const std::string& em
 
 const routing::domain::DeliveryRoute& assignNorthRoute(test::ApplicationHarness& app, const std::uint64_t courierId)
 {
-    const auto& batch = app.openSortingBatch.execute(app.operador(), logistics::domain::Zone::Norte);
+    const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
     app.sortSortingBatch.execute(app.operador(), batch.id(), sorting::domain::SortCriteria::CodeAscending);
     app.prepareSortingBatch.execute(app.operador(), batch.id());
     for (int i = 0; i < 3; ++i)
@@ -49,7 +49,7 @@ TEST(RoutingFlow, AssigningRouteDispatchesLoadInLifoOrder)
     EXPECT_EQ(route.stops()[2].shipmentCode, "PKG-1002");
     EXPECT_EQ(app.getShipment.execute(app.operador(), "PKG-1005").status(),
               logistics::domain::ShipmentStatus::EnReparto);
-    EXPECT_EQ(app.summarizeZone.execute(app.operador(), logistics::domain::Zone::Norte).count, 0U);
+    EXPECT_EQ(app.summarizeZone.execute(app.operador(), "NORTE").count, 0U);
     EXPECT_EQ(storage.routes.records.size(), 1U);
     EXPECT_EQ(app.getActiveSortingBatch.execute(app.operador()), nullptr);
 }
@@ -117,7 +117,7 @@ TEST(RoutingFlow, AssignmentRequiresProcessedLoadAndActiveCourier)
     test::ApplicationHarness app {storage};
     app.seedDataset();
     const auto  courierId = createCourier(app, "pum1@hubflow.local");
-    const auto& batch     = app.openSortingBatch.execute(app.operador(), logistics::domain::Zone::Sur);
+    const auto& batch     = app.openSortingBatch.execute(app.operador(), "SUR");
     EXPECT_THROW(app.assignDeliveryRoute.execute(app.operador(),
                                                  routing::application::AssignRouteRequest {batch.id(), courierId, {}}),
                  business_error);

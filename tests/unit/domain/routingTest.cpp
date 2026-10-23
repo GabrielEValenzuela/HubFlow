@@ -118,7 +118,7 @@ TEST_F(RoutingFixture, StartEqualsGoalAndUnreachableGoal)
     EXPECT_EQ(same.path.size(), 1U);
     EXPECT_DOUBLE_EQ(same.metrics.costTotal, 0.0);
 
-    map.addNode(RoadNode {"X1", "Isla", false, logistics::domain::Zone::Sur, 30.0, 30.0});
+    map.addNode(RoadNode {"X1", "Isla", false, "SUR", 30.0, 30.0});
     const SearchTrace unreachable = search(SearchAlgorithm::BreadthFirst, "HUB", "X1");
     EXPECT_FALSE(unreachable.metrics.solutionFound);
     EXPECT_EQ(unreachable.path.size(), 0U);

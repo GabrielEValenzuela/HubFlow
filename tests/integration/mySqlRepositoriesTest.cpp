@@ -1,5 +1,7 @@
 #include "hubflow/audit/adapters/out/mysql/mySqlAuditLog.hpp"
+#include "hubflow/identity/adapters/out/mysql/mySqlRolePermissionRepository.hpp"
 #include "hubflow/identity/adapters/out/mysql/mySqlUserRepository.hpp"
+#include "hubflow/logistics/adapters/out/mysql/mySqlCatalogRepository.hpp"
 #include "hubflow/logistics/adapters/out/mysql/mySqlShipmentRepository.hpp"
 #include "hubflow/platform/config/settings.hpp"
 #include "hubflow/platform/mysql/mySqlConnection.hpp"
@@ -19,8 +21,13 @@ using namespace hubflow;
 
 namespace
 {
-constexpr const char* MIGRATIONS[] {"001_schema.sql", "002_road_map.sql", "003_idempotency.sql"};
-constexpr const char* TABLES[] {"idempotency_keys",
+constexpr const char* MIGRATIONS[] {"001_schema.sql", "002_road_map.sql", "003_idempotency.sql", "004_catalogs.sql"};
+constexpr const char* TABLES[] {"shipment_feature_links",
+                                "shipment_features",
+                                "service_levels",
+                                "zones",
+                                "role_permissions",
+                                "idempotency_keys",
                                 "audit_events",
                                 "route_stops",
                                 "routes",
@@ -59,6 +66,42 @@ private:
     void restoreMovement(const std::string& code, const logistics::domain::Movement& movement) override
     {
         movements.emplace_back(code, movement);
+    }
+};
+
+class CatalogCollector final : public logistics::application::CatalogRestorer
+{
+public:
+    std::vector<logistics::domain::ZoneState>            zones;
+    std::vector<logistics::domain::ServiceLevelState>    services;
+    std::vector<logistics::domain::ShipmentFeatureState> features;
+
+private:
+    void restoreZone(const logistics::domain::ZoneState& state) override
+    {
+        zones.push_back(state);
+    }
+
+    void restoreServiceLevel(const logistics::domain::ServiceLevelState& state) override
+    {
+        services.push_back(state);
+    }
+
+    void restoreFeature(const logistics::domain::ShipmentFeatureState& state) override
+    {
+        features.push_back(state);
+    }
+};
+
+class GrantCollector final : public identity::application::GrantRestorer
+{
+public:
+    std::vector<std::pair<identity::domain::Role, identity::domain::Permission>> grants;
+
+private:
+    void restoreGrant(const identity::domain::Role role, const identity::domain::Permission permission) override
+    {
+        grants.emplace_back(role, permission);
     }
 };
 
@@ -136,8 +179,7 @@ protected:
                                                  const std::string&                          code)
     {
         logistics::domain::ShipmentState state;
-        state.draft = {
-            code, "Marta Lopez", logistics::domain::Zone::Norte, 2.5, logistics::domain::ServiceLevel::Express, "N2"};
+        state.draft  = {code, "Marta Lopez", "NORTE", 2.5, "EXPRESS", "N2"};
         state.ticket = 7;
         shipments.add(state);
         return state;
@@ -258,4 +300,119 @@ TEST_F(MySqlRepositories, IdempotencyStoreKeepsTheFirstResponse)
     EXPECT_EQ(found->body, "{\"a\":1}");
     EXPECT_EQ(found->status, 201);
     EXPECT_FALSE(store.find(2, "clave").has_value());
+}
+
+TEST_F(MySqlRepositories, MigrationSeedsTheReferenceCatalogsAndPermissions)
+{
+    logistics::adapters::MySqlCatalogRepository       catalogsAdapter {connection()};
+    logistics::application::CatalogRepository&        catalogs = catalogsAdapter;
+    identity::adapters::MySqlRolePermissionRepository grantsAdapter {connection()};
+    identity::application::RolePermissionRepository&  grants = grantsAdapter;
+    CatalogCollector                                  collector;
+    GrantCollector                                    permissions;
+
+    catalogs.loadAll(collector);
+    grants.loadAll(permissions);
+
+    ASSERT_EQ(collector.zones.size(), 3U);
+    EXPECT_EQ(collector.zones[0].code, "CENTRO");
+    ASSERT_EQ(collector.services.size(), 3U);
+    EXPECT_EQ(collector.services[0].code, "EXPRESS");
+    EXPECT_EQ(collector.services[0].priority, 3U);
+    EXPECT_EQ(collector.features.size(), 3U);
+    EXPECT_EQ(permissions.grants.size(), 14U);
+}
+
+TEST_F(MySqlRepositories, CatalogChangesAreUpsertedAndKeepTheirOrder)
+{
+    logistics::adapters::MySqlCatalogRepository catalogsAdapter {connection()};
+    logistics::application::CatalogRepository&  catalogs = catalogsAdapter;
+    catalogs.saveZone({"OESTE", "Oeste", true});
+    catalogs.saveZone({"NORTE", "Zona Norte", false});
+    catalogs.saveServiceLevel({"RELAMPAGO", "Relámpago", 10, true});
+    catalogs.saveFeature({"DOCUMENTOS", "Documentos", true});
+    CatalogCollector collector;
+
+    catalogs.loadAll(collector);
+
+    ASSERT_EQ(collector.zones.size(), 4U);
+    EXPECT_EQ(collector.zones[1].name, "Zona Norte");
+    EXPECT_FALSE(collector.zones[1].active);
+    EXPECT_EQ(collector.zones[3].code, "OESTE");
+    EXPECT_EQ(collector.services.back().priority, 10U);
+    EXPECT_EQ(collector.features.back().code, "DOCUMENTOS");
+}
+
+TEST_F(MySqlRepositories, ShipmentFeaturesSurviveReload)
+{
+    logistics::adapters::MySqlShipmentRepository shipmentsAdapter {connection()};
+    logistics::application::ShipmentRepository&  shipments = shipmentsAdapter;
+    logistics::domain::ShipmentState             state;
+    state.draft = {"PKG-9001", "Marta Lopez", "NORTE", 2.5, "EXPRESS", "N2"};
+    state.draft.features.pushBack("FRAGIL");
+    state.draft.features.pushBack("REFRIGERADO");
+    state.ticket = 1;
+    shipments.add(state);
+    ShipmentCollector collector;
+
+    shipments.loadAll(collector);
+
+    ASSERT_EQ(collector.states.size(), 1U);
+    ASSERT_EQ(collector.states[0].draft.features.size(), 2U);
+    EXPECT_EQ(collector.states[0].draft.features[0], "FRAGIL");
+}
+
+TEST_F(MySqlRepositories, NewMapPointsAndTheirChangesSurviveReload)
+{
+    logistics::adapters::MySqlCatalogRepository catalogsAdapter {connection()};
+    logistics::application::CatalogRepository&  catalogs = catalogsAdapter;
+    catalogs.saveZone({"OESTE", "Oeste", true});
+    routing::adapters::MySqlRoadMapRepository   mapsAdapter {connection()};
+    routing::application::RoadMapRepository&    maps = mapsAdapter;
+    ds::DynamicArray<routing::domain::RoadLink> links;
+    links.pushBack({"HUB", 4.5});
+    maps.addNode({"O1", "Plaza Oeste", false, "OESTE", 6.0, 10.0, true}, links);
+    maps.updateNode({"O1", "Plaza Oeste", false, "CENTRO", 6.0, 10.0, false});
+    routing::domain::RoadMap map;
+
+    maps.loadInto(map);
+
+    EXPECT_EQ(map.nodeCount(), 16U);
+    const auto& added = map.node(map.require("O1"));
+    EXPECT_EQ(added.zone, "CENTRO");
+    EXPECT_FALSE(added.active);
+    EXPECT_EQ(map.graph().degree(map.require("HUB")), 5U);
+}
+
+TEST_F(MySqlRepositories, ReassigningARouteIsPersisted)
+{
+    identity::adapters::MySqlUserRepository      usersAdapter {connection()};
+    identity::application::UserRepository&       users = usersAdapter;
+    logistics::adapters::MySqlShipmentRepository shipmentsAdapter {connection()};
+    logistics::application::ShipmentRepository&  shipments = shipmentsAdapter;
+    routing::adapters::MySqlRouteRepository      routesAdapter {connection()};
+    routing::application::RouteRepository&       routes  = routesAdapter;
+    const auto                                   courier = addCourier(users);
+    identity::domain::UserState                  other;
+    other.id           = users.nextIdentity();
+    other.email        = "pum2@hubflow.local";
+    other.name         = "Pum Dos";
+    other.role         = identity::domain::Role::Pum;
+    other.passwordHash = "hash";
+    users.add(other);
+    addShipment(shipments, "PKG-9001");
+    routing::domain::RouteRecord record;
+    record.id        = 1;
+    record.courier   = {courier.id, courier.name};
+    record.createdAt = 1700000000;
+    record.stops.pushBack(routing::domain::RouteStop {1, "PKG-9001", "N2", routing::domain::StopOutcome::Pending});
+    routes.add(record);
+
+    routes.updateCourier(1, {other.id, other.name});
+    RouteCollector collector;
+    routes.loadAll(collector);
+
+    ASSERT_EQ(collector.records.size(), 1U);
+    EXPECT_EQ(collector.records[0].courier.id, other.id);
+    EXPECT_EQ(collector.records[0].courier.name, "Pum Dos");
 }

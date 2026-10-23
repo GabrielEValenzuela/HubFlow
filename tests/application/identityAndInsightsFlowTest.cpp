@@ -28,7 +28,7 @@ TEST(IdentityFlow, SignInAuthenticateAndPermissions)
                                  identity::application::RegisterUserRequest {
                                      "op@hubflow.local", "Operador", identity::domain::Role::Operador, "operador123"});
     EXPECT_THROW(app.registerUser.execute(
-                     shared::application::Principal {operador.id, "Operador", operador.role},
+                     shared::application::Principal {operador.id, "Operador", operador.role, &app.policy},
                      identity::application::RegisterUserRequest {"x@hubflow.local", "X", {}, "operador123"}),
                  business_error);
 
@@ -50,10 +50,10 @@ TEST(InsightsFlow, CombinesSetsAndResolvesShipmentsThroughBPlus)
     app.seedDataset();
     insights::application::SetSelector north;
     north.kind = insights::application::SetSelector::Kind::Zone;
-    north.zone = logistics::domain::Zone::Norte;
+    north.zone = "NORTE";
     insights::application::SetSelector express;
     express.kind    = insights::application::SetSelector::Kind::Service;
-    express.service = logistics::domain::ServiceLevel::Express;
+    express.service = "EXPRESS";
 
     const auto intersection = app.combineCodeSets.execute(
         app.operador(), insights::application::SetOperationKind::Intersection, north, express);
@@ -80,17 +80,12 @@ TEST(InsightsFlow, NewShipmentIsReachableThroughEveryStructure)
     test::Storage            storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
-    app.registerShipment.execute(app.operador(),
-                                 logistics::domain::ShipmentDraft {"PKG-1009",
-                                                                   "Inés Ríos",
-                                                                   logistics::domain::Zone::Norte,
-                                                                   2.0,
-                                                                   logistics::domain::ServiceLevel::Express,
-                                                                   "N4"});
+    app.registerShipment.execute(
+        app.operador(), logistics::domain::ShipmentDraft {"PKG-1009", "Inés Ríos", "NORTE", 2.0, "EXPRESS", "N4"});
     EXPECT_NE(app.lookupInBPlusTree.execute(app.operador(), "PKG-1009").pShipment, nullptr);
     insights::application::SetSelector express;
     express.kind    = insights::application::SetSelector::Kind::Service;
-    express.service = logistics::domain::ServiceLevel::Express;
+    express.service = "EXPRESS";
     EXPECT_TRUE(app.getCodeSet.execute(app.operador(), express).contains("PKG-1009"));
     const auto& shipment = app.getShipment.execute(app.operador(), "PKG-1009");
     EXPECT_TRUE(shipment.stateHistory().test(0));

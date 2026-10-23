@@ -8,15 +8,20 @@ namespace hubflow::test
 ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     : storage {sharedStorage}
     , deliveryPoints {routing.map}
+    , occupancy {logistics, routing}
+    , zoneDirectory {logistics}
+    , courierWorkload {routing}
     , m_projector {logistics}
     , m_shipmentPersistence {storage.shipments}
     , m_routePersistence {storage.routes}
     , m_userPersistence {storage.users}
+    , m_catalogPersistence {storage.catalogs}
+    , m_roadMapPersistence {storage.maps}
     , m_auditLog {storage.audit}
     , m_signIn {storage.users, hasher, tokens, clock}
-    , m_authenticate {storage.users, tokens, clock}
+    , m_authenticate {storage.users, tokens, policy, clock}
     , m_registerUser {storage.users, hasher, bus, clock}
-    , m_updateUser {storage.users, hasher, bus, clock}
+    , m_updateUser {storage.users, hasher, courierWorkload, bus, clock}
     , m_listUsers {storage.users}
     , m_listCouriers {storage.users}
     , m_findUser {storage.users}
@@ -34,6 +39,15 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , m_summarizeZone {logistics}
     , m_findHeaviestShipment {logistics}
     , m_getOperationsMetrics {logistics}
+    , m_createZone {logistics, bus, clock}
+    , m_updateZone {logistics, occupancy, bus, clock}
+    , m_listZones {logistics}
+    , m_createServiceLevel {logistics, bus, clock}
+    , m_updateServiceLevel {logistics, occupancy, bus, clock}
+    , m_listServiceLevels {logistics}
+    , m_createShipmentFeature {logistics, bus, clock}
+    , m_updateShipmentFeature {logistics, bus, clock}
+    , m_listShipmentFeatures {logistics}
     , m_openSortingBatch {logistics, desk}
     , m_sortSortingBatch {desk}
     , m_prepareSortingBatch {desk}
@@ -46,6 +60,9 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , m_compareSortingBatchSearches {desk}
     , m_assignDeliveryRoute {routing, desk, storage.users, bus, clock}
     , m_resolveRouteStop {logistics, routing, bus, clock}
+    , m_reassignDeliveryRoute {routing, storage.users, bus, clock}
+    , m_addRoadNode {routing, zoneDirectory, bus, clock}
+    , m_updateRoadNode {routing, zoneDirectory, bus, clock}
     , m_getRoadMap {routing}
     , m_previewRoute {routing}
     , m_listRoutes {routing}
@@ -81,6 +98,15 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , summarizeZone {m_summarizeZone}
     , findHeaviestShipment {m_findHeaviestShipment}
     , getOperationsMetrics {m_getOperationsMetrics}
+    , createZone {m_createZone}
+    , updateZone {m_updateZone}
+    , listZones {m_listZones}
+    , createServiceLevel {m_createServiceLevel}
+    , updateServiceLevel {m_updateServiceLevel}
+    , listServiceLevels {m_listServiceLevels}
+    , createShipmentFeature {m_createShipmentFeature}
+    , updateShipmentFeature {m_updateShipmentFeature}
+    , listShipmentFeatures {m_listShipmentFeatures}
     , openSortingBatch {m_openSortingBatch}
     , sortSortingBatch {m_sortSortingBatch}
     , prepareSortingBatch {m_prepareSortingBatch}
@@ -93,6 +119,9 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     , compareSortingBatchSearches {m_compareSortingBatchSearches}
     , assignDeliveryRoute {m_assignDeliveryRoute}
     , resolveRouteStop {m_resolveRouteStop}
+    , reassignDeliveryRoute {m_reassignDeliveryRoute}
+    , addRoadNode {m_addRoadNode}
+    , updateRoadNode {m_updateRoadNode}
     , getRoadMap {m_getRoadMap}
     , previewRoute {m_previewRoute}
     , listRoutes {m_listRoutes}
@@ -111,24 +140,27 @@ ApplicationHarness::ApplicationHarness(Storage& sharedStorage)
     bus.subscribe(m_shipmentPersistence);
     bus.subscribe(m_routePersistence);
     bus.subscribe(m_userPersistence);
+    bus.subscribe(m_catalogPersistence);
+    bus.subscribe(m_roadMapPersistence);
     bus.subscribe(m_auditLog);
-    logistics::application::LogisticsHydrator {logistics}.hydrate(storage.shipments);
+    identity::application::AccessPolicyHydrator {policy}.hydrate(storage.rolePermissions);
+    logistics::application::LogisticsHydrator {logistics}.hydrate(storage.catalogs, storage.shipments);
     routing::application::RoutingHydrator {routing}.hydrate(storage.maps, storage.routes);
 }
 
 shared::application::Principal ApplicationHarness::admin() const
 {
-    return shared::application::Principal {1, "Admin", identity::domain::Role::Admin};
+    return shared::application::Principal {1, "Admin", identity::domain::Role::Admin, &policy};
 }
 
 shared::application::Principal ApplicationHarness::operador() const
 {
-    return shared::application::Principal {2, "Operador", identity::domain::Role::Operador};
+    return shared::application::Principal {2, "Operador", identity::domain::Role::Operador, &policy};
 }
 
 shared::application::Principal ApplicationHarness::pum(const std::uint64_t userId) const
 {
-    return shared::application::Principal {userId, "PUM", identity::domain::Role::Pum};
+    return shared::application::Principal {userId, "PUM", identity::domain::Role::Pum, &policy};
 }
 
 void ApplicationHarness::seedDataset()

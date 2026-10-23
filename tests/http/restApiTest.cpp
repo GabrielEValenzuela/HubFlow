@@ -29,7 +29,7 @@ json validShipment(const std::string& code)
 
 std::uint64_t openPreparedNorthBatch(HttpHarness& http)
 {
-    const auto batchId = http.app.openSortingBatch.execute(http.app.operador(), logistics::domain::Zone::Norte).id();
+    const auto batchId = http.app.openSortingBatch.execute(http.app.operador(), "NORTE").id();
     http.app.sortSortingBatch.execute(http.app.operador(), batchId, sorting::domain::SortCriteria::CodeAscending);
     http.app.prepareSortingBatch.execute(http.app.operador(), batchId);
     return batchId;
@@ -94,7 +94,7 @@ TEST(RestApi, PumCannotRegisterShipments)
 TEST(RestApi, InvalidShipmentListsEveryFieldError)
 {
     HttpHarness http;
-    const json  invalid {{"code", "XYZ"}, {"recipient", "A"}, {"zone", "OESTE"}, {"weightKg", -3}};
+    const json  invalid {{"code", "XYZ"}, {"recipient", "A"}, {"zone", "oeste"}, {"weightKg", -3}};
     const auto  result =
         http.client().Post(url("/shipments"), http.as("operador@hubflow.local"), invalid.dump(), JSON_TYPE);
 
@@ -365,4 +365,220 @@ TEST(RestApi, UnknownApiRouteIsProblemDetails)
     ASSERT_TRUE(result);
     EXPECT_EQ(result->status, 404);
     EXPECT_NE(result->get_header_value("Content-Type").find("application/problem+json"), std::string::npos);
+}
+
+TEST(RestApi, AdministratorConfiguresZonesAndOthersCannot)
+{
+    HttpHarness http;
+    const json  oeste {{"code", "OESTE"}, {"name", "Oeste"}};
+
+    const auto denied   = http.client().Post(url("/zones"), http.as("operador@hubflow.local"), oeste.dump(), JSON_TYPE);
+    const auto created  = http.client().Post(url("/zones"), http.as("admin@hubflow.local"), oeste.dump(), JSON_TYPE);
+    const auto repeated = http.client().Post(url("/zones"), http.as("admin@hubflow.local"), oeste.dump(), JSON_TYPE);
+    const auto malformed = http.client().Post(
+        url("/zones"), http.as("admin@hubflow.local"), json {{"code", "oeste"}, {"name", "x"}}.dump(), JSON_TYPE);
+
+    ASSERT_TRUE(denied && created && repeated && malformed);
+    EXPECT_EQ(denied->status, 403);
+    EXPECT_EQ(created->status, 201);
+    EXPECT_EQ(created->get_header_value("Location"), url("/zones/OESTE"));
+    EXPECT_EQ(repeated->status, 409);
+    EXPECT_EQ(malformed->status, 422);
+
+    const auto listed = http.client().Get(url("/zones"), http.as("pum1@hubflow.local"));
+    ASSERT_TRUE(listed);
+    EXPECT_EQ(listed->status, 200);
+    const auto items = HttpHarness::bodyOf(listed).at("items");
+    ASSERT_EQ(items.size(), 4U);
+    EXPECT_EQ(items[3].at("code"), "OESTE");
+    EXPECT_TRUE(items[3].at("active").get<bool>());
+}
+
+TEST(RestApi, PatchingAZoneIsIdempotentAndDeactivationRespectsTheRules)
+{
+    HttpHarness http;
+    http.app.seedDataset();
+    const json close {{"active", false}};
+    const auto headers = http.as("admin@hubflow.local");
+
+    const auto blocked = http.client().Patch(url("/zones/NORTE"), headers, close.dump(), JSON_TYPE);
+    ASSERT_TRUE(blocked);
+    EXPECT_EQ(blocked->status, 409);
+    EXPECT_EQ(HttpHarness::bodyOf(blocked).at("code"), "zone.has_shipments");
+
+    http.client().Post(url("/zones"), headers, json {{"code", "OESTE"}, {"name", "Oeste"}}.dump(), JSON_TYPE);
+    const auto first  = http.client().Patch(url("/zones/OESTE"), headers, close.dump(), JSON_TYPE);
+    const auto second = http.client().Patch(url("/zones/OESTE"), headers, close.dump(), JSON_TYPE);
+    const auto rename =
+        http.client().Patch(url("/zones/OESTE"), headers, json {{"name", "Zona Oeste"}}.dump(), JSON_TYPE);
+    const auto unknown = http.client().Patch(url("/zones/ESTE"), headers, close.dump(), JSON_TYPE);
+
+    ASSERT_TRUE(first && second && rename && unknown);
+    EXPECT_EQ(first->status, 200);
+    EXPECT_EQ(second->status, 200);
+    EXPECT_EQ(HttpHarness::bodyOf(first), HttpHarness::bodyOf(second));
+    EXPECT_FALSE(HttpHarness::bodyOf(rename).at("active").get<bool>());
+    EXPECT_EQ(HttpHarness::bodyOf(rename).at("name"), "Zona Oeste");
+    EXPECT_EQ(unknown->status, 404);
+}
+
+TEST(RestApi, ANewZoneWithMapPointsReceivesPackagesWithFeatures)
+{
+    HttpHarness http;
+    const auto  admin = http.as("admin@hubflow.local");
+    http.client().Post(url("/zones"), admin, json {{"code", "OESTE"}, {"name", "Oeste"}}.dump(), JSON_TYPE);
+    const json point {{"id", "O1"},
+                      {"label", "Plaza Oeste"},
+                      {"zone", "OESTE"},
+                      {"x", 6.0},
+                      {"y", 10.0},
+                      {"links", json::array({json {{"to", "HUB"}, {"costKm", 4.5}}})}};
+
+    const auto createdPoint  = http.client().Post(url("/road-nodes"), admin, point.dump(), JSON_TYPE);
+    const auto repeatedPoint = http.client().Post(url("/road-nodes"), admin, point.dump(), JSON_TYPE);
+    const auto tooShort      = http.client().Post(url("/road-nodes"),
+                                             admin,
+                                             json {{"id", "O2"},
+                                                        {"label", "Atajo"},
+                                                        {"zone", "OESTE"},
+                                                        {"x", 0.0},
+                                                        {"y", 10.0},
+                                                        {"links", json::array({json {{"to", "HUB"}, {"costKm", 1.0}}})}}
+                                                 .dump(),
+                                             JSON_TYPE);
+    const auto noLinks =
+        http.client().Post(url("/road-nodes"),
+                           admin,
+                           json {{"id", "O3"}, {"label", "Isla"}, {"zone", "OESTE"}, {"x", 1.0}, {"y", 1.0}}.dump(),
+                           JSON_TYPE);
+
+    ASSERT_TRUE(createdPoint && repeatedPoint && tooShort && noLinks);
+    EXPECT_EQ(createdPoint->status, 201);
+    EXPECT_EQ(HttpHarness::bodyOf(createdPoint).at("zone"), "OESTE");
+    EXPECT_EQ(repeatedPoint->status, 409);
+    EXPECT_EQ(tooShort->status, 422);
+    EXPECT_EQ(noLinks->status, 422);
+
+    json shipment             = validShipment("PKG-3001");
+    shipment["zone"]          = "OESTE";
+    shipment["deliveryPoint"] = "O1";
+    shipment["features"]      = json::array({"FRAGIL", "REFRIGERADO"});
+    const auto registered =
+        http.client().Post(url("/shipments"), http.as("operador@hubflow.local"), shipment.dump(), JSON_TYPE);
+    ASSERT_TRUE(registered);
+    EXPECT_EQ(registered->status, 201);
+    EXPECT_EQ(HttpHarness::bodyOf(registered).at("features"), json::array({"FRAGIL", "REFRIGERADO"}));
+
+    shipment["code"]     = "PKG-3002";
+    shipment["features"] = json::array({"NO_EXISTE"});
+    const auto badFeature =
+        http.client().Post(url("/shipments"), http.as("operador@hubflow.local"), shipment.dump(), JSON_TYPE);
+    ASSERT_TRUE(badFeature);
+    EXPECT_EQ(badFeature->status, 422);
+
+    const auto summary = http.client().Get(url("/zones/OESTE/summary"), http.as("operador@hubflow.local"));
+    ASSERT_TRUE(summary);
+    EXPECT_EQ(HttpHarness::bodyOf(summary).at("count"), 1);
+    const auto missing = http.client().Get(url("/zones/ESTE/summary"), http.as("operador@hubflow.local"));
+    ASSERT_TRUE(missing);
+    EXPECT_EQ(missing->status, 404);
+
+    const auto map = http.client().Get(url("/road-map"), http.as("operador@hubflow.local"));
+    ASSERT_TRUE(map);
+    const auto mapBody = HttpHarness::bodyOf(map);
+    bool       found {false};
+    for (const auto& node : mapBody.at("nodes"))
+    {
+        found = found || (node.at("id") == "O1" && node.at("zone") == "OESTE" && node.at("active").get<bool>());
+    }
+    EXPECT_TRUE(found);
+}
+
+TEST(RestApi, ServiceLevelsAndFeaturesAreManagedAsData)
+{
+    HttpHarness http;
+    const auto  admin = http.as("admin@hubflow.local");
+
+    const auto service = http.client().Post(url("/service-levels"),
+                                            admin,
+                                            json {{"code", "RELAMPAGO"}, {"name", "Relámpago"}, {"priority", 9}}.dump(),
+                                            JSON_TYPE);
+    const auto feature = http.client().Post(
+        url("/shipment-features"), admin, json {{"code", "DOCUMENTOS"}, {"name", "Documentos"}}.dump(), JSON_TYPE);
+    const auto badPriority = http.client().Post(
+        url("/service-levels"), admin, json {{"code", "NADA"}, {"name", "Nada"}, {"priority", 0}}.dump(), JSON_TYPE);
+
+    ASSERT_TRUE(service && feature && badPriority);
+    EXPECT_EQ(service->status, 201);
+    EXPECT_EQ(feature->status, 201);
+    EXPECT_EQ(badPriority->status, 422);
+
+    http.client().Post(
+        url("/shipments"), http.as("operador@hubflow.local"), validShipment("PKG-3001").dump(), JSON_TYPE);
+    json urgent       = validShipment("PKG-3002");
+    urgent["service"] = "RELAMPAGO";
+    http.client().Post(url("/shipments"), http.as("operador@hubflow.local"), urgent.dump(), JSON_TYPE);
+    const auto pending = http.client().Get(url("/pending-shipments"), http.as("operador@hubflow.local"));
+    ASSERT_TRUE(pending);
+    EXPECT_EQ(HttpHarness::bodyOf(pending).at("items")[0].at("code"), "PKG-3002");
+
+    const auto services = http.client().Get(url("/service-levels"), http.as("operador@hubflow.local"));
+    const auto features = http.client().Get(url("/shipment-features"), http.as("operador@hubflow.local"));
+    ASSERT_TRUE(services && features);
+    EXPECT_EQ(HttpHarness::bodyOf(services).at("items").size(), 4U);
+    EXPECT_EQ(HttpHarness::bodyOf(features).at("items").size(), 4U);
+
+    const auto blocked =
+        http.client().Patch(url("/service-levels/RELAMPAGO"), admin, json {{"active", false}}.dump(), JSON_TYPE);
+    ASSERT_TRUE(blocked);
+    EXPECT_EQ(blocked->status, 409);
+}
+
+TEST(RestApi, ACourierWithARouteInProgressIsDeactivatedOnlyAfterTheRouteIsReassigned)
+{
+    HttpHarness http;
+    http.app.seedDataset();
+    const auto batchId = openPreparedNorthBatch(http);
+    http.app.processSortingBatchItem.execute(http.app.operador(), batchId);
+    const auto routeId = http.app.assignDeliveryRoute
+                             .execute(http.app.operador(),
+                                      routing::application::AssignRouteRequest {
+                                          batchId, http.pumId, routing::domain::SearchAlgorithm::AStar})
+                             .id();
+    const auto admin = http.as("admin@hubflow.local");
+    const auto close = json {{"active", false}}.dump();
+
+    const auto blocked = http.client().Patch(url("/users/" + std::to_string(http.pumId)), admin, close, JSON_TYPE);
+    ASSERT_TRUE(blocked);
+    EXPECT_EQ(blocked->status, 409);
+    EXPECT_EQ(HttpHarness::bodyOf(blocked).at("code"), "user.has_route_in_progress");
+
+    const auto path      = url("/routes/" + std::to_string(routeId) + "/courier");
+    const auto body      = json {{"courierId", http.otherPumId}}.dump();
+    const auto byCourier = http.client().Put(path, http.as("pum1@hubflow.local"), body, JSON_TYPE);
+    const auto moved     = http.client().Put(path, http.as("operador@hubflow.local"), body, JSON_TYPE);
+    const auto again     = http.client().Put(path, admin, body, JSON_TYPE);
+    const auto invalid   = http.client().Put(path, admin, json {{"courierId", 9999}}.dump(), JSON_TYPE);
+
+    ASSERT_TRUE(byCourier && moved && again && invalid);
+    EXPECT_EQ(byCourier->status, 403);
+    EXPECT_EQ(moved->status, 200);
+    EXPECT_EQ(HttpHarness::bodyOf(moved).at("courier").at("id"), http.otherPumId);
+    EXPECT_EQ(again->status, 200);
+    EXPECT_EQ(invalid->status, 422);
+
+    const auto closed = http.client().Patch(url("/users/" + std::to_string(http.pumId)), admin, close, JSON_TYPE);
+    ASSERT_TRUE(closed);
+    EXPECT_EQ(closed->status, 200);
+    EXPECT_FALSE(HttpHarness::bodyOf(closed).at("active").get<bool>());
+
+    const auto audit = http.client().Get(url("/audit-events"), admin);
+    ASSERT_TRUE(audit);
+    const auto auditBody = HttpHarness::bodyOf(audit);
+    bool       reassigned {false};
+    for (const auto& event : auditBody.at("items"))
+    {
+        reassigned = reassigned || event.at("type") == "route.reassigned";
+    }
+    EXPECT_TRUE(reassigned);
 }

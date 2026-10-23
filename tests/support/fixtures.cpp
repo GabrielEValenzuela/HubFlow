@@ -4,8 +4,6 @@ namespace hubflow::test
 {
 namespace
 {
-using logistics::domain::ServiceLevel;
-using logistics::domain::Zone;
 
 struct EdgeData
 {
@@ -15,21 +13,21 @@ struct EdgeData
 };
 
 const routing::domain::RoadNode CITY_NODES[] {
-    {"HUB", "Centro de Distribución", true, Zone::Centro, 10.0, 10.0},
-    {"C1", "Plaza Mayor", false, Zone::Centro, 7.0, 10.0},
-    {"C2", "Mercado Central", false, Zone::Centro, 13.0, 11.0},
-    {"C3", "Estación Norte", false, Zone::Centro, 10.0, 7.0},
-    {"C4", "Barrio Universitario", false, Zone::Centro, 5.0, 7.0},
-    {"N1", "Av. Libertador", false, Zone::Norte, 9.0, 5.0},
-    {"N2", "Parque Norte", false, Zone::Norte, 13.0, 4.0},
-    {"N3", "Villa Alta", false, Zone::Norte, 6.0, 2.0},
-    {"N4", "Las Lomas", false, Zone::Norte, 11.0, 1.0},
-    {"N5", "Puerto Norte", false, Zone::Norte, 16.0, 2.0},
-    {"S1", "Av. del Sur", false, Zone::Sur, 9.0, 14.0},
-    {"S2", "Barrio Industrial", false, Zone::Sur, 13.0, 15.0},
-    {"S3", "Villa Sur", false, Zone::Sur, 6.0, 17.0},
-    {"S4", "Costanera", false, Zone::Sur, 11.0, 18.0},
-    {"S5", "Polo Sur", false, Zone::Sur, 16.0, 17.0},
+    {"HUB", "Centro de Distribución", true, "CENTRO", 10.0, 10.0},
+    {"C1", "Plaza Mayor", false, "CENTRO", 7.0, 10.0},
+    {"C2", "Mercado Central", false, "CENTRO", 13.0, 11.0},
+    {"C3", "Estación Norte", false, "CENTRO", 10.0, 7.0},
+    {"C4", "Barrio Universitario", false, "CENTRO", 5.0, 7.0},
+    {"N1", "Av. Libertador", false, "NORTE", 9.0, 5.0},
+    {"N2", "Parque Norte", false, "NORTE", 13.0, 4.0},
+    {"N3", "Villa Alta", false, "NORTE", 6.0, 2.0},
+    {"N4", "Las Lomas", false, "NORTE", 11.0, 1.0},
+    {"N5", "Puerto Norte", false, "NORTE", 16.0, 2.0},
+    {"S1", "Av. del Sur", false, "SUR", 9.0, 14.0},
+    {"S2", "Barrio Industrial", false, "SUR", 13.0, 15.0},
+    {"S3", "Villa Sur", false, "SUR", 6.0, 17.0},
+    {"S4", "Costanera", false, "SUR", 11.0, 18.0},
+    {"S5", "Polo Sur", false, "SUR", 16.0, 17.0},
 };
 
 constexpr EdgeData CITY_EDGES[] {
@@ -45,28 +43,84 @@ constexpr EdgeData CITY_EDGES[] {
 std::vector<logistics::domain::ShipmentDraft> initialDataset()
 {
     return {
-        {"PKG-1001", "Ana Torres", Zone::Centro, 1.20, ServiceLevel::Estandar, "C1"},
-        {"PKG-1002", "Bruno Díaz", Zone::Norte, 0.75, ServiceLevel::Express, "N2"},
-        {"PKG-1003", "Carla Ruiz", Zone::Sur, 4.10, ServiceLevel::Prioritario, "S3"},
-        {"PKG-1004", "Diego López", Zone::Centro, 2.30, ServiceLevel::Estandar, "C2"},
-        {"PKG-1005", "Elena Castro", Zone::Norte, 1.90, ServiceLevel::Prioritario, "N3"},
-        {"PKG-1006", "Franco Gómez", Zone::Sur, 0.50, ServiceLevel::Express, "S5"},
-        {"PKG-1007", "Gabriela Soto", Zone::Centro, 6.20, ServiceLevel::Estandar, "C4"},
-        {"PKG-1008", "Hugo Pérez", Zone::Norte, 3.40, ServiceLevel::Prioritario, "N5"},
+        {"PKG-1001", "Ana Torres", "CENTRO", 1.20, "ESTANDAR", "C1"},
+        {"PKG-1002", "Bruno Díaz", "NORTE", 0.75, "EXPRESS", "N2"},
+        {"PKG-1003", "Carla Ruiz", "SUR", 4.10, "PRIORITARIO", "S3"},
+        {"PKG-1004", "Diego López", "CENTRO", 2.30, "ESTANDAR", "C2"},
+        {"PKG-1005", "Elena Castro", "NORTE", 1.90, "PRIORITARIO", "N3"},
+        {"PKG-1006", "Franco Gómez", "SUR", 0.50, "EXPRESS", "S5"},
+        {"PKG-1007", "Gabriela Soto", "CENTRO", 6.20, "ESTANDAR", "C4"},
+        {"PKG-1008", "Hugo Pérez", "NORTE", 3.40, "PRIORITARIO", "N5"},
     };
 }
 
 logistics::domain::ShipmentDraft
-draft(const std::string& code, const ServiceLevel service, const Zone zone, const double weight)
+draft(const std::string& code, const std::string& service, const std::string& zone, const double weight)
 {
     return logistics::domain::ShipmentDraft {code, "Cliente de prueba", zone, weight, service, "N1"};
 }
 
-void buildReferenceCity(routing::domain::RoadMap& map)
+void seedZones(logistics::domain::ZoneCatalog& zones)
+{
+    zones.adopt(logistics::domain::Zone::restore({"CENTRO", "Centro", true}));
+    zones.adopt(logistics::domain::Zone::restore({"NORTE", "Norte", true}));
+    zones.adopt(logistics::domain::Zone::restore({"SUR", "Sur", true}));
+}
+
+void seedServiceLevels(logistics::domain::ServiceLevelCatalog& services)
+{
+    services.adopt(logistics::domain::ServiceLevel::restore({"EXPRESS", "Express", 3, true}));
+    services.adopt(logistics::domain::ServiceLevel::restore({"PRIORITARIO", "Prioritario", 2, true}));
+    services.adopt(logistics::domain::ServiceLevel::restore({"ESTANDAR", "Estándar", 1, true}));
+}
+
+ReferencePriorities::ReferencePriorities()
+    : services {logistics::domain::CatalogNouns {"service_level", "el servicio", "un servicio"}}
+    , policy {services}
+{
+    seedServiceLevels(services);
+}
+
+void seedFeatures(logistics::domain::FeatureCatalog& features)
+{
+    features.adopt(logistics::domain::ShipmentFeature::restore({"FRAGIL", "Frágil", true}));
+    features.adopt(logistics::domain::ShipmentFeature::restore({"REFRIGERADO", "Refrigerado", true}));
+    features.adopt(logistics::domain::ShipmentFeature::restore({"VOLUMINOSO", "Voluminoso", true}));
+}
+
+void grantDefaultPermissions(identity::domain::AccessPolicy& policy)
+{
+    using identity::domain::Permission;
+    using identity::domain::Role;
+    for (const auto permission : {Permission::ManageUsers,
+                                  Permission::OperateShipments,
+                                  Permission::OperateSortingDesk,
+                                  Permission::AssignRoutes,
+                                  Permission::ResolveStops,
+                                  Permission::ViewIndexes,
+                                  Permission::ViewAudit,
+                                  Permission::ManageCatalogs})
+    {
+        policy.grant(Role::Admin, permission);
+    }
+    for (const auto permission : {Permission::OperateShipments,
+                                  Permission::OperateSortingDesk,
+                                  Permission::AssignRoutes,
+                                  Permission::ResolveStops,
+                                  Permission::ViewIndexes})
+    {
+        policy.grant(Role::Operador, permission);
+    }
+    policy.grant(Role::Pum, Permission::ResolveStops);
+}
+
+void buildReferenceCity(routing::domain::RoadMap&                               map,
+                        const std::map<std::string, routing::domain::RoadNode>& overrides)
 {
     for (const auto& node : CITY_NODES)
     {
-        map.addNode(node);
+        const auto found = overrides.find(node.id);
+        map.addNode(found == overrides.end() ? node : found->second);
     }
     for (const auto& edge : CITY_EDGES)
     {

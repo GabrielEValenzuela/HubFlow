@@ -1,6 +1,7 @@
 #include "support/fixtures.hpp"
 
 #include "hubflow/logistics/domain/events/shipmentEvents.hpp"
+#include "hubflow/logistics/domain/services/catalogPriorityPolicy.hpp"
 #include "hubflow/logistics/domain/services/pendingShipments.hpp"
 #include "hubflow/logistics/domain/services/shipmentCatalog.hpp"
 #include "hubflow/logistics/domain/services/shipmentLookup.hpp"
@@ -55,6 +56,11 @@ private:
 class LogisticsFixture : public ::testing::Test
 {
 protected:
+    LogisticsFixture()
+        : pending {priorities.policy}
+    {
+    }
+
     Shipment& receive(const ShipmentDraft& shipmentDraft)
     {
         Shipment& shipment = catalog.adopt(Shipment::receive(shipmentDraft, tickets.next(), actor()));
@@ -73,9 +79,10 @@ protected:
         return codes;
     }
 
-    ShipmentCatalog  catalog;
-    PendingShipments pending;
-    TicketDispenser  tickets;
+    hubflow::test::ReferencePriorities priorities;
+    ShipmentCatalog                    catalog;
+    PendingShipments                   pending;
+    TicketDispenser                    tickets;
 };
 
 class PendingShipmentsTest : public LogisticsFixture
@@ -104,17 +111,17 @@ TEST_F(PendingShipmentsTest, OrdersByPriority)
 
 TEST_F(PendingShipmentsTest, KeepsArrivalOrderWithinSamePriority)
 {
-    receive(draft("PKG-0001", ServiceLevel::Express));
-    receive(draft("PKG-0002", ServiceLevel::Prioritario));
-    receive(draft("PKG-0003", ServiceLevel::Estandar));
-    receive(draft("PKG-0004", ServiceLevel::Express));
+    receive(draft("PKG-0001", "EXPRESS"));
+    receive(draft("PKG-0002", "PRIORITARIO"));
+    receive(draft("PKG-0003", "ESTANDAR"));
+    receive(draft("PKG-0004", "EXPRESS"));
     EXPECT_EQ(pendingCodes(), (std::vector<std::string> {"PKG-0001", "PKG-0004", "PKG-0002", "PKG-0003"}));
 }
 
 TEST_F(PendingShipmentsTest, DispatchRemovesNodeButKeepsShipment)
 {
-    Shipment& first = receive(draft("PKG-0001", ServiceLevel::Express));
-    receive(draft("PKG-0002", ServiceLevel::Estandar));
+    Shipment& first = receive(draft("PKG-0001", "EXPRESS"));
+    receive(draft("PKG-0002", "ESTANDAR"));
 
     Shipment* pPopped = pending.popFront();
     pPopped->dispatch("Asignado al móvil 12", actor());
@@ -129,9 +136,9 @@ TEST_F(PendingShipmentsTest, DispatchRemovesNodeButKeepsShipment)
 
 TEST_F(PendingShipmentsTest, RescheduleIncrementsAttemptsAndReinsertsByPriority)
 {
-    Shipment& express = receive(draft("PKG-0001", ServiceLevel::Express));
-    receive(draft("PKG-0002", ServiceLevel::Express));
-    receive(draft("PKG-0003", ServiceLevel::Estandar));
+    Shipment& express = receive(draft("PKG-0001", "EXPRESS"));
+    receive(draft("PKG-0002", "EXPRESS"));
+    receive(draft("PKG-0003", "ESTANDAR"));
     pending.remove(&express);
     express.dispatch("Salida", actor());
     express.reschedule("Destinatario ausente", tickets.next(), actor());
@@ -145,7 +152,7 @@ TEST_F(PendingShipmentsTest, RescheduleIncrementsAttemptsAndReinsertsByPriority)
 
 TEST_F(ShipmentHistoryTest, ReadsForwardAndBackward)
 {
-    Shipment& shipment = receive(draft("PKG-0001", ServiceLevel::Express));
+    Shipment& shipment = receive(draft("PKG-0001", "EXPRESS"));
     shipment.classify("Clasificado para zona NORTE", actor());
     shipment.dispatch("Asignado al móvil 12", actor());
     shipment.reschedule("Destinatario ausente", tickets.next(), actor());
@@ -182,12 +189,12 @@ TEST_F(PendingShipmentsTest, RecursiveZoneSummaryCountsWeightAndExpress)
     {
         receive(shipmentDraft);
     }
-    const ZoneSummary north = summarizeZone(pending.head(), Zone::Norte);
+    const ZoneSummary north = summarizeZone(pending.head(), "NORTE", priorities.policy);
     EXPECT_EQ(north.count, 3U);
     EXPECT_DOUBLE_EQ(north.totalWeightKg, 6.05);
-    EXPECT_EQ(north.expressCount, 1U);
-    EXPECT_EQ(heaviestInZone(pending.head(), Zone::Centro)->code(), "PKG-1007");
-    EXPECT_EQ(summarizeZone(nullptr, Zone::Sur).count, 0U);
+    EXPECT_EQ(north.urgentCount, 1U);
+    EXPECT_EQ(heaviestInZone(pending.head(), "CENTRO")->code(), "PKG-1007");
+    EXPECT_EQ(summarizeZone(nullptr, "SUR", priorities.policy).count, 0U);
 }
 
 TEST_F(PendingShipmentsTest, HandlesEmptyDuplicatedAndSingleElementCases)
@@ -195,20 +202,20 @@ TEST_F(PendingShipmentsTest, HandlesEmptyDuplicatedAndSingleElementCases)
     EXPECT_EQ(pending.popFront(), nullptr);
     EXPECT_THROW(catalog.require("PKG-9999"), business_error);
 
-    Shipment& only = receive(draft("PKG-0001", ServiceLevel::Estandar));
+    Shipment& only = receive(draft("PKG-0001", "ESTANDAR"));
     EXPECT_EQ(only.history().size(), 1U);
-    EXPECT_THROW(catalog.adopt(Shipment::receive(draft("PKG-0001", ServiceLevel::Express), tickets.next(), actor())),
+    EXPECT_THROW(catalog.adopt(Shipment::receive(draft("PKG-0001", "EXPRESS"), tickets.next(), actor())),
                  business_error);
     EXPECT_EQ(pending.popFront(), &only);
     EXPECT_TRUE(pending.empty());
-    receive(draft("PKG-0002", ServiceLevel::Express));
+    receive(draft("PKG-0002", "EXPRESS"));
     EXPECT_EQ(pendingCodes(), (std::vector<std::string> {"PKG-0002"}));
 }
 
 TEST(Shipment, EnforcesStateMachineAndTracksStateBits)
 {
     TicketDispenser tickets;
-    Shipment*       pShipment = Shipment::receive(draft("PKG-0001", ServiceLevel::Express), tickets.next(), actor());
+    Shipment*       pShipment = Shipment::receive(draft("PKG-0001", "EXPRESS"), tickets.next(), actor());
     EXPECT_THROW(pShipment->deliver("x", actor()), business_error);
     pShipment->dispatch("salida", actor());
     pShipment->reschedule("ausente", tickets.next(), actor());
@@ -225,7 +232,7 @@ TEST(Shipment, RaisesOneEventPerBehaviour)
 {
     TicketDispenser    tickets;
     RecordingPublisher publisher;
-    Shipment*          pShipment = Shipment::receive(draft("PKG-0001", ServiceLevel::Express), tickets.next(), actor());
+    Shipment*          pShipment = Shipment::receive(draft("PKG-0001", "EXPRESS"), tickets.next(), actor());
     pShipment->dispatch("salida", actor());
     pShipment->reschedule("ausente", tickets.next(), actor());
     pShipment->dispatch("salida", actor());
@@ -241,12 +248,11 @@ TEST(Shipment, RaisesOneEventPerBehaviour)
 TEST(Shipment, ValidatesValueObjects)
 {
     TicketDispenser tickets;
-    EXPECT_THROW(Shipment::receive(draft("PKG-1", ServiceLevel::Express), tickets.next(), actor()), business_error);
-    EXPECT_THROW(Shipment::receive(draft("PKG-0001", ServiceLevel::Express, Zone::Norte, 0.0), tickets.next(), actor()),
+    EXPECT_THROW(Shipment::receive(draft("PKG-1", "EXPRESS"), tickets.next(), actor()), business_error);
+    EXPECT_THROW(Shipment::receive(draft("PKG-0001", "EXPRESS", "NORTE", 0.0), tickets.next(), actor()),
                  business_error);
-    EXPECT_THROW(
-        Shipment::receive(draft("PKG-0001", ServiceLevel::Express, Zone::Norte, 51.0), tickets.next(), actor()),
-        business_error);
+    EXPECT_THROW(Shipment::receive(draft("PKG-0001", "EXPRESS", "NORTE", 51.0), tickets.next(), actor()),
+                 business_error);
 }
 
 TEST_F(ShipmentLookupTest, StrategiesCompareVisitedNodes)

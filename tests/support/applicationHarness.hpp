@@ -8,6 +8,8 @@
 #include "hubflow/audit/application/subscribers/auditLogSubscriber.hpp"
 #include "hubflow/audit/application/usecases/queries/countAuditEvents.hpp"
 #include "hubflow/audit/application/usecases/queries/listAuditEvents.hpp"
+#include "hubflow/identity/adapters/out/routing/routingCourierWorkload.hpp"
+#include "hubflow/identity/application/hydration/accessPolicyHydrator.hpp"
 #include "hubflow/identity/application/ports/in/authenticateUseCase.hpp"
 #include "hubflow/identity/application/ports/in/findUserUseCase.hpp"
 #include "hubflow/identity/application/ports/in/listCouriersUseCase.hpp"
@@ -40,8 +42,12 @@
 #include "hubflow/insights/application/usecases/queries/lookupInBst.hpp"
 #include "hubflow/insights/application/usecases/queries/rangeInBPlusTree.hpp"
 #include "hubflow/logistics/adapters/out/routing/roadMapDeliveryPoints.hpp"
+#include "hubflow/logistics/adapters/out/routing/routingPlantOccupancy.hpp"
 #include "hubflow/logistics/application/hydration/logisticsHydrator.hpp"
 #include "hubflow/logistics/application/ports/in/classifyShipmentUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/createServiceLevelUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/createShipmentFeatureUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/createZoneUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/deliverShipmentUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/dispatchNextShipmentUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/findHeaviestShipmentUseCase.hpp"
@@ -49,36 +55,60 @@
 #include "hubflow/logistics/application/ports/in/getOperationsMetricsUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/getShipmentUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/listPendingShipmentsUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/listServiceLevelsUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/listShipmentFeaturesUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/listShipmentsUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/listZonesUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/registerShipmentUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/rescheduleShipmentUseCase.hpp"
 #include "hubflow/logistics/application/ports/in/summarizeZoneUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/updateServiceLevelUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/updateShipmentFeatureUseCase.hpp"
+#include "hubflow/logistics/application/ports/in/updateZoneUseCase.hpp"
+#include "hubflow/logistics/application/subscribers/catalogPersistenceSubscriber.hpp"
 #include "hubflow/logistics/application/subscribers/pendingShipmentsProjector.hpp"
 #include "hubflow/logistics/application/subscribers/shipmentPersistenceSubscriber.hpp"
 #include "hubflow/logistics/application/usecases/commands/classifyShipment.hpp"
+#include "hubflow/logistics/application/usecases/commands/createServiceLevel.hpp"
+#include "hubflow/logistics/application/usecases/commands/createShipmentFeature.hpp"
+#include "hubflow/logistics/application/usecases/commands/createZone.hpp"
 #include "hubflow/logistics/application/usecases/commands/deliverShipment.hpp"
 #include "hubflow/logistics/application/usecases/commands/dispatchNextShipment.hpp"
 #include "hubflow/logistics/application/usecases/commands/registerShipment.hpp"
 #include "hubflow/logistics/application/usecases/commands/rescheduleShipment.hpp"
+#include "hubflow/logistics/application/usecases/commands/updateServiceLevel.hpp"
+#include "hubflow/logistics/application/usecases/commands/updateShipmentFeature.hpp"
+#include "hubflow/logistics/application/usecases/commands/updateZone.hpp"
 #include "hubflow/logistics/application/usecases/queries/findHeaviestShipment.hpp"
 #include "hubflow/logistics/application/usecases/queries/findShipment.hpp"
 #include "hubflow/logistics/application/usecases/queries/getOperationsMetrics.hpp"
 #include "hubflow/logistics/application/usecases/queries/getShipment.hpp"
 #include "hubflow/logistics/application/usecases/queries/listPendingShipments.hpp"
+#include "hubflow/logistics/application/usecases/queries/listServiceLevels.hpp"
+#include "hubflow/logistics/application/usecases/queries/listShipmentFeatures.hpp"
 #include "hubflow/logistics/application/usecases/queries/listShipments.hpp"
+#include "hubflow/logistics/application/usecases/queries/listZones.hpp"
 #include "hubflow/logistics/application/usecases/queries/summarizeZone.hpp"
 #include "hubflow/routing/adapters/out/logistics/logisticsStopShipments.hpp"
+#include "hubflow/routing/adapters/out/logistics/logisticsZoneDirectory.hpp"
 #include "hubflow/routing/application/hydration/routingHydrator.hpp"
+#include "hubflow/routing/application/ports/in/addRoadNodeUseCase.hpp"
 #include "hubflow/routing/application/ports/in/assignDeliveryRouteUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getCourierRouteSheetUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getRoadMapUseCase.hpp"
 #include "hubflow/routing/application/ports/in/getRouteUseCase.hpp"
 #include "hubflow/routing/application/ports/in/listRoutesUseCase.hpp"
 #include "hubflow/routing/application/ports/in/previewRouteUseCase.hpp"
+#include "hubflow/routing/application/ports/in/reassignDeliveryRouteUseCase.hpp"
 #include "hubflow/routing/application/ports/in/resolveRouteStopUseCase.hpp"
+#include "hubflow/routing/application/ports/in/updateRoadNodeUseCase.hpp"
+#include "hubflow/routing/application/subscribers/roadMapPersistenceSubscriber.hpp"
 #include "hubflow/routing/application/subscribers/routePersistenceSubscriber.hpp"
+#include "hubflow/routing/application/usecases/commands/addRoadNode.hpp"
 #include "hubflow/routing/application/usecases/commands/assignDeliveryRoute.hpp"
+#include "hubflow/routing/application/usecases/commands/reassignDeliveryRoute.hpp"
 #include "hubflow/routing/application/usecases/commands/resolveRouteStop.hpp"
+#include "hubflow/routing/application/usecases/commands/updateRoadNode.hpp"
 #include "hubflow/routing/application/usecases/queries/getCourierRouteSheet.hpp"
 #include "hubflow/routing/application/usecases/queries/getRoadMap.hpp"
 #include "hubflow/routing/application/usecases/queries/getRoute.hpp"
@@ -111,11 +141,13 @@ namespace hubflow::test
 /// @brief Repositorios compartidos entre instancias del harness (simulan la base de datos).
 struct Storage
 {
-    InMemoryShipmentRepository shipments;
-    InMemoryRouteRepository    routes;
-    InMemoryUserRepository     users;
-    InMemoryAuditLog           audit;
-    FixtureRoadMapRepository   maps;
+    InMemoryShipmentRepository       shipments;
+    InMemoryCatalogRepository        catalogs;
+    InMemoryRouteRepository          routes;
+    InMemoryUserRepository           users;
+    InMemoryRolePermissionRepository rolePermissions;
+    InMemoryAuditLog                 audit;
+    FixtureRoadMapRepository         maps;
 };
 
 /**
@@ -147,12 +179,18 @@ public:
     routing::application::RoutingModel         routing;
     sorting::domain::SortingDesk               desk;
     logistics::adapters::RoadMapDeliveryPoints deliveryPoints;
+    logistics::adapters::RoutingPlantOccupancy occupancy;
+    routing::adapters::LogisticsZoneDirectory  zoneDirectory;
+    identity::adapters::RoutingCourierWorkload courierWorkload;
+    identity::domain::AccessPolicy             policy;
 
 private:
     logistics::application::PendingShipmentsProjector     m_projector;
     logistics::application::ShipmentPersistenceSubscriber m_shipmentPersistence;
     routing::application::RoutePersistenceSubscriber      m_routePersistence;
     identity::application::UserPersistenceSubscriber      m_userPersistence;
+    logistics::application::CatalogPersistenceSubscriber  m_catalogPersistence;
+    routing::application::RoadMapPersistenceSubscriber    m_roadMapPersistence;
     audit::application::AuditLogSubscriber                m_auditLog;
     identity::application::SignIn                         m_signIn;
     identity::application::Authenticate                   m_authenticate;
@@ -175,6 +213,15 @@ private:
     logistics::application::SummarizeZone                 m_summarizeZone;
     logistics::application::FindHeaviestShipment          m_findHeaviestShipment;
     logistics::application::GetOperationsMetrics          m_getOperationsMetrics;
+    logistics::application::CreateZone                    m_createZone;
+    logistics::application::UpdateZone                    m_updateZone;
+    logistics::application::ListZones                     m_listZones;
+    logistics::application::CreateServiceLevel            m_createServiceLevel;
+    logistics::application::UpdateServiceLevel            m_updateServiceLevel;
+    logistics::application::ListServiceLevels             m_listServiceLevels;
+    logistics::application::CreateShipmentFeature         m_createShipmentFeature;
+    logistics::application::UpdateShipmentFeature         m_updateShipmentFeature;
+    logistics::application::ListShipmentFeatures          m_listShipmentFeatures;
     sorting::application::OpenSortingBatch                m_openSortingBatch;
     sorting::application::SortSortingBatch                m_sortSortingBatch;
     sorting::application::PrepareSortingBatch             m_prepareSortingBatch;
@@ -187,6 +234,9 @@ private:
     sorting::application::CompareSortingBatchSearches     m_compareSortingBatchSearches;
     routing::application::AssignDeliveryRoute             m_assignDeliveryRoute;
     routing::application::ResolveRouteStop                m_resolveRouteStop;
+    routing::application::ReassignDeliveryRoute           m_reassignDeliveryRoute;
+    routing::application::AddRoadNode                     m_addRoadNode;
+    routing::application::UpdateRoadNode                  m_updateRoadNode;
     routing::application::GetRoadMap                      m_getRoadMap;
     routing::application::PreviewRoute                    m_previewRoute;
     routing::application::ListRoutes                      m_listRoutes;
@@ -224,6 +274,15 @@ public:
     logistics::application::SummarizeZoneUseCase&             summarizeZone;
     logistics::application::FindHeaviestShipmentUseCase&      findHeaviestShipment;
     logistics::application::GetOperationsMetricsUseCase&      getOperationsMetrics;
+    logistics::application::CreateZoneUseCase&                createZone;
+    logistics::application::UpdateZoneUseCase&                updateZone;
+    logistics::application::ListZonesUseCase&                 listZones;
+    logistics::application::CreateServiceLevelUseCase&        createServiceLevel;
+    logistics::application::UpdateServiceLevelUseCase&        updateServiceLevel;
+    logistics::application::ListServiceLevelsUseCase&         listServiceLevels;
+    logistics::application::CreateShipmentFeatureUseCase&     createShipmentFeature;
+    logistics::application::UpdateShipmentFeatureUseCase&     updateShipmentFeature;
+    logistics::application::ListShipmentFeaturesUseCase&      listShipmentFeatures;
     sorting::application::OpenSortingBatchUseCase&            openSortingBatch;
     sorting::application::SortSortingBatchUseCase&            sortSortingBatch;
     sorting::application::PrepareSortingBatchUseCase&         prepareSortingBatch;
@@ -236,6 +295,9 @@ public:
     sorting::application::CompareSortingBatchSearchesUseCase& compareSortingBatchSearches;
     routing::application::AssignDeliveryRouteUseCase&         assignDeliveryRoute;
     routing::application::ResolveRouteStopUseCase&            resolveRouteStop;
+    routing::application::ReassignDeliveryRouteUseCase&       reassignDeliveryRoute;
+    routing::application::AddRoadNodeUseCase&                 addRoadNode;
+    routing::application::UpdateRoadNodeUseCase&              updateRoadNode;
     routing::application::GetRoadMapUseCase&                  getRoadMap;
     routing::application::PreviewRouteUseCase&                previewRoute;
     routing::application::ListRoutesUseCase&                  listRoutes;

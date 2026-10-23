@@ -4,6 +4,7 @@
 #include "hubflow/identity/adapters/in/http/sessionController.hpp"
 #include "hubflow/identity/adapters/in/http/userController.hpp"
 #include "hubflow/insights/adapters/in/http/insightController.hpp"
+#include "hubflow/logistics/adapters/in/http/catalogController.hpp"
 #include "hubflow/logistics/adapters/in/http/dispatchController.hpp"
 #include "hubflow/logistics/adapters/in/http/movementController.hpp"
 #include "hubflow/logistics/adapters/in/http/operationsController.hpp"
@@ -53,6 +54,16 @@ HttpHarness::HttpHarness()
     m_controllers.push_back(
         std::make_unique<logistics::adapters::OperationsController>(logistics::adapters::OperationsUseCases {
             app.summarizeZone, app.findHeaviestShipment, app.getOperationsMetrics}));
+    m_controllers.push_back(std::make_unique<logistics::adapters::CatalogController>(
+        logistics::adapters::CatalogUseCases {app.createZone,
+                                              app.updateZone,
+                                              app.listZones,
+                                              app.createServiceLevel,
+                                              app.updateServiceLevel,
+                                              app.listServiceLevels,
+                                              app.createShipmentFeature,
+                                              app.updateShipmentFeature,
+                                              app.listShipmentFeatures}));
     m_controllers.push_back(std::make_unique<sorting::adapters::SortingBatchController>(
         sorting::adapters::SortingUseCases {app.openSortingBatch,
                                             app.sortSortingBatch,
@@ -67,11 +78,13 @@ HttpHarness::HttpHarness()
     m_controllers.push_back(std::make_unique<routing::adapters::RouteController>(
         routing::adapters::RouteUseCases {app.assignDeliveryRoute,
                                           app.resolveRouteStop,
+                                          app.reassignDeliveryRoute,
                                           app.listRoutes,
                                           app.getRoute,
                                           app.getRoadMap,
                                           app.getCourierRouteSheet}));
-    m_controllers.push_back(std::make_unique<routing::adapters::RoadMapController>(app.getRoadMap, app.previewRoute));
+    m_controllers.push_back(std::make_unique<routing::adapters::RoadMapController>(
+        app.getRoadMap, app.previewRoute, app.addRoadNode, app.updateRoadNode));
     m_controllers.push_back(std::make_unique<insights::adapters::InsightController>(
         insights::adapters::InsightUseCases {app.getBst,
                                              app.lookupInBst,

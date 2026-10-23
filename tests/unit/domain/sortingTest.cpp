@@ -26,10 +26,8 @@ protected:
         double      weight {1.0};
         for (const char* pCode : codes)
         {
-            Shipment& shipment = catalog.adopt(
-                Shipment::receive(hubflow::test::draft(pCode, ServiceLevel::Estandar, Zone::Norte, weight),
-                                  tickets.next(),
-                                  hubflow::test::actor()));
+            Shipment& shipment = catalog.adopt(Shipment::receive(
+                hubflow::test::draft(pCode, "ESTANDAR", "NORTE", weight), tickets.next(), hubflow::test::actor()));
             pending.insert(&shipment);
             weight += 0.5;
         }
@@ -45,9 +43,10 @@ protected:
         return codes;
     }
 
-    ShipmentCatalog  catalog;
-    PendingShipments pending;
-    TicketDispenser  tickets;
+    ShipmentCatalog                    catalog;
+    hubflow::test::ReferencePriorities priorities;
+    PendingShipments                   pending {priorities.policy};
+    TicketDispenser                    tickets;
 };
 
 const BatchSearch& linear()
@@ -73,7 +72,7 @@ class BatchSearchTest : public SortingFixture
 
 TEST_F(SortingBatchTest, SortsByCodeAndByWeightKeepingReferences)
 {
-    SortingBatch batch {1, Zone::Norte, pending};
+    SortingBatch batch {1, "NORTE", pending};
     batch.sort(ShipmentOrdering::of(SortCriteria::CodeAscending));
     EXPECT_EQ(codesOf(batch),
               (std::vector<std::string> {
@@ -91,7 +90,7 @@ TEST_F(SortingBatchTest, SortsByCodeAndByWeightKeepingReferences)
 
 TEST_F(SortingBatchTest, InsertionSortBestCaseIsLinear)
 {
-    SortingBatch batch {1, Zone::Norte, pending};
+    SortingBatch batch {1, "NORTE", pending};
     batch.sort(ShipmentOrdering::of(SortCriteria::CodeAscending));
     const SortStats sorted = batch.sort(ShipmentOrdering::of(SortCriteria::CodeAscending));
     EXPECT_EQ(sorted.comparisons, batch.size() - 1);
@@ -100,18 +99,19 @@ TEST_F(SortingBatchTest, InsertionSortBestCaseIsLinear)
 
 TEST_F(SortingBatchTest, EmptyZoneIsReported)
 {
-    EXPECT_THROW((SortingBatch {1, Zone::Sur, pending}), business_error);
+    EXPECT_THROW((SortingBatch {1, "SUR", pending}), business_error);
 }
 
 TEST(SortingBatchEdgeCases, SingleElementBatchSortsTrivially)
 {
-    ShipmentCatalog  catalog;
-    PendingShipments pending;
-    TicketDispenser  tickets;
-    Shipment&        only = catalog.adopt(Shipment::receive(
-        hubflow::test::draft("PKG-0001", ServiceLevel::Express), tickets.next(), hubflow::test::actor()));
+    ShipmentCatalog                    catalog;
+    hubflow::test::ReferencePriorities priorities;
+    PendingShipments                   pending {priorities.policy};
+    TicketDispenser                    tickets;
+    Shipment&                          only = catalog.adopt(
+        Shipment::receive(hubflow::test::draft("PKG-0001", "EXPRESS"), tickets.next(), hubflow::test::actor()));
     pending.insert(&only);
-    SortingBatch    batch {1, Zone::Norte, pending};
+    SortingBatch    batch {1, "NORTE", pending};
     const SortStats stats = batch.sort(ShipmentOrdering::of(SortCriteria::WeightDescending));
     EXPECT_EQ(stats.comparisons, 0U);
     EXPECT_EQ(&batch.at(0), &only);
@@ -119,7 +119,7 @@ TEST(SortingBatchEdgeCases, SingleElementBatchSortsTrivially)
 
 TEST_F(SortingBatchTest, PreparingAgainSkipsPackagesAlreadyLoaded)
 {
-    SortingBatch batch {1, Zone::Norte, pending};
+    SortingBatch batch {1, "NORTE", pending};
     batch.sort(ShipmentOrdering::of(SortCriteria::CodeAscending));
     batch.prepare();
     const std::size_t total = batch.preparation().size();
@@ -136,7 +136,7 @@ TEST_F(SortingBatchTest, PreparingAgainSkipsPackagesAlreadyLoaded)
 
 TEST_F(SortingBatchTest, PreparationQueueIsFifoAndProcessedStackIsLifo)
 {
-    SortingBatch batch {1, Zone::Norte, pending};
+    SortingBatch batch {1, "NORTE", pending};
     batch.sort(ShipmentOrdering::of(SortCriteria::CodeAscending));
     batch.prepare();
     EXPECT_EQ(batch.preparation().front()->code(), "PKG-1001");
@@ -162,7 +162,7 @@ TEST_F(SortingBatchTest, PreparationQueueIsFifoAndProcessedStackIsLifo)
 
 TEST_F(BatchSearchTest, LinearAndBinaryReportComparisons)
 {
-    SortingBatch batch {1, Zone::Norte, pending};
+    SortingBatch batch {1, "NORTE", pending};
     EXPECT_THROW(binary().search(batch, "PKG-1005"), business_error);
     batch.sort(ShipmentOrdering::of(SortCriteria::CodeAscending));
 
@@ -186,9 +186,9 @@ TEST_F(BatchSearchTest, LinearAndBinaryReportComparisons)
 TEST_F(SortingBatchTest, DeskReplacesActiveBatch)
 {
     SortingDesk desk;
-    const auto& first = desk.open(Zone::Norte, pending);
+    const auto& first = desk.open("NORTE", pending);
     EXPECT_EQ(first.id(), 1U);
-    const auto& second = desk.open(Zone::Norte, pending);
+    const auto& second = desk.open("NORTE", pending);
     EXPECT_EQ(second.id(), 2U);
     EXPECT_THROW(desk.require(1), business_error);
     desk.close();
@@ -197,7 +197,7 @@ TEST_F(SortingBatchTest, DeskReplacesActiveBatch)
 
 TEST_F(SortingBatchTest, ReturnProcessedItemOnlyAcceptsTheLastProcessedCode)
 {
-    SortingBatch batch {1, Zone::Norte, pending};
+    SortingBatch batch {1, "NORTE", pending};
     batch.sort(ShipmentOrdering::of(SortCriteria::CodeAscending));
     batch.prepare();
     batch.processNext();
@@ -211,7 +211,7 @@ TEST_F(SortingBatchTest, ReturnProcessedItemOnlyAcceptsTheLastProcessedCode)
 
 TEST_F(SortingBatchTest, ReturningTheSameItemTwiceFailsWithoutSideEffects)
 {
-    SortingBatch batch {1, Zone::Norte, pending};
+    SortingBatch batch {1, "NORTE", pending};
     batch.prepare();
     batch.processNext();
     const std::string code {batch.processed().top()->code()};

@@ -31,6 +31,7 @@ std::vector<std::string> items(const insights::domain::CodeSet& set)
 
 TEST(User, RegistersValidatesAndAuthenticates)
 {
+    const test::IdleCouriers                idleCouriers;
     const hubflow::test::PlainHasher        plain;
     const identity::domain::PasswordHasher& hasher = plain;
     identity::domain::User*                 pUser  = identity::domain::User::registerNew(4,
@@ -44,7 +45,7 @@ TEST(User, RegistersValidatesAndAuthenticates)
     EXPECT_EQ(pUser->email(), "ana@hubflow.local");
     EXPECT_TRUE(pUser->authenticates("secreta123", hasher));
     EXPECT_FALSE(pUser->authenticates("otra-clave", hasher));
-    pUser->activate(false, hubflow::test::actor());
+    pUser->activate(false, idleCouriers, hubflow::test::actor());
     EXPECT_FALSE(pUser->authenticates("secreta123", hasher));
     EXPECT_EQ(pUser->pendingEvents(), 2U);
     delete pUser;
@@ -62,21 +63,34 @@ TEST(User, CannotDeactivateItself)
 {
     identity::domain::User* pUser = identity::domain::User::restore(
         identity::domain::UserState {1, "a@b.co", "Admin", identity::domain::Role::Admin, "", true});
-    EXPECT_THROW(pUser->activate(false, hubflow::test::actor()), business_error);
+    const test::IdleCouriers idleCouriers;
+    EXPECT_THROW(pUser->activate(false, idleCouriers, hubflow::test::actor()), business_error);
     delete pUser;
 }
 
-TEST(AccessPolicy, GrantsByRole)
+TEST(AccessPolicy, GrantsComeFromData)
 {
     using identity::domain::AccessPolicy;
     using identity::domain::Permission;
     using identity::domain::Role;
-    EXPECT_TRUE(AccessPolicy::allows(Role::Admin, Permission::ManageUsers));
-    EXPECT_FALSE(AccessPolicy::allows(Role::Operador, Permission::ManageUsers));
-    EXPECT_TRUE(AccessPolicy::allows(Role::Operador, Permission::AssignRoutes));
-    EXPECT_TRUE(AccessPolicy::allows(Role::Pum, Permission::ResolveStops));
-    EXPECT_FALSE(AccessPolicy::allows(Role::Pum, Permission::OperateShipments));
-    EXPECT_THROW(AccessPolicy::require(Role::Pum, Permission::ViewAudit), business_error);
+    AccessPolicy empty;
+    EXPECT_FALSE(empty.allows(Role::Admin, Permission::ManageUsers));
+
+    AccessPolicy policy;
+    hubflow::test::grantDefaultPermissions(policy);
+    EXPECT_TRUE(policy.allows(Role::Admin, Permission::ManageUsers));
+    EXPECT_TRUE(policy.allows(Role::Admin, Permission::ManageCatalogs));
+    EXPECT_FALSE(policy.allows(Role::Operador, Permission::ManageUsers));
+    EXPECT_FALSE(policy.allows(Role::Operador, Permission::ManageCatalogs));
+    EXPECT_TRUE(policy.allows(Role::Operador, Permission::AssignRoutes));
+    EXPECT_TRUE(policy.allows(Role::Pum, Permission::ResolveStops));
+    EXPECT_FALSE(policy.allows(Role::Pum, Permission::OperateShipments));
+    EXPECT_THROW(policy.require(Role::Pum, Permission::ViewAudit), business_error);
+
+    policy.grant(Role::Pum, Permission::ViewAudit);
+    policy.grant(Role::Pum, Permission::ViewAudit);
+    EXPECT_NO_THROW(policy.require(Role::Pum, Permission::ViewAudit));
+    EXPECT_EQ(policy.grantCount(), 15U);
 }
 
 TEST(CodeSets, BuildsByZoneAndServiceAndCombines)
@@ -87,8 +101,8 @@ TEST(CodeSets, BuildsByZoneAndServiceAndCombines)
     {
         catalog.adopt(logistics::domain::Shipment::receive(draft, tickets.next(), hubflow::test::actor()));
     }
-    const insights::domain::ZoneCriterion    north {logistics::domain::Zone::Norte};
-    const insights::domain::ServiceCriterion express {logistics::domain::ServiceLevel::Express};
+    const insights::domain::ZoneCriterion    north {"NORTE"};
+    const insights::domain::ServiceCriterion express {"EXPRESS"};
     const insights::domain::CodeSet a = static_cast<const insights::domain::SetCriterion&>(north).collect(catalog);
     const insights::domain::CodeSet b = static_cast<const insights::domain::SetCriterion&>(express).collect(catalog);
 
@@ -108,14 +122,10 @@ TEST(CodeSets, BuildsByZoneAndServiceAndCombines)
 TEST(StateComparison, UsesBitwiseOperations)
 {
     logistics::domain::TicketDispenser tickets;
-    logistics::domain::Shipment*       pFirst =
-        logistics::domain::Shipment::receive(hubflow::test::draft("PKG-0001", logistics::domain::ServiceLevel::Express),
-                                             tickets.next(),
-                                             hubflow::test::actor());
-    logistics::domain::Shipment* pSecond =
-        logistics::domain::Shipment::receive(hubflow::test::draft("PKG-0002", logistics::domain::ServiceLevel::Express),
-                                             tickets.next(),
-                                             hubflow::test::actor());
+    logistics::domain::Shipment*       pFirst = logistics::domain::Shipment::receive(
+        hubflow::test::draft("PKG-0001", "EXPRESS"), tickets.next(), hubflow::test::actor());
+    logistics::domain::Shipment* pSecond = logistics::domain::Shipment::receive(
+        hubflow::test::draft("PKG-0002", "EXPRESS"), tickets.next(), hubflow::test::actor());
     pFirst->dispatch("salida", hubflow::test::actor());
     pFirst->reschedule("ausente", tickets.next(), hubflow::test::actor());
     pSecond->classify("clasificado", hubflow::test::actor());

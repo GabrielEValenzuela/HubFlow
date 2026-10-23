@@ -61,7 +61,7 @@ TEST(LogisticsFlow, RejectsDuplicatesForeignDeliveryPointsAndForbiddenRoles)
     test::ApplicationHarness app {storage};
     app.seedDataset();
     auto duplicate = test::initialDataset().front();
-    auto wrongZone = test::draft("PKG-2000", logistics::domain::ServiceLevel::Express, logistics::domain::Zone::Sur);
+    auto wrongZone = test::draft("PKG-2000", "EXPRESS", "SUR");
 
     EXPECT_EQ(kindOf(
                   [&]
@@ -137,5 +137,5 @@ TEST(LogisticsFlow, LookupsOverAllStructuresAgree)
     }
     const auto metrics = app.getOperationsMetrics.execute(app.operador());
     EXPECT_EQ(metrics.totalShipments, 8U);
-    EXPECT_EQ(metrics.pendingByZone[1].count, 3U);
+    EXPECT_EQ(metrics.pendingByZone[1].summary.count, 3U);
 }

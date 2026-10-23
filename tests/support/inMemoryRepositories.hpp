@@ -2,8 +2,11 @@
 #define HUBFLOW_TESTS_SUPPORT_IN_MEMORY_REPOSITORIES_HPP
 
 #include "hubflow/audit/application/ports/out/auditLog.hpp"
+#include "hubflow/identity/application/ports/out/rolePermissionRepository.hpp"
 #include "hubflow/identity/application/ports/out/tokenIssuer.hpp"
 #include "hubflow/identity/application/ports/out/userRepository.hpp"
+#include "hubflow/identity/domain/services/accessPolicy.hpp"
+#include "hubflow/logistics/application/ports/out/catalogRepository.hpp"
 #include "hubflow/logistics/application/ports/out/shipmentRepository.hpp"
 #include "hubflow/routing/application/ports/out/roadMapRepository.hpp"
 #include "hubflow/routing/application/ports/out/routeRepository.hpp"
@@ -70,14 +73,57 @@ public:
 private:
     void add(const routing::domain::RouteRecord& record) override;
     void updateStop(std::uint64_t routeId, const routing::domain::RouteStop& stop) override;
+    void updateCourier(std::uint64_t routeId, const routing::domain::Courier& courier) override;
     void loadAll(routing::application::RouteRestorer& restorer) const override;
 };
 
-/// @brief Mapa de prueba construido con la ciudad de referencia.
+/// @brief Mapa de prueba: arranca con la ciudad de referencia y recuerda los puntos que se le agregan o cambian.
 class FixtureRoadMapRepository final : public routing::application::RoadMapRepository
 {
+public:
+    struct AddedNode
+    {
+        routing::domain::RoadNode                   node;
+        ds::DynamicArray<routing::domain::RoadLink> links;
+    };
+
+    std::vector<AddedNode>                           added;
+    std::map<std::string, routing::domain::RoadNode> changed;
+
 private:
     void loadInto(routing::domain::RoadMap& map) const override;
+    void addNode(const routing::domain::RoadNode&                   node,
+                 const ds::DynamicArray<routing::domain::RoadLink>& links) override;
+    void updateNode(const routing::domain::RoadNode& node) override;
+};
+
+/// @brief Zonas, servicios y características en memoria, arrancan con los datos de ejemplo del TP.
+class InMemoryCatalogRepository final : public logistics::application::CatalogRepository
+{
+public:
+    InMemoryCatalogRepository();
+
+    std::vector<logistics::domain::ZoneState>            zones;
+    std::vector<logistics::domain::ServiceLevelState>    services;
+    std::vector<logistics::domain::ShipmentFeatureState> features;
+
+private:
+    void saveZone(const logistics::domain::ZoneState& state) override;
+    void saveServiceLevel(const logistics::domain::ServiceLevelState& state) override;
+    void saveFeature(const logistics::domain::ShipmentFeatureState& state) override;
+    void loadAll(logistics::application::CatalogRestorer& restorer) const override;
+};
+
+/// @brief Permisos por rol en memoria, arrancan con la configuración por defecto.
+class InMemoryRolePermissionRepository final : public identity::application::RolePermissionRepository
+{
+public:
+    InMemoryRolePermissionRepository();
+
+    std::vector<identity::domain::Grant> grants;
+
+private:
+    void loadAll(identity::application::GrantRestorer& restorer) const override;
 };
 
 /// @brief Repositorio de usuarios en memoria.
