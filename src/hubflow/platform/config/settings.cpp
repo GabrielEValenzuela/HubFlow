@@ -30,6 +30,7 @@ Settings Settings::fromEnvironment()
     settings.jwtSecret         = environmentValue("HUBFLOW_JWT_SECRET", "");
     settings.seedPassword      = environmentValue("HUBFLOW_SEED_PASSWORD", settings.seedPassword);
     settings.trackingCodes     = environmentValue("HUBFLOW_TRACKING_CODES", settings.trackingCodes);
+    settings.publicBaseUrl     = environmentValue("HUBFLOW_PUBLIC_BASE_URL", settings.publicBaseUrl);
     settings.database.host     = environmentValue("DB_HOST", settings.database.host);
     settings.database.port     = portFrom("DB_PORT", settings.database.port);
     settings.database.user     = environmentValue("DB_USER", settings.database.user);
@@ -43,7 +44,16 @@ Settings Settings::fromEnvironment()
     {
         throw std::invalid_argument("HUBFLOW_TRACKING_CODES debe ser public o sequential");
     }
+    while (!settings.publicBaseUrl.empty() && settings.publicBaseUrl.back() == '/')
+    {
+        settings.publicBaseUrl.pop_back();
+    }
     return settings;
+}
+
+std::string Settings::trackingLinkBase() const
+{
+    return publicBaseUrl + "/seguimiento/";
 }
 
 } // namespace hubflow::platform

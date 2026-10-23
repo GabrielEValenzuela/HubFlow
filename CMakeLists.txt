@@ -30,7 +30,11 @@ file(GLOB_RECURSE HUBFLOW_APPLICATION_SOURCES CONFIGURE_DEPENDS
     src/hubflow/routing/adapters/out/logistics/*.cpp
     src/hubflow/identity/adapters/out/routing/*.cpp
     src/hubflow/logistics/adapters/out/generation/*.cpp
-    src/hubflow/shared/adapters/out/generation/*.cpp)
+    src/hubflow/shared/adapters/out/generation/*.cpp
+    src/hubflow/shared/adapters/out/memory/*.cpp
+    src/hubflow/tracking/adapters/out/logistics/*.cpp
+    src/hubflow/tracking/adapters/out/routing/*.cpp
+    src/hubflow/tracking/adapters/out/notification/*.cpp)
 add_library(hubflow_application STATIC ${HUBFLOW_APPLICATION_SOURCES})
 target_link_libraries(hubflow_application PUBLIC hubflow_domain)
 

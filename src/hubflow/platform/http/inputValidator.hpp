@@ -44,6 +44,12 @@ public:
     std::vector<logistics::domain::ParcelData> parcels(const std::string& field, std::size_t maximum);
     std::string                                email(const std::string& field);
 
+    /// @brief Teléfono: entre 8 y 15 dígitos, con espacios, guiones, paréntesis y un + inicial opcionales.
+    std::string phone(const std::string& field);
+
+    /// @brief Código postal argentino: 4 dígitos o formato CPA (una letra, cuatro dígitos y tres letras).
+    std::string postalCode(const std::string& field);
+
     /// @brief Código de catálogo (zona, servicio, característica): 2 a 16 caracteres entre A-Z, 0-9 y guion bajo.
     std::string code(const std::string& field);
 

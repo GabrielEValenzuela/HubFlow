@@ -158,6 +158,7 @@
 #include "hubflow/routing/application/usecases/queries/listRoutes.hpp"
 #include "hubflow/routing/application/usecases/queries/previewRoute.hpp"
 #include "hubflow/shared/adapters/out/generation/uuidV7IdentityGenerator.hpp"
+#include "hubflow/shared/adapters/out/memory/slidingWindowRateLimiter.hpp"
 #include "hubflow/shared/adapters/out/mysql/mySqlIdempotencyStore.hpp"
 #include "hubflow/shared/adapters/out/system/systemClock.hpp"
 #include "hubflow/sorting/adapters/in/http/sortingBatchController.hpp"
@@ -181,6 +182,20 @@
 #include "hubflow/sorting/application/usecases/queries/getActiveSortingBatch.hpp"
 #include "hubflow/sorting/application/usecases/queries/getSortingBatch.hpp"
 #include "hubflow/sorting/application/usecases/queries/linearSearchInSortingBatch.hpp"
+#include "hubflow/tracking/adapters/in/http/customerNoticeController.hpp"
+#include "hubflow/tracking/adapters/in/http/trackingController.hpp"
+#include "hubflow/tracking/adapters/out/logistics/plantTrackedShipments.hpp"
+#include "hubflow/tracking/adapters/out/mysql/mySqlCustomerNoticeLog.hpp"
+#include "hubflow/tracking/adapters/out/notification/compositeCustomerNotifier.hpp"
+#include "hubflow/tracking/adapters/out/notification/logCustomerNotifier.hpp"
+#include "hubflow/tracking/adapters/out/notification/recordingCustomerNotifier.hpp"
+#include "hubflow/tracking/adapters/out/routing/routingDeliveryProgress.hpp"
+#include "hubflow/tracking/adapters/out/security/hmacTrackingTokenIssuer.hpp"
+#include "hubflow/tracking/application/subscribers/customerNoticeSubscriber.hpp"
+#include "hubflow/tracking/application/usecases/commands/verifyTracking.hpp"
+#include "hubflow/tracking/application/usecases/queries/getPublicTracking.hpp"
+#include "hubflow/tracking/application/usecases/queries/getVerifiedTracking.hpp"
+#include "hubflow/tracking/application/usecases/queries/listCustomerNotices.hpp"
 
 #include <chrono>
 #include <filesystem>
@@ -196,6 +211,8 @@ namespace hubflow::bootstrap
 namespace
 {
 constexpr std::chrono::milliseconds POLL_INTERVAL {100};
+constexpr std::size_t               VERIFICATION_ATTEMPTS {5};
+constexpr std::int64_t              VERIFICATION_WINDOW_SECONDS {15 * 60};
 
 std::unique_ptr<logistics::application::TrackingCodeGenerator>
 trackingCodeGeneratorFor(const platform::Settings& settings)
@@ -234,6 +251,13 @@ struct Application::Parts
         , maps {connection}
         , audit {connection}
         , idempotency {connection}
+        , noticeLog {connection}
+        , trackingTokens {settings.jwtSecret}
+        , verificationLimiter {VERIFICATION_ATTEMPTS, VERIFICATION_WINDOW_SECONDS}
+        , trackedShipments {logistics, routing}
+        , deliveryProgress {routing}
+        , recordingNotifier {noticeLog}
+        , logNotifier {std::cout}
         , m_projector {logistics}
         , m_shipmentPersistence {shipments}
         , m_shipmentGroupPersistence {shipmentGroups}
@@ -242,6 +266,7 @@ struct Application::Parts
         , m_catalogPersistence {catalogs}
         , m_roadMapPersistence {maps}
         , m_routeExport {routing, exporter}
+        , m_customerNotices {customerNotifier, settings.trackingLinkBase()}
         , m_auditLog {audit}
         , m_signIn {users, hasher, tokens, clock}
         , m_authenticate {users, tokens, policy, clock}
@@ -309,6 +334,10 @@ struct Application::Parts
         , m_compareShipmentStates {logistics}
         , m_getCodeSet {logistics}
         , m_combineCodeSets {logistics}
+        , m_getPublicTracking {trackedShipments}
+        , m_verifyTracking {trackedShipments, verificationLimiter, trackingTokens, clock}
+        , m_getVerifiedTracking {trackedShipments, deliveryProgress, trackingTokens, clock}
+        , m_listCustomerNotices {noticeLog}
         , seeder {m_registerUser, users, m_registerShipment, logistics, policy, clock, settings.seedPassword}
     {
         bus.subscribe(m_projector);
@@ -319,10 +348,13 @@ struct Application::Parts
         bus.subscribe(m_catalogPersistence);
         bus.subscribe(m_roadMapPersistence);
         bus.subscribe(m_routeExport);
+        bus.subscribe(m_customerNotices);
         bus.subscribe(m_auditLog);
         identity::application::AccessPolicyHydrator {policy}.hydrate(rolePermissions);
         logistics::application::LogisticsHydrator {logistics}.hydrate(catalogs, shipments, shipmentGroups);
         routing::application::RoutingHydrator {routing}.hydrate(maps, routes);
+        customerNotifier.add(logNotifier);
+        customerNotifier.add(recordingNotifier);
         seeder.seedUsers();
         seeder.seedShipments();
         router = std::make_unique<platform::ApiRouter>(server, m_authenticate, idempotency, mutex);
@@ -357,6 +389,14 @@ struct Application::Parts
     routing::adapters::MySqlRoadMapRepository                      maps;
     audit::adapters::MySqlAuditLog                                 audit;
     shared::adapters::MySqlIdempotencyStore                        idempotency;
+    tracking::adapters::MySqlCustomerNoticeLog                     noticeLog;
+    tracking::adapters::HmacTrackingTokenIssuer                    trackingTokens;
+    shared::adapters::SlidingWindowRateLimiter                     verificationLimiter;
+    tracking::adapters::PlantTrackedShipments                      trackedShipments;
+    tracking::adapters::RoutingDeliveryProgress                    deliveryProgress;
+    tracking::adapters::RecordingCustomerNotifier                  recordingNotifier;
+    tracking::adapters::LogCustomerNotifier                        logNotifier;
+    tracking::adapters::CompositeCustomerNotifier                  customerNotifier;
     logistics::application::PendingShipmentsProjector              m_projector;
     logistics::application::ShipmentPersistenceSubscriber          m_shipmentPersistence;
     logistics::application::ShipmentGroupPersistenceSubscriber     m_shipmentGroupPersistence;
@@ -365,6 +405,7 @@ struct Application::Parts
     logistics::application::CatalogPersistenceSubscriber           m_catalogPersistence;
     routing::application::RoadMapPersistenceSubscriber             m_roadMapPersistence;
     routing::application::RoutePlanExportSubscriber                m_routeExport;
+    tracking::application::CustomerNoticeSubscriber                m_customerNotices;
     audit::application::AuditLogSubscriber                         m_auditLog;
     identity::application::SignIn                                  m_signIn;
     identity::application::Authenticate                            m_authenticate;
@@ -432,6 +473,10 @@ struct Application::Parts
     insights::application::CompareShipmentStates                   m_compareShipmentStates;
     insights::application::GetCodeSet                              m_getCodeSet;
     insights::application::CombineCodeSets                         m_combineCodeSets;
+    tracking::application::GetPublicTracking                       m_getPublicTracking;
+    tracking::application::VerifyTracking                          m_verifyTracking;
+    tracking::application::GetVerifiedTracking                     m_getVerifiedTracking;
+    tracking::application::ListCustomerNotices                     m_listCustomerNotices;
     DatasetSeeder                                                  seeder;
     httplib::Server                                                server;
     std::mutex                                                     mutex;
@@ -505,6 +550,10 @@ void Application::Parts::wire()
                                              m_compareShipmentStates,
                                              m_getCodeSet,
                                              m_combineCodeSets}));
+    controllers.push_back(std::make_unique<tracking::adapters::TrackingController>(
+        tracking::adapters::TrackingUseCases {m_getPublicTracking, m_verifyTracking, m_getVerifiedTracking},
+        settings.trackingLinkBase()));
+    controllers.push_back(std::make_unique<tracking::adapters::CustomerNoticeController>(m_listCustomerNotices));
     for (auto& spController : controllers)
     {
         spController->registerRoutes(*router);

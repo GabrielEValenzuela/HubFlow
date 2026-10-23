@@ -1,6 +1,8 @@
 #include "hubflow/platform/http/inputValidator.hpp"
 
 #include "hubflow/logistics/domain/valueobjects/catalogCode.hpp"
+#include "hubflow/logistics/domain/valueobjects/phone.hpp"
+#include "hubflow/logistics/domain/valueobjects/postalCode.hpp"
 #include "hubflow/logistics/domain/valueobjects/trackingCode.hpp"
 
 #include <regex>
@@ -230,6 +232,26 @@ std::string InputValidator::email(const std::string& field)
         fail(field, "Debe ser un email válido");
     }
     return address;
+}
+
+std::string InputValidator::phone(const std::string& field)
+{
+    const std::string value {requiredText(field, 1, 30)};
+    if (!value.empty() && !logistics::domain::Phone::accepts(value))
+    {
+        fail(field, "Debe tener entre 8 y 15 dígitos; puede llevar espacios, guiones y un + inicial");
+    }
+    return value;
+}
+
+std::string InputValidator::postalCode(const std::string& field)
+{
+    const std::string value {requiredText(field, 1, 12)};
+    if (!value.empty() && !logistics::domain::PostalCode::accepts(value))
+    {
+        fail(field, "Debe tener 4 dígitos (1425) o formato CPA (C1425ABC)");
+    }
+    return value;
 }
 
 std::string InputValidator::code(const std::string& field)

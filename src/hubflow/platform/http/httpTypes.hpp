@@ -30,6 +30,7 @@ enum class HttpStatus
     MethodNotAllowed    = 405,
     Conflict            = 409,
     UnprocessableEntity = 422,
+    TooManyRequests     = 429,
     InternalServerError = 500,
     ServiceUnavailable  = 503
 };

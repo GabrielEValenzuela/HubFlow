@@ -12,6 +12,17 @@ business_error::business_error(const ErrorKind kind, std::string code, const std
 {
 }
 
+business_error::business_error(const ErrorKind     kind,
+                               std::string         code,
+                               const std::string&  message,
+                               const std::uint32_t retryAfterSeconds)
+    : std::runtime_error {message}
+    , m_kind {kind}
+    , m_code {std::move(code)}
+    , m_retryAfterSeconds {retryAfterSeconds}
+{
+}
+
 ErrorKind business_error::kind() const noexcept
 {
     return m_kind;
@@ -20,6 +31,11 @@ ErrorKind business_error::kind() const noexcept
 const std::string& business_error::code() const noexcept
 {
     return m_code;
+}
+
+std::uint32_t business_error::retryAfterSeconds() const noexcept
+{
+    return m_retryAfterSeconds;
 }
 
 } // namespace hubflow::shared::domain

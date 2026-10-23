@@ -15,6 +15,7 @@ constexpr const char* BEARER_PREFIX {"Bearer "};
 constexpr const char* JSON_TYPE {"application/json; charset=utf-8"};
 constexpr const char* PROBLEM_TYPE {"application/problem+json; charset=utf-8"};
 constexpr const char* KEY_FIELD {"Idempotency-Key"};
+constexpr const char* RETRY_AFTER_HEADER {"Retry-After"};
 constexpr int         FIRST_SUCCESS {200};
 constexpr int         LAST_SUCCESS {299};
 
@@ -35,7 +36,8 @@ constexpr KindStatus KIND_STATUSES[] {{ErrorKind::Validation, HttpStatus::Unproc
                                       {ErrorKind::Conflict, HttpStatus::Conflict},
                                       {ErrorKind::InvalidState, HttpStatus::Conflict},
                                       {ErrorKind::Unauthorized, HttpStatus::Unauthorized},
-                                      {ErrorKind::Forbidden, HttpStatus::Forbidden}};
+                                      {ErrorKind::Forbidden, HttpStatus::Forbidden},
+                                      {ErrorKind::RateLimited, HttpStatus::TooManyRequests}};
 
 constexpr StatusTitle STATUS_TITLES[] {{HttpStatus::BadRequest, "Pedido mal formado"},
                                        {HttpStatus::Unauthorized, "No autenticado"},
@@ -44,6 +46,7 @@ constexpr StatusTitle STATUS_TITLES[] {{HttpStatus::BadRequest, "Pedido mal form
                                        {HttpStatus::MethodNotAllowed, "Método no permitido"},
                                        {HttpStatus::Conflict, "Conflicto con el estado actual"},
                                        {HttpStatus::UnprocessableEntity, "Entrada inválida"},
+                                       {HttpStatus::TooManyRequests, "Demasiados intentos"},
                                        {HttpStatus::InternalServerError, "Error interno"},
                                        {HttpStatus::ServiceUnavailable, "Servicio no disponible"}};
 
@@ -298,6 +301,10 @@ httplib::Server::Handler ApiRouter::wrap(Handler handler, const Access access, c
         catch (const shared::domain::business_error& error)
         {
             problem(response, statusOf(error.kind()), error.code(), error.what());
+            if (error.retryAfterSeconds() > 0)
+            {
+                response.set_header(RETRY_AFTER_HEADER, std::to_string(error.retryAfterSeconds()));
+            }
         }
         catch (const std::exception& error)
         {

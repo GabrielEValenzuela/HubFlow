@@ -30,6 +30,10 @@ enum class Access
  *   clave; repetir el mismo pedido devuelve esa respuesta con @c Idempotent-Replayed: true sin volver a
  *   ejecutarlo, y reutilizar la clave en otro método o ruta se rechaza con 422.
  *
+ * - Límite de intentos: un error de negocio de tipo RateLimited se responde 429 con la cabecera @c Retry-After.
+ * - Los endpoints públicos (@c Access::Public) no tienen usuario: no usan @c Idempotency-Key aunque declaren un POST
+ *   no idempotente, y cada caso de uso documenta cómo se protege.
+ *
  * La idempotencia de cada endpoint se toma de la constante @c IDEMPOTENCY de su caso de uso, de modo
  * que el contrato HTTP deriva del contrato del caso de uso.
  */
