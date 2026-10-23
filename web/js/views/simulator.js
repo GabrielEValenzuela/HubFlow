@@ -3,15 +3,16 @@ import { roadMap } from "../data.js";
 import { MapView } from "../lib/mapview.js";
 import { buildFrames, Replay } from "../lib/replay.js";
 import { transport } from "../lib/player.js";
-import { h, pageHead, loading, errorBox, field, busy, ALGORITHM, ALGORITHMS, fmtKm, toast, empty } from "../ui.js";
+import { h, pageHead, loading, errorBox, field, busy, fmtKm, toast, empty } from "../ui.js";
 import { icon } from "../icons.js";
+import { ALGORITHM, ALGORITHMS } from "../lib/algoInfo.js";
 
 export default async function simulator(root) {
   const slot = h("div", {}, loading());
   const out = h("div", { style: "margin-top:20px" });
   let replay = null;
   let views = [];
-  root.append(pageHead("Simular PUM", "Elegí un tramo y mirá cómo cada algoritmo recorre el mismo mapa: cuánto explora y qué camino encuentra."), slot, out);
+  root.append(slot, out);
   try {
     const map = await roadMap();
     const opts = (sel) => map.nodes.map((n) => h("option", { value: n.id, selected: n.id === sel }, `${n.id} · ${n.label}`));

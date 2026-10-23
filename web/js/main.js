@@ -15,7 +15,8 @@ router.define("/consultas", { roles: OP, load: () => import("./views/queries.js"
 router.define("/metricas", { roles: OP, load: () => import("./views/metrics.js"), nav: ["Operación", "Métricas", "chart"] });
 router.define("/rutas", { load: () => import("./views/routes.js"), nav: ["Reparto", "Rutas", "route"] });
 router.define("/rutas/:id", { load: () => import("./views/routeDetail.js") });
-router.define("/simulador", { roles: OP, load: () => import("./views/simulator.js"), nav: ["Reparto", "Simular PUM", "map"] });
+router.define("/como-decide", { roles: OP, load: () => import("./views/howItWorks.js"), nav: ["Reparto", "Cómo decide el PUM", "map"] });
+router.define("/como-decide/:id", { roles: OP, load: () => import("./views/howItWorks.js") });
 router.define("/usuarios", { roles: ADMIN, load: () => import("./views/users.js"), nav: ["Administración", "Usuarios", "users"] });
 router.define("/auditoria", { roles: ADMIN, load: () => import("./views/audit.js"), nav: ["Administración", "Auditoría", "shield"] });
 
@@ -62,7 +63,7 @@ function drawNav(activePath) {
       group = gl;
       items.push(h("div", { class: "nav-group" }, gl));
     }
-    const active = activePath === r.pattern || (r.pattern === "/rutas" && activePath.startsWith("/rutas/"));
+    const active = activePath === r.pattern || (r.pattern === "/rutas" && activePath.startsWith("/rutas/")) || (r.pattern === "/como-decide" && activePath.startsWith("/como-decide/"));
     items.push(h("a", { href: "#" + r.pattern, "aria-current": active ? "page" : null }, icon(ic), lb));
   }
   nav.replaceChildren(...items);
