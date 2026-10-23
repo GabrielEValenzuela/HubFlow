@@ -1,0 +1,12 @@
+add_library(hubflow_options INTERFACE)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+    target_compile_options(hubflow_options INTERFACE -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wno-sign-conversion)
+    if(HUBFLOW_WARNINGS_AS_ERRORS)
+        target_compile_options(hubflow_options INTERFACE -Werror)
+    endif()
+    if(HUBFLOW_SANITIZE)
+        target_compile_options(hubflow_options INTERFACE -fsanitize=address,undefined -fno-omit-frame-pointer)
+        target_link_options(hubflow_options INTERFACE -fsanitize=address,undefined)
+    endif()
+endif()
