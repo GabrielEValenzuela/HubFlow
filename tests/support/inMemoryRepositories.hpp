@@ -8,6 +8,7 @@
 #include "hubflow/routing/application/ports/out/roadMapRepository.hpp"
 #include "hubflow/routing/application/ports/out/routeRepository.hpp"
 #include "hubflow/shared/application/ports/out/clock.hpp"
+#include "hubflow/shared/application/ports/out/idempotencyStore.hpp"
 
 #include <map>
 #include <string>
@@ -106,6 +107,19 @@ private:
     void
     forEachRecent(std::size_t limit, std::size_t offset, audit::application::AuditEntryVisitor& visitor) const override;
     std::size_t count() const override;
+};
+
+/// @brief Memoria de claves de idempotencia en memoria.
+class InMemoryIdempotencyStore final : public shared::application::IdempotencyStore
+{
+public:
+    std::map<std::pair<std::uint64_t, std::string>, shared::application::StoredResponse> responses;
+
+private:
+    std::optional<shared::application::StoredResponse> find(std::uint64_t      userId,
+                                                            const std::string& key) const override;
+    void
+    save(std::uint64_t userId, const std::string& key, const shared::application::StoredResponse& response) override;
 };
 
 } // namespace hubflow::test

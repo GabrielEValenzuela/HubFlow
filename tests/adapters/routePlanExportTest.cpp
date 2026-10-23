@@ -1,5 +1,6 @@
 #include "support/applicationHarness.hpp"
 
+#include "hubflow/routing/adapters/out/export/failureTolerantRoutePlanExporter.hpp"
 #include "hubflow/routing/adapters/out/export/jsonFileRoutePlanExporter.hpp"
 #include "hubflow/routing/adapters/out/export/routePlanJson.hpp"
 #include "hubflow/routing/application/subscribers/routePlanExportSubscriber.hpp"
@@ -24,6 +25,15 @@ private:
     void exportPlan(const routing::domain::RoadMap&, const routing::domain::DeliveryRoute& route) override
     {
         exported.push_back(route.id());
+    }
+};
+
+class FailingExporter final : public routing::application::RoutePlanExporter
+{
+private:
+    void exportPlan(const routing::domain::RoadMap&, const routing::domain::DeliveryRoute&) override
+    {
+        throw std::runtime_error {"disco lleno"};
     }
 };
 
@@ -162,4 +172,20 @@ TEST(RoutePlanExport, FileExporterWritesBothDocumentsPerRoute)
     EXPECT_EQ(readJson(folder / "initial_state.json").at("routeId"), routeId);
     EXPECT_EQ(readJson(folder / "sequence.json").at("segments").size(), 4U);
     std::filesystem::remove_all(directory);
+}
+
+TEST(RoutePlanExport, ExportFailureDoesNotFailRouteAssignment)
+{
+    test::Storage            storage;
+    test::ApplicationHarness app {storage};
+    app.seedDataset();
+    FailingExporter                                     failing;
+    routing::adapters::FailureTolerantRoutePlanExporter tolerant {failing};
+    routing::application::RoutePlanExportSubscriber     subscriber {app.routing, tolerant};
+    app.bus.subscribe(subscriber);
+
+    const auto& route = assignNorthRoute(app);
+
+    EXPECT_EQ(route.stops().size(), 3U);
+    EXPECT_EQ(storage.routes.records.size(), 1U);
 }

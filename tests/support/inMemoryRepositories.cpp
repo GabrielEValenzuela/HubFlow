@@ -169,4 +169,18 @@ std::size_t InMemoryAuditLog::count() const
     return entries.size();
 }
 
+std::optional<shared::application::StoredResponse> InMemoryIdempotencyStore::find(const std::uint64_t userId,
+                                                                                  const std::string&  key) const
+{
+    const auto found = responses.find({userId, key});
+    return found == responses.end() ? std::nullopt : std::optional<shared::application::StoredResponse> {found->second};
+}
+
+void InMemoryIdempotencyStore::save(const std::uint64_t                        userId,
+                                    const std::string&                         key,
+                                    const shared::application::StoredResponse& response)
+{
+    responses.emplace(std::make_pair(userId, key), response);
+}
+
 } // namespace hubflow::test
