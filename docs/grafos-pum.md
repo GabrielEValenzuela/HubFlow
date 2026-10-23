@@ -34,6 +34,23 @@ frontera, la prioridad y qué sucesores admite (Strategy). Se evita repetir esta
 Desempate en el heap: menor prioridad primero y, a igualdad, el nodo creado antes. Las aristas se recorren en
 el orden en que se agregaron, por lo que toda la búsqueda es determinista.
 
+## Opciones de ruta (lenguaje de negocio)
+
+El tablero no muestra nombres de algoritmos al operador ni al repartidor; la API conserva los valores técnicos
+(`algorithm`: `BFS`, `DFS`, `GREEDY`, `ASTAR`). La correspondencia vive en `web/js/lib/routeOptions.js`:
+
+| Opción en pantalla | `algorithm` | Descripción |
+|---|---|---|
+| Menos kilómetros (recomendada, por defecto) | `ASTAR` | La ruta más corta, garantizada |
+| Menos cruces | `BFS` | Pasa por menos intersecciones; puede sumar algunos km |
+| Salida inmediata | `GREEDY` | Siempre hacia el punto más cercano; rápida de calcular, puede recorrer más km |
+
+`DFS` no se ofrece a operadores; solo aparece en la pantalla "Cómo decide el PUM" (operador y administrador),
+donde también están el simulador lado a lado, el reproductor paso a paso con las métricas y la descarga de
+`initial_state.json` / `sequence.json`. Antes de asignar, la mesa compara las tres opciones con
+`GET /route-previews` por tramo `HUB -> paradas -> HUB`, en el orden de la pila del lote (el último procesado
+baja primero). El tiempo estimado supone 25 km/h promedio urbano + 4 min por parada (constantes `ETA`).
+
 ## Heurística euclídea admisible
 
 h(n) es la distancia en línea recta entre el nodo y el destino, con las coordenadas (x, y) en km de cada

@@ -46,6 +46,13 @@ casos de uso, suscriptores) y sus `adapters` (HTTP, MySQL, seguridad, exportaci�
 eventos de dominio en un bus síncrono; las proyecciones, la persistencia y la auditoría son suscriptores.
 `bootstrap/` es el composition root. Más detalle en [docs/arquitectura.md](docs/arquitectura.md).
 
+## Rutas: opciones de negocio
+
+Al asignar una ruta el operador elige **Menos kilómetros** (A*, recomendada), **Menos cruces** (BFS) o
+**Salida inmediata** (Greedy), con una comparación de km, tiempo estimado y cruces para la carga actual. Los
+algoritmos y sus trazas (incluido DFS) se explican en la pantalla "Cómo decide el PUM"; el detalle está en
+[docs/grafos-pum.md](docs/grafos-pum.md).
+
 ## Comandos
 
 | Comando | Qué hace |
