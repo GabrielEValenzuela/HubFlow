@@ -1,5 +1,5 @@
 import { api } from "../api.js";
-import { roadMap } from "../data.js";
+import { roadMap, trackingLink } from "../data.js";
 import { h, dialog, loading, errorBox, statusBadge, serviceBadge, zoneTag, journeyChips, fmtDate, fmtKg, STATUS, FEATURE, promptNote, toast, confirmDialog, parcelsText } from "../ui.js";
 import { printLabels } from "../lib/labels.js";
 import { icon } from "../icons.js";
@@ -24,9 +24,12 @@ export function openShipment(code, onChange) {
           h("div", {}, statusBadge(s.status), " ", serviceBadge(s.service)),
           h("dl", { class: "kv" },
             h("dt", {}, "Destinatario"), h("dd", {}, s.recipient),
+            h("dt", {}, "Teléfono"), h("dd", {}, s.recipientPhone),
+            h("dt", {}, "Código postal"), h("dd", {}, s.recipientPostalCode),
             h("dt", {}, "Zona"), h("dd", {}, zoneTag(s.zone)),
             h("dt", {}, "Lugar de entrega"), h("dd", {}, deliveryLabel(s.deliveryPoint)),
-            h("dt", {}, "Código de seguimiento"), h("dd", { class: "code" }, s.code),
+            h("dt", {}, "Código de seguimiento"), h("dd", {}, h("span", { class: "code" }, s.code), " ",
+              h("button", { class: "btn small", onClick: () => copyTrackingLink(s.code) }, icon("link", 16), "Copiar enlace de seguimiento")),
             h("dt", {}, "Bultos"), h("dd", {}, parcelsText(s.parcelCount) + (s.pendingParcels && s.pendingParcels < s.parcelCount ? ` (faltan entregar ${s.pendingParcels})` : "")),
             h("dt", {}, "Peso"), h("dd", {}, `${fmtKg(s.realWeightKg)} · se factura ${fmtKg(s.billableWeightKg)}`),
             s.features?.length ? h("dt", {}, "Cuidados") : null, s.features?.length ? h("dd", {}, s.features.map((f) => FEATURE[f] ?? f).join(", ")) : null,
@@ -46,6 +49,16 @@ export function openShipment(code, onChange) {
           actions(s)));
     } catch (e) {
       body.replaceChildren(errorBox(e, draw));
+    }
+  }
+
+  async function copyTrackingLink(code) {
+    try {
+      const link = await trackingLink(code);
+      await navigator.clipboard.writeText(link);
+      toast("Enlace copiado. El cliente puede seguir su paquete desde ahí.");
+    } catch {
+      toast("No se pudo copiar el enlace. Probá de nuevo.", "error");
     }
   }
 

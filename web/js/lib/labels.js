@@ -1,6 +1,6 @@
 import { h, dialog, SERVICE, ZONE } from "../ui.js";
 import { icon } from "../icons.js";
-import { roadMap } from "../data.js";
+import { roadMap, trackingLink } from "../data.js";
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
@@ -13,10 +13,11 @@ const PRINT_CSS = `
   .parcel { font-size: 20pt; font-weight: 700; margin: 0 0 4mm; }
   .row { font-size: 13pt; margin: 1mm 0; }
   .row b { display: inline-block; min-width: 38mm; }
+  .link { word-break: break-all; }
   .together { margin-top: 4mm; font-size: 12pt; font-weight: 700; border: 2px solid #000; padding: 2mm; }
 `;
 
-function labelHtml(shipment, parcel, destination, together) {
+function labelHtml(shipment, parcel, destination, together, link) {
   const total = shipment.parcelCount;
   return `<section class="label">
     <p class="code">${esc(shipment.code)}</p>
@@ -26,6 +27,7 @@ function labelHtml(shipment, parcel, destination, together) {
     <p class="row"><b>Servicio</b>${esc(SERVICE[shipment.service] ?? shipment.service)}</p>
     <p class="row"><b>Peso a facturar</b>${parcel.billableWeightKg.toLocaleString("es-AR")} kg</p>
     <p class="row"><b>Etiqueta</b>${esc(parcel.label)}</p>
+    ${link ? `<p class="row link"><b>Seguí tu paquete</b>${esc(link)}</p>` : ""}
     ${together ? `<p class="together">Viaja junto con: ${esc(together)}</p>` : ""}
   </section>`;
 }
@@ -35,7 +37,8 @@ export async function labelsHtml(shipment) {
   const map = await roadMap();
   const destination = map.nodes.find((n) => n.id === shipment.deliveryPoint)?.label ?? shipment.deliveryPoint;
   const together = shipment.group?.travelsWith?.join(", ") ?? "";
-  return shipment.parcels.map((p) => labelHtml(shipment, p, destination, together)).join("");
+  const link = await trackingLink(shipment.code).catch(() => "");
+  return shipment.parcels.map((p) => labelHtml(shipment, p, destination, together, link)).join("");
 }
 
 export async function printLabels(shipment) {

@@ -108,6 +108,8 @@ export default async function plant(root) {
 
   function buildForm() {
     const recipient = h("input", { class: "input", maxlength: "80", autocomplete: "off" });
+    const phone = h("input", { class: "input", type: "tel", maxlength: "30", autocomplete: "off", inputmode: "tel", placeholder: "11 5555-1234" });
+    const postalCode = h("input", { class: "input", maxlength: "12", autocomplete: "off", placeholder: "1425 o C1425ABC" });
     const zone = h("select", { class: "input" }, h("option", { value: "" }, "Elegí una zona"), ...zoneChoices().map(([v, l]) => h("option", { value: v }, l)));
     const service = h("select", { class: "input" }, h("option", { value: "" }, "Elegí un servicio"), ...serviceChoices().map(([v, l]) => h("option", { value: v }, l)));
     const point = h("select", { class: "input", disabled: true }, h("option", { value: "" }, "Primero elegí la zona"));
@@ -163,7 +165,9 @@ export default async function plant(root) {
     const form = h("form", { class: "card", novalidate: true, style: "margin-bottom:16px" },
       h("div", { class: "card-head" }, h("h2", {}, "Paquete nuevo"), h("p", {}, "Completá los datos. El sistema le asigna el código de seguimiento.")),
       h("div", { class: "form-grid" },
-        field("recipient", "Destinatario", recipient), field("zone", "Zona", zone),
+        field("recipient", "Destinatario", recipient),
+        field("recipientPhone", "Teléfono del destinatario", phone, { hint: "Para avisarle y confirmar que es quien espera el paquete." }),
+        field("recipientPostalCode", "Código postal del destinatario", postalCode), field("zone", "Zona", zone),
         field("service", "Servicio", service), field("deliveryPoint", "Lugar de entrega", point)),
       h("fieldset", { class: "crit", style: "margin-top:12px" }, h("legend", {}, "Bultos (cajas) del paquete"),
         h("p", { class: "muted small" }, "Un paquete puede tener varias cajas. Cargá el peso y las medidas de cada una."),
@@ -178,6 +182,9 @@ export default async function plant(root) {
       const errs = {};
       const r = recipient.value.trim();
       if (r.length < 2 || r.length > 80) errs.recipient = "Entre 2 y 80 caracteres.";
+      const digits = phone.value.replace(/[\s().-]/g, "").replace(/^\+/, "");
+      if (!/^\d{8,15}$/.test(digits)) errs.recipientPhone = "Entre 8 y 15 dígitos, por ejemplo 11 5555-1234.";
+      if (!/^(\d{4}|[A-Za-z]\d{4}[A-Za-z]{3})$/.test(postalCode.value.replace(/\s/g, ""))) errs.recipientPostalCode = "4 dígitos (1425) o formato CPA (C1425ABC).";
       if (!zone.value) errs.zone = "Elegí una zona.";
       if (!service.value) errs.service = "Elegí un servicio.";
       if (!point.value) errs.deliveryPoint = "Elegí un lugar de entrega.";
@@ -196,7 +203,7 @@ export default async function plant(root) {
       }
       const parcels = rows.map((row) => ({ weightKg: num(row.weight), lengthCm: num(row.length), widthCm: num(row.width), heightCm: num(row.height) }));
       try {
-        const s = await busy(submit, () => api.post("/shipments", { recipient: r, zone: zone.value, service: service.value, deliveryPoint: point.value, features: featureBoxes.filter((f) => f.box.checked).map((f) => f.v), parcels }));
+        const s = await busy(submit, () => api.post("/shipments", { recipient: r, recipientPhone: phone.value.trim(), recipientPostalCode: postalCode.value.trim(), zone: zone.value, service: service.value, deliveryPoint: point.value, features: featureBoxes.filter((f) => f.box.checked).map((f) => f.v), parcels }));
         toggleForm();
         load();
         showRegistered(s);

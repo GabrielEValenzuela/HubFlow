@@ -20,6 +20,7 @@ router.define("/repartos/:id", { roles: MANAGEMENT, load: () => import("./views/
 router.define("/buscar", { roles: PLANT, load: () => import("./views/findShipments.js"), nav: () => ["Planta", "Buscar paquete", "search"] });
 router.define("/personal", { roles: ADMIN, load: () => import("./views/staff.js"), nav: () => ["Administración", "Personal", "users"] });
 router.define("/configuracion", { roles: ADMIN, load: () => import("./views/settings.js"), nav: () => ["Administración", "Configuración", "settings"] });
+router.define("/avisos", { roles: ADMIN, load: () => import("./views/notices.js"), nav: () => ["Administración", "Avisos a clientes", "send"] });
 router.define("/actividad", { roles: ADMIN, load: () => import("./views/activity.js"), nav: () => ["Administración", "Actividad", "shield"] });
 
 const app = document.getElementById("app");
