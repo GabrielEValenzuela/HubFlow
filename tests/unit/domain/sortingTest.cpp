@@ -117,6 +117,23 @@ TEST(SortingBatchEdgeCases, SingleElementBatchSortsTrivially)
     EXPECT_EQ(&batch.at(0), &only);
 }
 
+TEST_F(SortingBatchTest, PreparingAgainSkipsPackagesAlreadyLoaded)
+{
+    SortingBatch batch {1, Zone::Norte, pending};
+    batch.sort(ShipmentOrdering::of(SortCriteria::CodeAscending));
+    batch.prepare();
+    const std::size_t total = batch.preparation().size();
+    batch.processNext();
+    batch.processNext();
+
+    batch.prepare();
+    batch.prepare();
+
+    EXPECT_EQ(batch.preparation().size(), total - 2U);
+    EXPECT_EQ(batch.processed().size(), 2U);
+    EXPECT_EQ(batch.preparation().front()->code(), "PKG-1004");
+}
+
 TEST_F(SortingBatchTest, PreparationQueueIsFifoAndProcessedStackIsLifo)
 {
     SortingBatch batch {1, Zone::Norte, pending};

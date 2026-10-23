@@ -38,7 +38,11 @@ public:
     /// @brief Ordena el lote con Insertion Sort según @p ordering.
     SortStats sort(const ShipmentOrdering& ordering);
 
-    /// @brief Encola el lote en su orden actual (descarta la cola previa). O(n).
+    /**
+     * @brief Encola, en el orden actual del lote, los envíos que todavía no se cargaron al vehículo
+     * (descarta la cola previa). Los ya procesados no se vuelven a encolar, así que repetir la
+     * operación deja el mismo resultado. O(n * m), con m los envíos procesados.
+     */
     void prepare();
 
     /**
@@ -71,6 +75,8 @@ public:
     const ds::Stack<logistics::domain::Shipment*>& processed() const noexcept;
 
 private:
+    bool isProcessed(const logistics::domain::Shipment* pShipment) const;
+
     std::uint64_t                           m_id;
     logistics::domain::Zone                 m_zone;
     logistics::domain::Shipment**           m_ppItems {nullptr};

@@ -71,7 +71,7 @@ export default async function loadPlan(root) {
         load = r.batch; hit = null;
       }, `Carga ordenada: ${l.toLowerCase()}.`) }, l));
 
-    const prepare = h("button", { class: "btn", disabled: onVehicle.length > 0, title: onVehicle.length ? "Ya empezaste a cargar. Para volver a preparar, bajá primero todos los paquetes del vehículo." : null, onClick: (e) => act(e.currentTarget, async () => { load = await api.put(`/sorting-batches/${id}/preparation-queue`); }, "Lista “Por cargar” preparada.") }, "Preparar para cargar");
+    const prepare = h("button", { class: "btn", onClick: (e) => act(e.currentTarget, async () => { load = await api.put(`/sorting-batches/${id}/preparation-queue`); }, "Lista “Por cargar” preparada.") }, "Preparar para cargar");
     const next = h("button", { class: "btn primary", disabled: !toLoad.length, onClick: (e) => act(e.currentTarget, async () => {
       const r = await api.post(`/sorting-batches/${id}/processed-items`, {});
       load = r.batch;
@@ -105,7 +105,7 @@ export default async function loadPlan(root) {
 
       h("section", { class: "card" },
         h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "2. Preparar y cargar"),
-          h("p", {}, "Preparar para cargar arma la lista “Por cargar” en el orden elegido. Cargar siguiente sube el primero al vehículo. Lo último que subió es lo primero que se entrega. Si querés volver a preparar la lista, primero bajá del vehículo todo lo que cargaste.")),
+          h("p", {}, "Preparar para cargar arma la lista “Por cargar” en el orden elegido. Cargar siguiente sube el primero al vehículo. Lo último que subió es lo primero que se entrega. Si volvés a preparar, los paquetes que ya cargaste no se repiten.")),
           h("div", { class: "actions" }, prepare, next, back)),
         h("div", { class: "lanes" }, toLoadLane(toLoad), vehicleLane(onVehicle))),
 

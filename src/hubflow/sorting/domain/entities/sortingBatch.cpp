@@ -48,6 +48,17 @@ SortingBatch::~SortingBatch()
     delete[] m_ppItems;
 }
 
+bool SortingBatch::isProcessed(const logistics::domain::Shipment* pShipment) const
+{
+    bool found {false};
+    m_processed.forEach(
+        [&found, pShipment](const logistics::domain::Shipment* pLoaded)
+        {
+            found = found || pLoaded == pShipment;
+        });
+    return found;
+}
+
 SortStats SortingBatch::sort(const ShipmentOrdering& ordering)
 {
     const SortStats stats {insertionSort(m_ppItems, m_size, ordering)};
@@ -60,7 +71,10 @@ void SortingBatch::prepare()
     m_preparation.clear();
     for (std::size_t i = 0; i < m_size; ++i)
     {
-        m_preparation.enqueue(m_ppItems[i]);
+        if (!isProcessed(m_ppItems[i]))
+        {
+            m_preparation.enqueue(m_ppItems[i]);
+        }
     }
 }
 
