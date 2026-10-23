@@ -25,10 +25,10 @@ class SortingBatch final
 {
 public:
     /**
-     * @brief Copia las referencias de los pendientes de @p zone a un arreglo dinámico.
+     * @brief Copia las referencias de los pendientes de la zona con código @p zone a un arreglo dinámico.
      * @throws business_error (Conflict) si la zona no tiene pendientes.
      */
-    SortingBatch(std::uint64_t id, logistics::domain::Zone zone, const logistics::domain::PendingShipments& pending);
+    SortingBatch(std::uint64_t id, const std::string& zone, const logistics::domain::PendingShipments& pending);
 
     ~SortingBatch();
 
@@ -67,7 +67,7 @@ public:
     ds::DynamicArray<logistics::domain::Shipment*> unloadProcessed();
 
     std::uint64_t                                  id() const noexcept;
-    logistics::domain::Zone                        zone() const noexcept;
+    const std::string&                             zone() const noexcept;
     std::size_t                                    size() const noexcept;
     SortCriteria                                   sortedBy() const noexcept;
     const logistics::domain::Shipment&             at(std::size_t index) const;
@@ -78,7 +78,7 @@ private:
     bool isProcessed(const logistics::domain::Shipment* pShipment) const;
 
     std::uint64_t                           m_id;
-    logistics::domain::Zone                 m_zone;
+    std::string                             m_zone;
     logistics::domain::Shipment**           m_ppItems {nullptr};
     std::size_t                             m_size {0};
     SortCriteria                            m_sortedBy {SortCriteria::None};

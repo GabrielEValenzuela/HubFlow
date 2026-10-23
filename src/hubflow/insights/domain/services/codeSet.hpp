@@ -25,28 +25,28 @@ public:
     CodeSet collect(const logistics::domain::ShipmentCatalog& catalog) const;
 };
 
-/// @brief Envíos de una zona.
+/// @brief Envíos de una zona (por su código de catálogo).
 class ZoneCriterion final : public SetCriterion
 {
 public:
-    explicit ZoneCriterion(logistics::domain::Zone zone) noexcept;
+    explicit ZoneCriterion(std::string zone) noexcept;
 
 private:
     bool matches(const logistics::domain::Shipment& shipment) const override;
 
-    logistics::domain::Zone m_zone;
+    std::string m_zone;
 };
 
-/// @brief Envíos de un nivel de servicio.
+/// @brief Envíos de un nivel de servicio (por su código de catálogo).
 class ServiceCriterion final : public SetCriterion
 {
 public:
-    explicit ServiceCriterion(logistics::domain::ServiceLevel service) noexcept;
+    explicit ServiceCriterion(std::string service) noexcept;
 
 private:
     bool matches(const logistics::domain::Shipment& shipment) const override;
 
-    logistics::domain::ServiceLevel m_service;
+    std::string m_service;
 };
 
 /// @brief Operación entre conjuntos (Strategy). Todas son O(n + m).

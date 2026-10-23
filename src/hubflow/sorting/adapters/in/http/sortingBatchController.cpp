@@ -16,7 +16,6 @@ using platform::Json;
 using platform::RequestContext;
 using shared::application::Vocabulary;
 
-constexpr const char* ZONES {"CENTRO, NORTE, SUR"};
 constexpr const char* CRITERIA {"CODE_ASC, WEIGHT_DESC"};
 constexpr const char* ALGORITHMS {"linear, binary, both"};
 
@@ -77,7 +76,7 @@ void SortingBatchController::registerRoutes(platform::ApiRouter& router)
         [this](const RequestContext& context)
         {
             auto       input = InputValidator::body(context.request);
-            const auto zone  = input.requiredTerm<logistics::domain::Zone>("zone", Vocabulary::zone, ZONES);
+            const auto zone  = input.code("zone");
             input.validate();
             const auto& batch = m_useCases.open.execute(context.user(), zone);
             return platform::HttpResponse::created(SortingJsonPresenter::sortingBatch(batch),

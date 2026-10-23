@@ -1,5 +1,6 @@
 #include "hubflow/platform/http/inputValidator.hpp"
 
+#include "hubflow/logistics/domain/valueobjects/catalogCode.hpp"
 #include "hubflow/logistics/domain/valueobjects/trackingCode.hpp"
 
 #include <regex>
@@ -165,6 +166,73 @@ std::string InputValidator::email(const std::string& field)
         fail(field, "Debe ser un email válido");
     }
     return address;
+}
+
+std::string InputValidator::code(const std::string& field)
+{
+    const std::string value {requiredText(field, 2, 16)};
+    if (!value.empty() && !logistics::domain::CatalogCode::isValid(value))
+    {
+        fail(field, "Debe tener entre 2 y 16 caracteres: mayúsculas, números o guion bajo");
+    }
+    return value;
+}
+
+std::vector<std::string> InputValidator::optionalCodes(const std::string& field)
+{
+    std::vector<std::string> codes;
+    if (has(field) && !m_source.at(field).is_array())
+    {
+        fail(field, "Debe ser una lista de códigos");
+    }
+    else if (has(field))
+    {
+        for (const auto& item : m_source.at(field))
+        {
+            const std::string value {item.is_string() ? item.get<std::string>() : std::string {}};
+            if (!logistics::domain::CatalogCode::isValid(value))
+            {
+                fail(field, "Cada código debe tener entre 2 y 16 caracteres: mayúsculas, números o guion bajo");
+            }
+            else
+            {
+                codes.push_back(value);
+            }
+        }
+    }
+    return codes;
+}
+
+std::vector<std::pair<std::string, double>> InputValidator::textNumberPairs(const std::string& field,
+                                                                            const std::string& textKey,
+                                                                            const std::size_t  maxText,
+                                                                            const std::string& numberKey,
+                                                                            const double       maxNumber)
+{
+    std::vector<std::pair<std::string, double>> pairs;
+    if (!has(field) || !m_source.at(field).is_array() || m_source.at(field).empty())
+    {
+        fail(field, "Debe ser una lista con al menos un elemento");
+    }
+    else
+    {
+        for (const auto& item : m_source.at(field))
+        {
+            const bool wellFormed {item.is_object() && item.contains(textKey) && item.at(textKey).is_string() &&
+                                   item.contains(numberKey) && numberFrom(item.at(numberKey)).has_value()};
+            const auto text   = wellFormed ? item.at(textKey).get<std::string>() : std::string {};
+            const auto number = wellFormed ? *numberFrom(item.at(numberKey)) : 0.0;
+            if (!wellFormed || text.empty() || text.size() > maxText || number <= 0.0 || number > maxNumber)
+            {
+                fail(field, "Cada elemento necesita " + textKey + " (texto) y " + numberKey + " (número positivo)");
+            }
+            else
+            {
+                pairs.emplace_back(text, number);
+            }
+        }
+    }
+    return pairs;
 }
 
 std::pair<std::size_t, std::size_t> InputValidator::page()

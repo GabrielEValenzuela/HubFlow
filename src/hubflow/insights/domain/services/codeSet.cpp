@@ -1,5 +1,7 @@
 #include "hubflow/insights/domain/services/codeSet.hpp"
 
+#include <utility>
+
 namespace hubflow::insights::domain
 {
 
@@ -17,8 +19,8 @@ CodeSet SetCriterion::collect(const logistics::domain::ShipmentCatalog& catalog)
     return result;
 }
 
-ZoneCriterion::ZoneCriterion(const logistics::domain::Zone zone) noexcept
-    : m_zone {zone}
+ZoneCriterion::ZoneCriterion(std::string zone) noexcept
+    : m_zone {std::move(zone)}
 {
 }
 
@@ -27,8 +29,8 @@ bool ZoneCriterion::matches(const logistics::domain::Shipment& shipment) const
     return shipment.zone() == m_zone;
 }
 
-ServiceCriterion::ServiceCriterion(const logistics::domain::ServiceLevel service) noexcept
-    : m_service {service}
+ServiceCriterion::ServiceCriterion(std::string service) noexcept
+    : m_service {std::move(service)}
 {
 }
 

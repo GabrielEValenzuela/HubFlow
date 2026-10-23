@@ -23,7 +23,7 @@ public:
     SortingDesk& operator=(const SortingDesk&) = delete;
 
     /// @brief Abre un lote para @p zone reemplazando al activo.
-    SortingBatch& open(logistics::domain::Zone zone, const logistics::domain::PendingShipments& pending);
+    SortingBatch& open(const std::string& zone, const logistics::domain::PendingShipments& pending);
 
     /// @throws business_error (NotFound) si @p id no es el lote activo.
     SortingBatch& require(std::uint64_t id) const;

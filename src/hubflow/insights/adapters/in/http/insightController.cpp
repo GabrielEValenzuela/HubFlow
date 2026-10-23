@@ -2,6 +2,7 @@
 
 #include "hubflow/insights/adapters/in/http/insightsJsonPresenter.hpp"
 #include "hubflow/logistics/adapters/in/http/logisticsJsonPresenter.hpp"
+#include "hubflow/logistics/domain/valueobjects/catalogCode.hpp"
 #include "hubflow/platform/http/inputValidator.hpp"
 #include "hubflow/shared/application/vocabulary.hpp"
 
@@ -18,7 +19,7 @@ using platform::RequestContext;
 using shared::application::Vocabulary;
 
 constexpr const char* OPERATIONS {"UNION, INTERSECTION, DIFFERENCE"};
-constexpr const char* SELECTORS {"zone:CENTRO|NORTE|SUR o service:EXPRESS|PRIORITARIO|ESTANDAR"};
+constexpr const char* SELECTORS {"zone:<código de zona> o service:<código de servicio>"};
 constexpr const char* ZONE_PREFIX {"zone"};
 constexpr const char* SERVICE_PREFIX {"service"};
 
@@ -53,15 +54,13 @@ std::optional<SetSelector> selector(const std::string& text)
     {
         const std::string kind {text.substr(0, separator)};
         const std::string value {text.substr(separator + 1)};
-        const auto        zone    = Vocabulary::zone(value);
-        const auto        service = Vocabulary::serviceLevel(value);
-        if (kind == ZONE_PREFIX && zone.has_value())
+        if (kind == ZONE_PREFIX && logistics::domain::CatalogCode::isValid(value))
         {
-            result = SetSelector {SetSelector::Kind::Zone, *zone, {}};
+            result = SetSelector {SetSelector::Kind::Zone, value, {}};
         }
-        else if (kind == SERVICE_PREFIX && service.has_value())
+        else if (kind == SERVICE_PREFIX && logistics::domain::CatalogCode::isValid(value))
         {
-            result = SetSelector {SetSelector::Kind::Service, {}, *service};
+            result = SetSelector {SetSelector::Kind::Service, {}, value};
         }
     }
     return result;

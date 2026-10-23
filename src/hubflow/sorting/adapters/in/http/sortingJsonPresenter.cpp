@@ -32,7 +32,7 @@ Json SortingJsonPresenter::sortingBatch(const domain::SortingBatch& batch)
             processed.push_back(pShipment->code());
         });
     return Json {{"id", batch.id()},
-                 {"zone", Vocabulary::name(batch.zone())},
+                 {"zone", batch.zone()},
                  {"size", batch.size()},
                  {"sortedBy", Vocabulary::name(batch.sortedBy())},
                  {"items", items},

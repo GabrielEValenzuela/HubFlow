@@ -16,7 +16,7 @@ public:
 
 private:
     const domain::SortingBatch& execute(const shared::application::Principal& principal,
-                                        logistics::domain::Zone               zone) override;
+                                        const std::string&                    zone) override;
 
     const logistics::application::LogisticsModel& m_model;
     domain::SortingDesk&                          m_desk;

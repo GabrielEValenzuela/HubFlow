@@ -132,9 +132,8 @@ Json InsightsJsonPresenter::stateComparison(const domain::StateComparison& compa
 
 Json InsightsJsonPresenter::selector(const application::SetSelector& selector)
 {
-    return selector.kind == application::SetSelector::Kind::Zone
-               ? Json {{"zone", Vocabulary::name(selector.zone)}}
-               : Json {{"service", Vocabulary::name(selector.service)}};
+    return selector.kind == application::SetSelector::Kind::Zone ? Json {{"zone", selector.zone}}
+                                                                 : Json {{"service", selector.service}};
 }
 
 } // namespace hubflow::insights::adapters

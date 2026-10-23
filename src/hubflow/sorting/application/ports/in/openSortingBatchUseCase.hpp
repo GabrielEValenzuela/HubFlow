@@ -1,7 +1,6 @@
 #ifndef HUBFLOW_SORTING_APPLICATION_PORTS_IN_OPEN_SORTING_BATCH_USE_CASE_HPP
 #define HUBFLOW_SORTING_APPLICATION_PORTS_IN_OPEN_SORTING_BATCH_USE_CASE_HPP
 
-#include "hubflow/logistics/domain/valueobjects/zone.hpp"
 #include "hubflow/shared/application/principal.hpp"
 #include "hubflow/shared/application/useCase.hpp"
 #include "hubflow/sorting/domain/services/sortingDesk.hpp"
@@ -17,6 +16,7 @@ namespace hubflow::sorting::application
  *
  * @par Errores
  * - Forbidden: el rol no puede operar la mesa de clasificación.
+ * - NotFound: la zona no existe.
  * - Conflict: la zona no tiene envíos pendientes.
  *
  * @par Idempotencia
@@ -31,7 +31,7 @@ public:
     virtual ~OpenSortingBatchUseCase() = default;
 
     virtual const domain::SortingBatch& execute(const shared::application::Principal& principal,
-                                                logistics::domain::Zone               zone) = 0;
+                                                const std::string&                    zone) = 0;
 };
 
 } // namespace hubflow::sorting::application

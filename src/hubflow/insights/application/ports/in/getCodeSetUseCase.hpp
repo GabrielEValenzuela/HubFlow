@@ -3,15 +3,13 @@
 
 #include "hubflow/insights/domain/services/codeSet.hpp"
 #include "hubflow/logistics/domain/entities/shipment.hpp"
-#include "hubflow/logistics/domain/valueobjects/serviceLevel.hpp"
-#include "hubflow/logistics/domain/valueobjects/zone.hpp"
 #include "hubflow/shared/application/principal.hpp"
 #include "hubflow/shared/application/useCase.hpp"
 
 namespace hubflow::insights::application
 {
 
-/// @brief Criterio de pertenencia pedido por el operador: una zona o un nivel de servicio.
+/// @brief Criterio de pertenencia pedido por el operador: una zona o un nivel de servicio, por su código.
 struct SetSelector
 {
     enum class Kind
@@ -20,9 +18,9 @@ struct SetSelector
         Service
     };
 
-    Kind                            kind {Kind::Zone};
-    logistics::domain::Zone         zone {logistics::domain::Zone::Centro};
-    logistics::domain::ServiceLevel service {logistics::domain::ServiceLevel::Estandar};
+    Kind        kind {Kind::Zone};
+    std::string zone;
+    std::string service;
 };
 
 /**

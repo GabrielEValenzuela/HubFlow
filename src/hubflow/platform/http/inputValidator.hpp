@@ -34,6 +34,24 @@ public:
     std::string                trackingCode(const std::string& field);
     std::string                email(const std::string& field);
 
+    /// @brief Código de catálogo (zona, servicio, característica): 2 a 16 caracteres entre A-Z, 0-9 y guion bajo.
+    std::string code(const std::string& field);
+
+    /**
+     * @brief Lista (al menos un elemento) de objetos con un texto y un número, por ejemplo las calles de un punto
+     * nuevo: @c [{"to":"C1","costKm":3.2}].
+     * @param textKey clave del texto (1 a @p maxText caracteres).
+     * @param numberKey clave del número (entre 0 y @p maxNumber, excluido el cero).
+     */
+    std::vector<std::pair<std::string, double>> textNumberPairs(const std::string& field,
+                                                                const std::string& textKey,
+                                                                std::size_t        maxText,
+                                                                const std::string& numberKey,
+                                                                double             maxNumber);
+
+    /// @brief Lista opcional de códigos de catálogo (vacía si el campo falta).
+    std::vector<std::string> optionalCodes(const std::string& field);
+
     /**
      * @brief Valida que el campo sea uno de los valores admitidos por @p parse.
      * @param field nombre del campo en el JSON.

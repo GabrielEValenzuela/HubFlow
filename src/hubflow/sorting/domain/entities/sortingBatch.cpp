@@ -8,7 +8,7 @@ namespace hubflow::sorting::domain
 {
 namespace
 {
-std::size_t countInZone(const logistics::domain::PendingNode* pNode, const logistics::domain::Zone zone)
+std::size_t countInZone(const logistics::domain::PendingNode* pNode, const std::string& zone)
 {
     std::size_t count {0};
     for (; pNode != nullptr; pNode = pNode->pNext)
@@ -20,7 +20,7 @@ std::size_t countInZone(const logistics::domain::PendingNode* pNode, const logis
 } // namespace
 
 SortingBatch::SortingBatch(const std::uint64_t                        id,
-                           const logistics::domain::Zone              zone,
+                           const std::string&                         zone,
                            const logistics::domain::PendingShipments& pending)
     : m_id {id}
     , m_zone {zone}
@@ -116,7 +116,7 @@ std::uint64_t SortingBatch::id() const noexcept
     return m_id;
 }
 
-logistics::domain::Zone SortingBatch::zone() const noexcept
+const std::string& SortingBatch::zone() const noexcept
 {
     return m_zone;
 }

@@ -10,7 +10,7 @@ SortingDesk::~SortingDesk()
     close();
 }
 
-SortingBatch& SortingDesk::open(const logistics::domain::Zone zone, const logistics::domain::PendingShipments& pending)
+SortingBatch& SortingDesk::open(const std::string& zone, const logistics::domain::PendingShipments& pending)
 {
     SortingBatch* pBatch = new SortingBatch {m_lastId + 1, zone, pending};
     close();

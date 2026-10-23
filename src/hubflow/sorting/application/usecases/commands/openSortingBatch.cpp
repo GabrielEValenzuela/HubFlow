@@ -12,9 +12,10 @@ OpenSortingBatch::OpenSortingBatch(const logistics::application::LogisticsModel&
 }
 
 const domain::SortingBatch& OpenSortingBatch::execute(const shared::application::Principal& principal,
-                                                      logistics::domain::Zone               zone)
+                                                      const std::string&                    zone)
 {
     principal.require(identity::domain::Permission::OperateSortingDesk);
+    m_model.zones.require(zone);
     return m_desk.open(zone, m_model.pending);
 }
 

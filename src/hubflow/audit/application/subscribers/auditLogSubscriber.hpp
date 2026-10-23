@@ -22,8 +22,14 @@ private:
     void on(const logistics::domain::ShipmentDispatched& event) override;
     void on(const logistics::domain::ShipmentRescheduled& event) override;
     void on(const logistics::domain::ShipmentDelivered& event) override;
+    void on(const logistics::domain::ZoneChanged& event) override;
+    void on(const logistics::domain::ServiceLevelChanged& event) override;
+    void on(const logistics::domain::ShipmentFeatureChanged& event) override;
     void on(const routing::domain::DeliveryRouteAssigned& event) override;
     void on(const routing::domain::RouteStopResolved& event) override;
+    void on(const routing::domain::DeliveryRouteReassigned& event) override;
+    void on(const routing::domain::RoadNodeAdded& event) override;
+    void on(const routing::domain::RoadNodeChanged& event) override;
 
     void write(const shared::domain::DomainEvent& event,
                const std::string&                 type,
