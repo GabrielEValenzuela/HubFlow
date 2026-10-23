@@ -3,9 +3,9 @@ import { h, subHead, loading, errorBox, field, busy, shipmentTable, ZONE, SERVIC
 import { openShipment } from "./shipmentDetail.js";
 
 const JOIN = {
-  INTERSECTION: ["y", "y (cumplen las dos condiciones)"],
-  UNION: ["o", "o (cumplen al menos una)"],
-  DIFFERENCE: ["pero no", "pero no (cumplen la primera y no la segunda)"],
+  INTERSECTION: ["y", "y", "Cumplen las dos condiciones."],
+  UNION: ["o", "o", "Cumplen al menos una de las dos."],
+  DIFFERENCE: ["pero no", "pero no", "Cumplen la primera y no la segunda."],
 };
 
 export default function filters(root) {
@@ -27,11 +27,13 @@ export default function filters(root) {
   const a = condition("Primera condición", "zone", "NORTE");
   const b = condition("Segunda condición", "service", "EXPRESS");
   const join = h("select", { class: "input" }, ...Object.entries(JOIN).map(([v, [, l]]) => h("option", { value: v }, l)));
+  const joinHint = h("span", {}, JOIN.INTERSECTION[2]);
+  join.addEventListener("change", () => { joinHint.textContent = JOIN[join.value][2]; });
   const btn = h("button", { class: "btn primary", type: "submit" }, "Mostrar paquetes");
   const out = h("div", { style: "margin-top:20px", "aria-live": "polite" });
   const form = h("form", { class: "card", novalidate: true },
     
-    h("div", { class: "filter-row" }, a.el, h("div", { class: "join-box" }, field("join", "Combinar con", join)), b.el),
+    h("div", { class: "filter-row" }, a.el, h("div", { class: "join-box" }, field("join", "Combinar con", join, { hint: joinHint })), b.el),
     h("div", { class: "form-actions" }, btn));
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

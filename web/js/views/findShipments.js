@@ -7,8 +7,8 @@ import filters from "./filters.js";
 const CODE = /^PKG-\d{4}$/;
 
 export default function findShipments(root) {
-  const byCodeOut = h("div", { style: "margin-top:16px", "aria-live": "polite" });
-  const rangeOut = h("div", { style: "margin-top:16px", "aria-live": "polite" });
+  const byCodeOut = h("div", { class: "results", "aria-live": "polite" });
+  const rangeOut = h("div", { class: "results", "aria-live": "polite" });
 
   const code = h("input", { class: "input", placeholder: "PKG-1003", autocomplete: "off", style: "width:170px" });
   const codeBtn = h("button", { class: "btn primary", type: "submit" }, icon("search"), "Buscar");
@@ -59,6 +59,7 @@ export default function findShipments(root) {
   root.append(pageHead("Buscar paquete", "Encontrá un paquete por su código o listá los de un tramo de códigos."),
     h("div", { class: "grid-2" },
       h("section", { class: "card" }, h("div", { class: "card-head" }, h("h2", {}, "Por código")), codeForm, byCodeOut),
-      h("section", { class: "card" }, h("div", { class: "card-head" }, h("h2", {}, "Por tramo de códigos")), rangeForm, rangeOut)),
+      h("section", { class: "card" }, h("div", { class: "card-head" }, h("h2", {}, "Por tramo de códigos")), rangeForm)),
+    rangeOut,
     filterSection);
 }
