@@ -5,7 +5,7 @@ import { icon } from "../icons.js";
 export default async function metrics(root) {
   const slot = h("div", {}, loading());
   const refresh = h("button", { class: "btn", onClick: load }, icon("reset"), "Actualizar");
-  root.append(pageHead("Métricas", "Cómo viene el día: en qué estado está cada envío y qué pesa cada zona.", refresh), slot);
+  root.append(pageHead("Métricas", "Envíos por estado y resumen de pendientes por zona (cantidad, Express, peso total y envío más pesado, calculados con recursión sobre la lista de pendientes).", refresh), slot);
 
   async function load() {
     try {

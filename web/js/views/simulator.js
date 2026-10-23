@@ -53,7 +53,7 @@ export default async function simulator(root) {
       const status = h("p", { class: "small muted", "aria-live": "off" });
       const live = h("dl", { class: "kv small" });
       return { r, view, status, live, el: h("section", { class: "card" + (r.metrics.cost_total === best ? " winner" : "") },
-        h("div", { class: "card-head" }, h("h3", {}, ALGORITHM[r.algorithm]), r.metrics.cost_total === best ? h("span", { class: "badge s-ENTREGADO" }, "Camino más corto") : null),
+        h("div", { class: "card-head" }, h("h3", {}, ALGORITHM[r.algorithm]), r.metrics.cost_total === best ? h("span", { class: "badge s-ENTREGADO" }, "Menor cost_total (km)") : null),
         view.el, status, h("dl", { class: "kv small", style: "margin-top:8px" },
           h("dt", {}, "Camino"), h("dd", { class: "code" }, r.path.join(" → ")),
           h("dt", {}, "cost_total"), h("dd", { class: "code" }, fmtKm(r.metrics.cost_total)),
@@ -71,7 +71,7 @@ export default async function simulator(root) {
           c.status.textContent = `Paso ${f.index + 1} de ${f.count}: expande ${f.expanded}`;
         } else {
           c.view.render({ explored: f.explored, path: f.path, from: f.from, to: f.to, courier: f.to, animate: idx <= fr.length - 1, speed: replay.speed });
-          c.status.textContent = `Terminó: ${f.path.length - 1} tramos de calle.`;
+          c.status.textContent = `Camino encontrado: ${f.path.length - 1} tramos.`;
         }
       });
     });

@@ -7,7 +7,7 @@ export default async function users(root) {
   const slot = h("div", {}, loading());
   const formSlot = h("div", {});
   const createBtn = h("button", { class: "btn primary", "aria-expanded": "false", onClick: toggle }, icon("plus"), "Nuevo usuario");
-  root.append(pageHead("Usuarios", "Quién puede entrar a HubFlow y qué puede hacer. Desactivar una cuenta le quita el acceso sin borrar su historial.", createBtn), formSlot, slot);
+  root.append(pageHead("Usuarios", "Cuentas de HubFlow con su rol. Desactivar una cuenta impide el ingreso y conserva su historial.", createBtn), formSlot, slot);
   const me = session.user();
 
   async function load() {

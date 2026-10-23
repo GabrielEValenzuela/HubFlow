@@ -7,8 +7,8 @@ const OPS = { UNION: "Unión · está en A o en B", INTERSECTION: "Intersección
 export default async function queries(root) {
   let mode = "sets";
   const slot = h("div", {});
-  const bar = tabs([["sets", "Conjuntos de envíos"], ["bits", "Historial de estados"]], mode, (id) => { mode = id; draw(); });
-  root.append(pageHead("Consultas", "Cruzá grupos de envíos o compará por qué estados pasaron dos paquetes."), bar, slot);
+  const bar = tabs([["sets", "Set de códigos"], ["bits", "BitSet de estados"]], mode, (id) => { mode = id; draw(); });
+  root.append(pageHead("Consultas", "Operaciones de conjuntos sobre códigos de envío (Set sobre lista ordenada sin repetidos; unión, intersección y diferencia por merge, O(n + m)) y comparación del historial de estados de dos envíos con BitSet de 5 bits (AND, OR, XOR)."), bar, slot);
   const draw = () => slot.replaceChildren(mode === "sets" ? sets() : bits());
 
   function criterion(prefix, label, defType, defVal) {
@@ -31,11 +31,11 @@ export default async function queries(root) {
     const op = h("select", { class: "input" }, ...Object.entries(OPS).map(([v, l]) => h("option", { value: v }, l)));
     const btn = h("button", { class: "btn primary", type: "submit" }, "Calcular");
     const out = h("div", { style: "margin-top:20px" });
-    const form = h("form", { class: "card", novalidate: true }, h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "Armar y combinar grupos"), h("p", {}, "Cada grupo reúne los envíos de una zona o de un servicio."))),
+    const form = h("form", { class: "card", novalidate: true }, h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "Construir y combinar conjuntos"), h("p", {}, "Cada conjunto A o B contiene los códigos de los envíos de una zona o de un servicio."))),
       h("div", { class: "grid-2", style: "gap:12px" }, a.el, b.el), h("div", { style: "margin-top:12px;max-width:420px" }, field("operation", "Operación", op)), h("div", { class: "form-actions" }, btn));
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      if (a.get() === b.get()) { out.replaceChildren(h("div", { class: "alert warn" }, "Elegí dos grupos distintos para que la comparación tenga sentido.")); return; }
+      if (a.get() === b.get()) { out.replaceChildren(h("div", { class: "alert warn" }, "Elegí dos conjuntos distintos.")); return; }
       out.replaceChildren(loading(3));
       try {
         const r = await busy(btn, () => api.get("/shipment-set-operations", { operation: op.value, first: a.get(), second: b.get() }));
@@ -58,7 +58,7 @@ export default async function queries(root) {
       h("div", { class: "card" }, h("div", { class: "card-head" }, h("h2", {}, OPS[op].split(" · ")[0]), h("p", {}, `${r.result.size} ${r.result.size === 1 ? "envío" : "envíos"} en el resultado`)),
         h("div", { class: "venn-wrap" }, venn(op, onlyA.length, both.length, onlyB.length, nameA, nameB),
           h("div", { class: "venn-lists" }, listBlock("Solo en A", onlyA, op !== "INTERSECTION"), listBlock("En A y en B", both, true), listBlock("Solo en B", onlyB, op === "UNION")))),
-      r.shipments.length ? shipmentTable(r.shipments) : empty("Ningún envío cumple", "Probá con otra combinación de grupos."));
+      r.shipments.length ? shipmentTable(r.shipments) : empty("Ningún envío cumple", "Probá con otra combinación de conjuntos."));
   }
 
   const listBlock = (title, codes, inResult) => h("div", {}, h("h3", {}, title, " ", h("span", { class: "tag" }, inResult ? "forma parte del resultado" : "queda afuera")),
@@ -81,7 +81,7 @@ export default async function queries(root) {
     const second = h("input", { class: "input", placeholder: "PKG-1002", autocomplete: "off" });
     const btn = h("button", { class: "btn primary", type: "submit" }, "Comparar");
     const out = h("div", { style: "margin-top:20px" });
-    const form = h("form", { class: "card", novalidate: true }, h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "Comparar dos envíos"), h("p", {}, "Cada envío guarda cinco casillas, una por estado. Acá ves qué casillas comparten."))),
+    const form = h("form", { class: "card", novalidate: true }, h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "Comparar dos historiales"), h("p", {}, "Cada envío guarda un BitSet de 5 bits, uno por estado alcanzado. Se combinan con AND (comunes), OR (de cualquiera) y XOR (exclusivos)."))),
       h("div", { class: "form-grid" }, field("first", "Primer envío", first), field("second", "Segundo envío", second)), h("div", { class: "form-actions" }, btn));
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -98,8 +98,8 @@ export default async function queries(root) {
         const row = (t, d, s) => h("tr", {}, h("td", {}, h("strong", {}, t), h("div", { class: "muted small" }, d)), h("td", {}, bitChips(s)));
         out.replaceChildren(h("div", { class: "table-wrap" }, h("table", {}, h("thead", {}, h("tr", {}, h("th", {}, "Qué muestra"), h("th", {}, "Estados"))), h("tbody", {},
           row(r.first, "Primer envío", sf), row(r.second, "Segundo envío", ss),
-          row("Estados en común", "Los dos pasaron por ahí", r.common), row("Estados de cualquiera", "Al menos uno pasó por ahí", r.either),
-          row("Solo el primero", "Únicos del primer envío", r.onlyFirst), row("Solo el segundo", "Únicos del segundo envío", r.onlySecond), row("Distintos entre sí", "Los pasó uno u otro, no ambos", r.exclusive)))));
+          row("Estados en común", "AND: ambos lo alcanzaron", r.common), row("Estados de cualquiera", "OR: al menos uno lo alcanzó", r.either),
+          row("Solo el primero", "Primero AND NOT segundo", r.onlyFirst), row("Solo el segundo", "Segundo AND NOT primero", r.onlySecond), row("Distintos entre sí", "XOR: lo alcanzó solo uno de los dos", r.exclusive)))));
       } catch (err) {
         out.replaceChildren(errorBox(err));
       }

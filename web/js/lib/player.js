@@ -53,7 +53,7 @@ export function transport(replay, label) {
 
 export function mountPlayer({ map, sequence, stops = [] }) {
   const frames = buildFrames(sequence);
-  const view = new MapView(map, { stops, title: "Mapa de la ciudad con la búsqueda del repartidor" });
+  const view = new MapView(map, { stops, title: "Mapa con la búsqueda sobre el grafo" });
   const status = h("p", { class: "player-status", "aria-live": "polite" });
   const frontierBox = h("div", { class: "chips" });
   const exploredBox = h("div", { class: "chips" });
@@ -91,10 +91,10 @@ export function mountPlayer({ map, sequence, stops = [] }) {
     h("div", { class: "player-map card" }, view.el,
       h("div", { class: "legend map-legend" },
         h("span", {}, h("i", { class: "l-explored" }), "Explorado"), h("span", {}, h("i", { class: "l-front" }), "En la frontera"), h("span", {}, h("i", { class: "l-exp" }), "Expandiendo ahora"),
-        h("span", {}, h("i", { class: "l-path" }), "Camino elegido"), h("span", {}, h("i", { class: "l-stop" }), "Parada"))),
+        h("span", {}, h("i", { class: "l-path" }), "Camino solución"), h("span", {}, h("i", { class: "l-stop" }), "Parada"))),
     h("div", { class: "player-side" }, transport(replay), status,
-      h("div", { class: "card" }, h("h3", {}, "Frontera"), h("p", { class: "muted small", style: "margin:2px 0 8px" }, "Nodos que el agente conoce y todavía no visitó, en orden de turno."), frontierBox),
-      h("div", { class: "card" }, h("h3", {}, "Explorados"), h("p", { class: "muted small", style: "margin:2px 0 8px" }, "Nodos ya expandidos en este tramo."), exploredBox),
+      h("div", { class: "card" }, h("h3", {}, "Frontera"), h("p", { class: "muted small", style: "margin:2px 0 8px" }, "Nodos generados y aún no expandidos, en el orden interno de la estructura de frontera."), frontierBox),
+      h("div", { class: "card" }, h("h3", {}, "Explorados"), h("p", { class: "muted small", style: "margin:2px 0 8px" }, "Nodos expandidos en este tramo, en orden de expansión."), exploredBox),
       mp.el, totals));
   return { el, view, replay, destroy: () => { replay.destroy(); view.destroy(); } };
 }

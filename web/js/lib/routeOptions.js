@@ -7,7 +7,7 @@ export const ETA = { avgKmh: 25, minutesPerStop: 4, note: "Estimación: 25 km/h 
 export const ROUTE_OPTIONS = [
   { algorithm: "ASTAR", label: "Menos kilómetros", short: "La ruta más corta, garantizada", recommended: true },
   { algorithm: "BFS", label: "Menos cruces", short: "Pasa por menos intersecciones; puede sumar algunos km" },
-  { algorithm: "GREEDY", label: "Salida inmediata", short: "Siempre hacia el punto más cercano; rápida de calcular, puede recorrer más km" },
+  { algorithm: "GREEDY", label: "Salida inmediata", short: "Prioriza el punto más cercano al destino en línea recta; calcula rápido y puede sumar km" },
 ];
 export const DEFAULT_OPTION = "ASTAR";
 

@@ -6,13 +6,13 @@ import { optionLabel, etaMinutes, fmtDuration } from "../lib/routeOptions.js";
 export default async function routes(root) {
   const pum = session.role() === "PUM";
   const slot = h("div", {}, loading());
-  root.append(pageHead(pum ? "Mi hoja de ruta" : "Rutas", pum ? "Las rutas que te asignaron, con la próxima parada y las entregas para marcar." : "Todas las rutas asignadas a repartidores."), slot);
+  root.append(pageHead(pum ? "Mi hoja de ruta" : "Rutas", pum ? "Rutas asignadas a tu usuario, con distancia, tiempo estimado y avance de entregas." : "Rutas asignadas a repartidores, con estado, distancia y avance de entregas."), slot);
 
   async function load() {
     try {
       const data = await api.get("/routes", { limit: 100 });
       if (!data.items.length) {
-        return slot.replaceChildren(empty(pum ? "Todavía no tenés rutas" : "No hay rutas asignadas", pum ? "Cuando un operador te asigne un lote, la ruta aparece acá." : "Las rutas se asignan desde la Mesa de clasificación.",
+        return slot.replaceChildren(empty(pum ? "Todavía no tenés rutas" : "No hay rutas asignadas", pum ? "Las rutas que un operador te asigne aparecen acá." : "Las rutas se asignan desde la Mesa de clasificación.",
           pum ? null : h("a", { class: "btn primary", href: "#/mesa" }, "Ir a la mesa")));
       }
       slot.replaceChildren(h("div", { class: "table-wrap" }, h("table", {},

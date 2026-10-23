@@ -17,12 +17,12 @@ const TYPES = {
 export default async function audit(root) {
   let offset = 0;
   const slot = h("div", {}, loading());
-  root.append(pageHead("Auditoría", "Qué pasó, quién lo hizo y cuándo. Los más recientes primero."), slot);
+  root.append(pageHead("Auditoría", "Registro de eventos con usuario y fecha, del más reciente al más antiguo."), slot);
 
   async function load() {
     try {
       const d = await api.get("/audit-events", { limit: LIMIT, offset });
-      if (!d.items.length && offset === 0) return slot.replaceChildren(empty("Todavía no hay actividad", "Los registros aparecen a medida que se usa HubFlow."));
+      if (!d.items.length && offset === 0) return slot.replaceChildren(empty("Todavía no hay actividad", "Los eventos se registran a medida que se opera."));
       const from = offset + 1, to = offset + d.items.length;
       slot.replaceChildren(
         h("div", { class: "table-wrap" }, h("table", {}, h("thead", {}, h("tr", {}, ...["Cuándo", "Quién", "Qué", "Sobre", "Detalle"].map((t) => h("th", {}, t)))),

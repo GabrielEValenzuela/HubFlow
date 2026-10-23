@@ -2,9 +2,9 @@ import { api } from "../api.js";
 import { h, dialog, loading, errorBox, statusBadge, serviceBadge, zoneTag, bitChips, fmtDate, fmtKg, STATUS, promptNote, toast, tabs } from "../ui.js";
 
 const ACTIONS = [
-  ["CLASIFICADO", "Clasificar", "Anotá dónde quedó el paquete en el centro de distribución.", "Clasificar envío"],
-  ["REPROGRAMADO", "Reprogramar", "Contá por qué no se pudo entregar y cuándo se reintenta.", "Reprogramar envío"],
-  ["ENTREGADO", "Entregar", "Dejá constancia de quién recibió el paquete.", "Registrar entrega"],
+  ["CLASIFICADO", "Clasificar", "Registrá la ubicación del paquete en el centro de distribución.", "Clasificar envío"],
+  ["REPROGRAMADO", "Reprogramar", "Registrá el motivo de la no entrega y cuándo se reintenta.", "Reprogramar envío"],
+  ["ENTREGADO", "Entregar", "Registrá quién recibió el paquete.", "Registrar entrega"],
 ];
 
 export function openShipment(code, onChange) {
@@ -25,7 +25,7 @@ export function openShipment(code, onChange) {
             h("dt", {}, "Peso"), h("dd", {}, fmtKg(s.weightKg)),
             h("dt", {}, "Intentos"), h("dd", {}, String(s.attempts))),
           h("section", {}, h("h3", {}, "Estados por los que pasó"),
-            h("p", { class: "muted small", style: "margin:4px 0 8px" }, `Cada casilla marca un estado alcanzado (${s.stateHistory.count} de 5).`),
+            h("p", { class: "muted small", style: "margin:4px 0 8px" }, `BitSet de 5 bits: cada bit marca un estado alcanzado (${s.stateHistory.count} de 5).`),
             bitChips(s.stateHistory),
             s.stateHistory.everRescheduled ? h("p", { class: "small", style: "margin-top:6px" }, "Este envío ya fue reprogramado alguna vez.") : null),
           h("section", {},

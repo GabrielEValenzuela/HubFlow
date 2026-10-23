@@ -11,7 +11,7 @@ export default async function sorting(root) {
   let stats = null;
   let search = null;
   const slot = h("div", {}, loading());
-  root.append(pageHead("Mesa de clasificación", "Armá un lote por zona, ordenalo, prepará la cola de salida y entregáselo a un repartidor."), slot);
+  root.append(pageHead("Mesa de clasificación", "Lote por zona con estructuras propias: ordenamiento por inserción, Queue FIFO de preparación, Stack LIFO de procesados, búsqueda lineal frente a binaria y asignación de ruta."), slot);
 
   async function load() {
     try {
@@ -32,7 +32,7 @@ export default async function sorting(root) {
     const btn = h("button", { class: "btn primary", type: "submit" }, "Abrir lote");
     const form = h("form", { novalidate: true, class: "card", style: "max-width:520px" },
       h("h2", {}, "No hay un lote abierto"),
-      h("p", { class: "muted", style: "margin:6px 0 16px" }, "Un lote reúne los pendientes de una zona para ordenarlos y despacharlos juntos."),
+      h("p", { class: "muted", style: "margin:6px 0 16px" }, "Un lote toma los envíos pendientes de una zona para ordenarlos, procesarlos y asignarlos a un repartidor."),
       field("zone", "Zona del lote", zone), h("div", { class: "form-error" }), h("div", { class: "form-actions" }, btn));
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -95,12 +95,12 @@ export default async function sorting(root) {
         tile("Envíos", batch.size), h("div", { class: "tile" }, h("div", { class: "k" }, "Orden actual"), h("div", { style: "font-size:1.05rem;font-weight:650;margin-top:6px" }, ORDER_LABEL[batch.sortedBy] ?? batch.sortedBy))),
 
       h("section", { class: "card" },
-        h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "1. Ordenar el lote"), h("p", {}, "Se ordena por inserción; abajo ves cuánto trabajo costó.")), h("div", { class: "seg" }, ...sortBtns)),
-        stats ? h("div", { class: "tiles", style: "margin-bottom:12px" }, tile("Comparaciones", stats.comparisons), tile("Desplazamientos", stats.shifts), h("div", { class: "tile" }, h("div", { class: "k" }, "Método"), h("div", { style: "font-weight:650;margin-top:6px" }, "Inserción"))) : null,
+        h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "1. Ordenar el lote"), h("p", {}, "Insertion Sort estable: O(n) en el mejor caso, O(n²) en el peor. Se informan comparaciones y desplazamientos.")), h("div", { class: "seg" }, ...sortBtns)),
+        stats ? h("div", { class: "tiles", style: "margin-bottom:12px" }, tile("Comparaciones", stats.comparisons), tile("Desplazamientos", stats.shifts), h("div", { class: "tile" }, h("div", { class: "k" }, "Método"), h("div", { style: "font-weight:650;margin-top:6px" }, "Insertion Sort"))) : null,
         itemsTable),
 
       h("section", { class: "card" },
-        h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "2. Preparar y procesar"), h("p", {}, "La cola sale en el orden del lote; lo procesado se apila y el último en entrar es el primero en poder volver.")), h("div", { class: "actions" }, prepare, next, back)),
+        h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "2. Preparar y procesar"), h("p", {}, "Preparar cola carga el lote en una Queue FIFO. Procesar siguiente la desencola y apila el envío en una Stack LIFO; Devolver el último desapila el tope.")), h("div", { class: "actions" }, prepare, next, back)),
         h("div", { class: "lanes" }, queueLane(batch.preparationQueue), stackLane(batch.processedStack))),
 
       searchCard(sortedByCode),
@@ -110,14 +110,14 @@ export default async function sorting(root) {
   const tile = (k, v) => h("div", { class: "tile" }, h("div", { class: "k" }, k), h("div", { class: "v" }, String(v)));
 
   function queueLane(q) {
-    return h("div", { class: "lane" }, h("h3", {}, "Cola de preparación ", h("span", { class: "tag" }, "FIFO · el primero en entrar sale primero")),
+    return h("div", { class: "lane" }, h("h3", {}, "Cola de preparación ", h("span", { class: "tag" }, "Queue FIFO: sale el primero que entró")),
       q.length ? h("ol", { class: "queue", "aria-label": "Cola de preparación" }, ...q.map((c, i) => h("li", { class: i === 0 ? "front" : "" }, h("span", { class: "code" }, c), i === 0 ? h("small", {}, "sale ahora") : null)))
         : h("p", { class: "muted lane-empty" }, "La cola está vacía. Tocá “Preparar cola” para cargar el lote."));
   }
 
   function stackLane(s) {
     const rev = s;
-    return h("div", { class: "lane" }, h("h3", {}, "Procesados ", h("span", { class: "tag" }, "LIFO · el último en entrar sale primero")),
+    return h("div", { class: "lane" }, h("h3", {}, "Procesados ", h("span", { class: "tag" }, "Stack LIFO: sale el último que entró")),
       rev.length ? h("ol", { class: "pile", "aria-label": "Pila de procesados, tope arriba" }, ...rev.map((c, i) => h("li", { class: i === 0 ? "top" : "" }, h("span", { class: "code" }, c), i === 0 ? h("small", {}, "tope") : null)))
         : h("p", { class: "muted lane-empty" }, "Todavía no se procesó ningún envío."));
   }
@@ -142,7 +142,7 @@ export default async function sorting(root) {
     form.style.alignItems = "flex-end";
     if (search && search.code) { input.value = search.code; out.replaceChildren(searchResult(search, sortedByCode)); }
     return h("section", { class: "card" },
-      h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "3. Buscar un envío en el lote"), h("p", {}, "Compará cuántos envíos hay que mirar recorriendo uno por uno contra partir el lote por la mitad."))),
+      h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "3. Buscar un envío en el lote"), h("p", {}, "Búsqueda lineal O(n) frente a binaria O(log n), con el número de comparaciones de cada una. La binaria exige el lote ordenado por código."))),
       form, out);
   }
 
@@ -153,16 +153,16 @@ export default async function sorting(root) {
       h("strong", { class: "code" }, `${res.comparisons}`));
     const found = r.linear.found;
     const parts = [h("div", { class: "alert " + (found ? "info" : "warn") }, found ? `${r.code} está en la posición ${r.linear.position + 1} del lote.` : `${r.code} no está en este lote.`),
-      h("div", { class: "cmp" }, bar("Recorrido uno por uno", r.linear, "linear"), r.binary ? bar("Búsqueda por mitades", r.binary, "binary") : null)];
+      h("div", { class: "cmp" }, bar("Búsqueda lineal", r.linear, "linear"), r.binary ? bar("Búsqueda binaria", r.binary, "binary") : null)];
     if (r.binary?.steps?.length) {
-      parts.push(h("h3", { style: "margin:16px 0 6px" }, "Cómo se acotó la búsqueda por mitades"),
-        h("div", { class: "table-wrap" }, h("table", {}, h("thead", {}, h("tr", {}, ...["Paso", "izq", "mid", "der", "Código en el medio", "Decisión"].map((t) => h("th", {}, t)))),
+      parts.push(h("h3", { style: "margin:16px 0 6px" }, "Iteraciones de la búsqueda binaria"),
+        h("div", { class: "table-wrap" }, h("table", {}, h("thead", {}, h("tr", {}, ...["Paso", "izq", "mid", "der", "Código en mid", "Decisión"].map((t) => h("th", {}, t)))),
           h("tbody", {}, ...r.binary.steps.map((s, i) => h("tr", {}, h("td", {}, String(i + 1)), h("td", { class: "code" }, String(s.left)), h("td", { class: "code" }, String(s.middle)), h("td", { class: "code" }, String(s.right)),
             h("td", { class: "code" }, s.codeAtMiddle),
-            h("td", {}, s.codeAtMiddle === r.code ? "Encontrado" : r.code < s.codeAtMiddle ? "Seguir por la izquierda" : "Seguir por la derecha")))))));
+            h("td", {}, s.codeAtMiddle === r.code ? "Encontrado" : r.code < s.codeAtMiddle ? "Descartar la mitad derecha" : "Descartar la mitad izquierda")))))));
     }
     if (!sortedByCode) {
-      parts.push(h("div", { class: "alert warn", style: "margin-top:12px" }, h("div", {}, h("strong", {}, "Búsqueda por mitades no disponible. "), r.binaryUnavailableReason || "El lote tiene que estar ordenado por código (A→Z) para poder partirlo por la mitad.")));
+      parts.push(h("div", { class: "alert warn", style: "margin-top:12px" }, h("div", {}, h("strong", {}, "Búsqueda binaria no disponible. "), r.binaryUnavailableReason || "Precondición: lote ordenado por código ascendente.")));
     }
     return h("div", {}, ...parts);
   }
@@ -222,7 +222,7 @@ export default async function sorting(root) {
       h("fieldset", { class: "crit", style: "margin-top:12px" }, h("legend", { id: "opt-legend" }, "¿Qué priorizar en esta ruta?"), optionsBox, note, failure),
       h("div", { class: "form-error" }), h("div", { class: "form-actions" }, btn,
         batch.processedStack.length ? h("span", { class: "muted small" }, `Se reparten ${batch.processedStack.length} envíos procesados, en el orden de la pila.`) : h("span", { class: "muted small" }, "Procesá al menos un envío para asignar la ruta.")));
-    return h("section", { class: "card" }, h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "4. Asignar la ruta"), h("p", {}, "Compará las opciones para esta carga y elegí cuál recibe el repartidor."))), form);
+    return h("section", { class: "card" }, h("div", { class: "card-head" }, h("div", {}, h("h2", {}, "4. Asignar la ruta"), h("p", {}, "Cada opción se calcula sobre la carga procesada; elegí cuál recibe el repartidor."))), form);
   }
 
   load();

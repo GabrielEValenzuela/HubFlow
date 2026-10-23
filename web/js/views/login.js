@@ -32,10 +32,10 @@ export default function login(root) {
   root.append(h("div", { class: "login" },
     h("section", { class: "login-hero", "aria-hidden": "true" },
       h("div", { class: "brand" }, h("span", { class: "brand-mark" }, icon("route", 18)), "HubFlow"),
-      h("p", { class: "login-claim" }, "Del centro de distribución a la puerta, sin perder un paquete en el camino."),
+      h("p", { class: "login-claim" }, "Gestión de envíos desde el centro de distribución hasta la entrega."),
       loginMap()),
     h("section", { class: "login-panel" },
-      h("h1", {}, "Ingresá a tu turno"),
+      h("h1", {}, "Ingresar a HubFlow"),
       h("p", { class: "muted" }, "Operadores, repartidores y administración usan la misma cuenta de HubFlow."),
       form)));
 }

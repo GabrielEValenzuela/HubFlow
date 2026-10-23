@@ -18,7 +18,7 @@ export default async function pending(root) {
   } }, lookup, h("button", { class: "btn", type: "submit" }, icon("search"), "Ver envío"));
 
   root.append(pageHead("Bandeja de pendientes",
-    "Los envíos esperando salir, en el orden en que se despachan: primero los Express, luego Prioritarios y Estándar; a igual servicio, el que llegó antes.",
+    "Envíos pendientes de salir, en orden de despacho: Express, luego Prioritario, luego Estándar; dentro de un mismo servicio, por orden de registro.",
     lookupForm, registerBtn, dispatchBtn), formSlot, listSlot);
 
   async function load() {
@@ -31,7 +31,7 @@ export default async function pending(root) {
   }
 
   function table(items) {
-    if (!items.length) return empty("No hay envíos pendientes", "Cuando registres un envío nuevo va a aparecer acá, listo para despachar.", h("button", { class: "btn primary", onClick: toggleForm }, "Registrar envío"));
+    if (!items.length) return empty("No hay envíos pendientes", "Los envíos registrados aparecen acá hasta que se despachan.", h("button", { class: "btn primary", onClick: toggleForm }, "Registrar envío"));
     return h("div", {}, h("div", { class: "table-wrap" }, h("table", {},
       h("thead", {}, h("tr", {}, ...["Orden", "Código", "Destinatario", "Zona", "Servicio", "Peso", "Estado", ""].map((t) => h("th", { class: t === "Peso" ? "num" : "" }, t)))),
       h("tbody", {}, ...items.map((s, i) => h("tr", {},
@@ -77,7 +77,7 @@ export default async function pending(root) {
     });
     const submit = h("button", { class: "btn primary", type: "submit" }, "Registrar envío");
     const form = h("form", { class: "card", novalidate: true, style: "margin-bottom:16px" },
-      h("div", { class: "card-head" }, h("h2", {}, "Nuevo envío"), h("p", {}, "Todo se revisa de nuevo en el servidor.")),
+      h("div", { class: "card-head" }, h("h2", {}, "Nuevo envío"), h("p", {}, "Los datos se validan también en el servidor.")),
       h("div", { class: "form-grid" },
         field("code", "Código", code, { hint: "PKG- y cuatro dígitos" }), field("recipient", "Destinatario", recipient),
         field("weightKg", "Peso (kg)", weight, { hint: "Entre 0,01 y 50" }), field("zone", "Zona", zone),
