@@ -17,7 +17,7 @@
 @media (max-width: 860px) {
   .shell { grid-template-columns: minmax(0, 1fr); }
   .sidebar { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; padding: var(--s-3) var(--s-4); gap: var(--s-3); border-right: 0; border-bottom: 1px solid var(--line); }
-  .nav { flex-direction: row; overflow-x: auto; order: 3; width: 100%; padding-bottom: 2px; scrollbar-width: thin; }
+  .nav { flex-direction: row; flex-wrap: wrap; order: 3; width: 100%; }
   .nav-group { display: none; }
   .nav a { white-space: nowrap; min-height: 44px; }
   .sidebar-foot { margin: 0 0 0 auto; border: 0; padding: 0; flex-direction: row; align-items: center; }
@@ -161,3 +161,4 @@ details.advanced summary { cursor: pointer; color: var(--ink-2); font-weight: 60
 .tabs button:hover { color: var(--ink); }
 .check { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 4px 12px; border: 1px solid var(--line-strong); border-radius: var(--r-s); background: var(--surface); cursor: pointer; font-weight: 500; }
 .check input { width: 18px; height: 18px; accent-color: var(--accent); }
+td.code, td.num { white-space: nowrap; }
