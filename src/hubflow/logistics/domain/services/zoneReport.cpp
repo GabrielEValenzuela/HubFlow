@@ -3,6 +3,7 @@
 namespace hubflow::logistics::domain
 {
 
+    // NOLINTNEXTLINE(misc-no-recursion)
     ZoneSummary summarizeZone(const PendingNode* pNode, const std::string& zone, const PriorityPolicy& policy)
     {
         ZoneSummary summary;
@@ -20,7 +21,7 @@ namespace hubflow::logistics::domain
         return summary;
     }
 
-    const Shipment* heaviestInZone(const PendingNode* pNode, const std::string& zone)
+    const Shipment* heaviestInZone(const PendingNode* pNode, const std::string& zone) // NOLINT(misc-no-recursion)
     {
         const Shipment* pHeaviest = nullptr;
         if (pNode != nullptr)
