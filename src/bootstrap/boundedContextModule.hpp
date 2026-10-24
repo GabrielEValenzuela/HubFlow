@@ -2,6 +2,7 @@
 #define HUBFLOW_BOOTSTRAP_BOUNDED_CONTEXT_MODULE_HPP
 
 #include <array>
+#include <cstdint>
 #include <utility>
 #include <vector>
 
@@ -31,7 +32,7 @@ namespace hubflow::bootstrap
      * al cliente y, al final, se deja constancia en la auditoría. Cada contexto declara en qué etapa reacciona; el
      * orden entre contextos dentro de una misma etapa es el orden en que se registraron los módulos.
      */
-    enum class SubscriptionPhase
+    enum class SubscriptionPhase : std::uint8_t
     {
         Projection,
         Persistence,
