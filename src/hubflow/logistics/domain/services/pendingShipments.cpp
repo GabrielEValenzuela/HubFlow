@@ -29,7 +29,7 @@ namespace hubflow::logistics::domain
 
     void PendingShipments::insert(Shipment* pShipment)
     {
-        PendingNode* pNode = new PendingNode {pShipment, nullptr};
+        auto* pNode = new PendingNode {pShipment, nullptr};
         if (m_pHead == nullptr || goesBefore(pShipment, m_pHead->pShipment))
         {
             pNode->pNext = m_pHead;
