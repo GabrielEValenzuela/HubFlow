@@ -1,4 +1,5 @@
 #include "support/inMemoryRepositories.hpp"
+#include <algorithm>
 
 #include "support/fixtures.hpp"
 
@@ -165,39 +166,36 @@ namespace hubflow::test
 
     void InMemoryCatalogRepository::saveZone(const logistics::domain::ZoneState& state)
     {
-        for (auto& stored : zones)
+        const auto found = std::find_if(
+            zones.begin(), zones.end(), [&state](const auto& stored) { return stored.code == state.code; });
+        if (found != zones.end())
         {
-            if (stored.code == state.code)
-            {
-                stored = state;
-                return;
-            }
+            *found = state;
+            return;
         }
         zones.push_back(state);
     }
 
     void InMemoryCatalogRepository::saveServiceLevel(const logistics::domain::ServiceLevelState& state)
     {
-        for (auto& stored : services)
+        const auto found = std::find_if(
+            services.begin(), services.end(), [&state](const auto& stored) { return stored.code == state.code; });
+        if (found != services.end())
         {
-            if (stored.code == state.code)
-            {
-                stored = state;
-                return;
-            }
+            *found = state;
+            return;
         }
         services.push_back(state);
     }
 
     void InMemoryCatalogRepository::saveFeature(const logistics::domain::ShipmentFeatureState& state)
     {
-        for (auto& stored : features)
+        const auto found = std::find_if(
+            features.begin(), features.end(), [&state](const auto& stored) { return stored.code == state.code; });
+        if (found != features.end())
         {
-            if (stored.code == state.code)
-            {
-                stored = state;
-                return;
-            }
+            *found = state;
+            return;
         }
         features.push_back(state);
     }
