@@ -15,7 +15,7 @@
 #include <string>
 
 using namespace hubflow::logistics::domain;
-using hubflow::shared::domain::business_error;
+using hubflow::shared::domain::BusinessError;
 using hubflow::shared::domain::ErrorKind;
 using hubflow::test::actor;
 using hubflow::test::draft;
@@ -41,7 +41,7 @@ namespace
             return catalog.adopt(Shipment::receive(shipmentDraft, tickets.next(), actor()));
         }
 
-        hubflow::ds::DynamicArray<std::string> codes(const std::string& first, const std::string& second)
+        static hubflow::ds::DynamicArray<std::string> codes(const std::string& first, const std::string& second)
         {
             hubflow::ds::DynamicArray<std::string> list;
             list.pushBack(first);
@@ -64,9 +64,9 @@ TEST(Dimensions, VolumetricWeightIsLengthTimesWidthTimesHeightOverFiveThousand)
 
 TEST(Dimensions, RejectsMeasuresOutOfRange)
 {
-    EXPECT_THROW((Dimensions {0.0, 10.0, 10.0}), business_error);
-    EXPECT_THROW((Dimensions {10.0, -1.0, 10.0}), business_error);
-    EXPECT_THROW((Dimensions {10.0, 10.0, 301.0}), business_error);
+    EXPECT_THROW((Dimensions {0.0, 10.0, 10.0}), BusinessError);
+    EXPECT_THROW((Dimensions {10.0, -1.0, 10.0}), BusinessError);
+    EXPECT_THROW((Dimensions {10.0, 10.0, 301.0}), BusinessError);
     EXPECT_NO_THROW((Dimensions {300.0, 0.1, 10.0}));
 }
 
@@ -88,7 +88,7 @@ TEST(Parcel, BillableWeightIsTheGreaterOfRealAndVolumetric)
 
 TEST_F(GroupFixture, ShipmentWeightIsTheSumOfBillableParcelWeights)
 {
-    Shipment& shipment = receive(threeParcels("PKG-0001"));
+    const Shipment& shipment = receive(threeParcels("PKG-0001"));
 
     EXPECT_EQ(shipment.parcelCount(), 3U);
     EXPECT_DOUBLE_EQ(shipment.realWeightKg(), 3.5);
@@ -112,8 +112,8 @@ TEST_F(GroupFixture, ShipmentNeedsBetweenOneAndTwentyParcels)
         twenty.parcels.pushBack(ParcelData {1.0, 10.0, 10.0, 10.0});
     }
 
-    EXPECT_THROW(Shipment::receive(none, tickets.next(), actor()), business_error);
-    EXPECT_THROW(Shipment::receive(many, tickets.next(), actor()), business_error);
+    EXPECT_THROW(Shipment::receive(none, tickets.next(), actor()), BusinessError);
+    EXPECT_THROW(Shipment::receive(many, tickets.next(), actor()), BusinessError);
     EXPECT_EQ(receive(twenty).parcelCount(), 20U);
 }
 
@@ -122,7 +122,7 @@ TEST_F(GroupFixture, ShipmentIdMustBeAUuidVersionSeven)
     ShipmentDraft bad = threeParcels("PKG-0001");
     bad.id = "not-a-uuid";
 
-    EXPECT_THROW(Shipment::receive(bad, tickets.next(), actor()), business_error);
+    EXPECT_THROW(Shipment::receive(bad, tickets.next(), actor()), BusinessError);
     EXPECT_FALSE(ShipmentId::isValid("018f0000-0000-4000-8000-000000000001"));
     EXPECT_TRUE(ShipmentId::isValid("018f0000-0000-7000-8000-000000000001"));
 }
@@ -134,7 +134,7 @@ TEST_F(GroupFixture, DeliveryRequiresEveryParcelConfirmed)
     shipment.confirmParcel(1, actor());
     shipment.confirmParcel(2, actor());
 
-    EXPECT_THROW(shipment.deliver("entregado", actor()), business_error);
+    EXPECT_THROW(shipment.deliver("entregado", actor()), BusinessError);
     shipment.confirmParcel(3, actor());
     shipment.deliver("entregado", actor());
 
@@ -158,10 +158,10 @@ TEST_F(GroupFixture, ParcelsCanOnlyBeConfirmedWhileOutForDelivery)
 {
     Shipment& shipment = receive(threeParcels("PKG-0001"));
 
-    EXPECT_THROW(shipment.confirmParcel(1, actor()), business_error);
+    EXPECT_THROW(shipment.confirmParcel(1, actor()), BusinessError);
     shipment.dispatch("salida", actor());
-    EXPECT_THROW(shipment.confirmParcel(4, actor()), business_error);
-    EXPECT_THROW(shipment.confirmParcel(0, actor()), business_error);
+    EXPECT_THROW(shipment.confirmParcel(4, actor()), BusinessError);
+    EXPECT_THROW(shipment.confirmParcel(0, actor()), BusinessError);
 }
 
 TEST_F(GroupFixture, PartialDeliveryKeepsDeliveredParcelsRecordedWhenRescheduled)
@@ -181,7 +181,7 @@ TEST_F(GroupFixture, PartialDeliveryKeepsDeliveredParcelsRecordedWhenRescheduled
     EXPECT_TRUE(pRestored->parcel(2).isDelivered());
     EXPECT_EQ(pRestored->pendingParcelCount(), 1U);
     pRestored->dispatch("segundo intento", actor());
-    EXPECT_THROW(pRestored->deliver("x", actor()), business_error);
+    EXPECT_THROW(pRestored->deliver("x", actor()), BusinessError);
     pRestored->confirmParcel(2, actor());
     pRestored->deliver("ok", actor());
     delete pRestored;
@@ -213,7 +213,7 @@ TEST(TrackingCode, CheckSymbolDetectsATypoAndASwap)
     EXPECT_TRUE(TrackingCode::isValid(good));
     EXPECT_FALSE(TrackingCode::isValid(typo));
     EXPECT_FALSE(TrackingCode::isValid(swapped));
-    EXPECT_THROW(TrackingCode {typo}, business_error);
+    EXPECT_THROW(TrackingCode {typo}, BusinessError);
 }
 
 TEST(TrackingCode, OrdersLexicographicallyWithinAndAcrossFormats)
@@ -232,11 +232,11 @@ TEST_F(GroupFixture, GroupNeedsAtLeastTwoDistinctShipmentsAtTheSameDeliveryPoint
     receive(threeParcels("PKG-0003", "N3"));
 
     EXPECT_THROW(groups.form("018f0000-0000-7000-8000-00000000000a", codes("PKG-0001", "PKG-0003"), catalog, actor()),
-                 business_error);
+                 BusinessError);
     EXPECT_THROW(groups.form("018f0000-0000-7000-8000-00000000000a", codes("PKG-0001", "PKG-0001"), catalog, actor()),
-                 business_error);
+                 BusinessError);
     EXPECT_THROW(groups.form("018f0000-0000-7000-8000-00000000000a", codes("PKG-0001", "PKG-0009"), catalog, actor()),
-                 business_error);
+                 BusinessError);
     ShipmentGroup& group =
         groups.form("018f0000-0000-7000-8000-00000000000a", codes("PKG-0001", "PKG-0002"), catalog, actor());
 
@@ -254,7 +254,7 @@ TEST_F(GroupFixture, AShipmentBelongsToOneGroupAtMost)
     groups.form("018f0000-0000-7000-8000-00000000000a", codes("PKG-0001", "PKG-0002"), catalog, actor());
 
     EXPECT_THROW(groups.form("018f0000-0000-7000-8000-00000000000b", codes("PKG-0002", "PKG-0003"), catalog, actor()),
-                 business_error);
+                 BusinessError);
 }
 
 TEST_F(GroupFixture, OnlyShipmentsAwaitingDispatchCanBeGrouped)
@@ -264,7 +264,7 @@ TEST_F(GroupFixture, OnlyShipmentsAwaitingDispatchCanBeGrouped)
     outForDelivery.dispatch("salida", actor());
 
     EXPECT_THROW(groups.form("018f0000-0000-7000-8000-00000000000a", codes("PKG-0001", "PKG-0002"), catalog, actor()),
-                 business_error);
+                 BusinessError);
 }
 
 TEST_F(GroupFixture, AGroupInDeliveryCannotBeDissolved)
@@ -277,7 +277,7 @@ TEST_F(GroupFixture, AGroupInDeliveryCannotBeDissolved)
 
     second.dispatch("salida", actor());
 
-    EXPECT_THROW(groups.ensureDissolvable(group, catalog), business_error);
+    EXPECT_THROW(groups.ensureDissolvable(group, catalog), BusinessError);
     second.reschedule("ausente", tickets.next(), actor());
     groups.discard(group.id());
     EXPECT_EQ(groups.size(), 0U);
