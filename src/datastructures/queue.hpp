@@ -40,7 +40,7 @@ namespace hubflow::ds
         /// @brief Encola al final. O(1).
         void enqueue(const TElement& value)
         {
-            Node* pNode = new Node {value, nullptr};
+            auto* pNode = new Node {value, nullptr};
             if (m_pRear == nullptr)
             {
                 m_pFront = pNode;

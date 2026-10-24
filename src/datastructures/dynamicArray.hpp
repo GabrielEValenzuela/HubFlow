@@ -145,7 +145,7 @@ namespace hubflow::ds
         void grow()
         {
             const std::size_t newCapacity {m_capacity == 0 ? INITIAL_CAPACITY : m_capacity * 2};
-            TElement* pBigger = new TElement[newCapacity];
+            auto* pBigger = new TElement[newCapacity];
             for (std::size_t i = 0; i < m_size; ++i)
             {
                 pBigger[i] = m_pData[i];
@@ -158,13 +158,13 @@ namespace hubflow::ds
         void swap(DynamicArray& other) noexcept
         {
             TElement* pData {m_pData};
-            const std::size_t size {m_size};
+            const std::size_t oldSize {m_size};
             const std::size_t capacity {m_capacity};
             m_pData = other.m_pData;
             m_size = other.m_size;
             m_capacity = other.m_capacity;
             other.m_pData = pData;
-            other.m_size = size;
+            other.m_size = oldSize;
             other.m_capacity = capacity;
         }
 
