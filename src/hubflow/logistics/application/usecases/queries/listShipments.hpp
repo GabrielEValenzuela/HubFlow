@@ -7,17 +7,17 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de ListShipmentsUseCase.
-class ListShipments final : public ListShipmentsUseCase
-{
-public:
-    explicit ListShipments(const LogisticsModel& model);
+    /// @brief Implementación de ListShipmentsUseCase.
+    class ListShipments final : public ListShipmentsUseCase
+    {
+    public:
+        explicit ListShipments(const LogisticsModel& model);
 
-private:
-    const domain::ShipmentCatalog& execute(const shared::application::Principal& principal) const override;
+    private:
+        const domain::ShipmentCatalog& execute(const shared::application::Principal& principal) const override;
 
-    const LogisticsModel& m_model;
-};
+        const LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::logistics::application
 

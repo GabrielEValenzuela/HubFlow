@@ -7,27 +7,27 @@
 namespace hubflow::routing::application
 {
 
-/**
- * @brief Devuelve el mapa de la ciudad (centro de distribución, puntos de entrega y calles).
- *
- * @par Quién puede ejecutarlo
- * Cualquier usuario autenticado.
- *
- * @par Errores
- * - Ninguno propio de la operación.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class GetRoadMapUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Devuelve el mapa de la ciudad (centro de distribución, puntos de entrega y calles).
+     *
+     * @par Quién puede ejecutarlo
+     * Cualquier usuario autenticado.
+     *
+     * @par Errores
+     * - Ninguno propio de la operación.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class GetRoadMapUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~GetRoadMapUseCase() = default;
+        virtual ~GetRoadMapUseCase() = default;
 
-    virtual const domain::RoadMap& execute() const = 0;
-};
+        virtual const domain::RoadMap& execute() const = 0;
+    };
 
 } // namespace hubflow::routing::application
 

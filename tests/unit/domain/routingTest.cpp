@@ -15,48 +15,48 @@ using namespace hubflow::routing::domain;
 
 namespace
 {
-class RoutingFixture : public ::testing::Test
-{
-protected:
-    void SetUp() override
+    class RoutingFixture : public ::testing::Test
     {
-        hubflow::test::buildReferenceCity(map);
-    }
-
-    SearchTrace search(const SearchAlgorithm algorithm, const std::string& from, const std::string& to) const
-    {
-        return SearchStrategy::of(algorithm).search(map, map.require(from), map.require(to));
-    }
-
-    std::vector<std::string> pathOf(const SearchTrace& trace) const
-    {
-        std::vector<std::string> ids;
-        for (std::size_t pathPosition = 0; pathPosition < trace.path.size(); ++pathPosition)
+    protected:
+        void SetUp() override
         {
-            ids.push_back(map.node(trace.path[pathPosition]).id);
+            hubflow::test::buildReferenceCity(map);
         }
-        return ids;
-    }
 
-    double pathCost(const SearchTrace& trace) const
-    {
-        double total {0.0};
-        for (std::size_t pathPosition = 1; pathPosition < trace.path.size(); ++pathPosition)
+        SearchTrace search(const SearchAlgorithm algorithm, const std::string& from, const std::string& to) const
         {
-            map.graph().forEachNeighbor(trace.path[pathPosition - 1],
-                                        [&](const std::size_t to, const double weight)
-                                        {
-                                            if (to == trace.path[pathPosition])
+            return SearchStrategy::of(algorithm).search(map, map.require(from), map.require(to));
+        }
+
+        std::vector<std::string> pathOf(const SearchTrace& trace) const
+        {
+            std::vector<std::string> ids;
+            for (std::size_t pathPosition = 0; pathPosition < trace.path.size(); ++pathPosition)
+            {
+                ids.push_back(map.node(trace.path[pathPosition]).id);
+            }
+            return ids;
+        }
+
+        double pathCost(const SearchTrace& trace) const
+        {
+            double total {0.0};
+            for (std::size_t pathPosition = 1; pathPosition < trace.path.size(); ++pathPosition)
+            {
+                map.graph().forEachNeighbor(trace.path[pathPosition - 1],
+                                            [&](const std::size_t to, const double weight)
                                             {
-                                                total += weight;
-                                            }
-                                        });
+                                                if (to == trace.path[pathPosition])
+                                                {
+                                                    total += weight;
+                                                }
+                                            });
+            }
+            return total;
         }
-        return total;
-    }
 
-    RoadMap map;
-};
+        RoadMap map;
+    };
 } // namespace
 
 TEST_F(RoutingFixture, MapRejectsEdgesCheaperThanStraightLine)
@@ -93,7 +93,7 @@ TEST_F(RoutingFixture, DepthFirstAndGreedyReturnValidPaths)
     for (const auto algorithm : {SearchAlgorithm::DepthFirst, SearchAlgorithm::GreedyBestFirst})
     {
         const SearchTrace trace = search(algorithm, "S3", "N4");
-        const auto        path  = pathOf(trace);
+        const auto path = pathOf(trace);
         EXPECT_EQ(path.front(), "S3");
         EXPECT_EQ(path.back(), "N4");
         EXPECT_EQ(trace.steps.size(), trace.metrics.nodesExplored);
@@ -127,18 +127,14 @@ TEST_F(RoutingFixture, StartEqualsGoalAndUnreachableGoal)
 
 TEST_F(RoutingFixture, DeliveryRoutePlansRoundTripAndResolvesStops)
 {
-    const PumAgent              agent {map, SearchStrategy::of(SearchAlgorithm::AStar)};
+    const PumAgent agent {map, SearchStrategy::of(SearchAlgorithm::AStar)};
     ds::DynamicArray<RouteStop> stops;
     stops.pushBack(RouteStop {1, "PKG-1008", "N5", StopOutcome::Pending});
     stops.pushBack(RouteStop {2, "PKG-1002", "N2", StopOutcome::Pending});
 
     DeliveryRoute* pRoute = DeliveryRoute::assign(7, Courier {3, "Pum Uno"}, stops, agent, hubflow::test::actor());
-    std::size_t    segments {0};
-    pRoute->forEachSegment(
-        [&segments](const SearchTrace&)
-        {
-            ++segments;
-        });
+    std::size_t segments {0};
+    pRoute->forEachSegment([&segments](const SearchTrace&) { ++segments; });
 
     EXPECT_EQ(segments, 3U);
     EXPECT_EQ(pRoute->pendingEvents(), 1U);
@@ -161,14 +157,14 @@ TEST_F(RoutingFixture, DeliveryRouteRequiresStops)
 
 TEST_F(RoutingFixture, ResolvingAStopWithTheSameOutcomeIsANoOp)
 {
-    const PumAgent              agent {map, SearchStrategy::of(SearchAlgorithm::AStar)};
+    const PumAgent agent {map, SearchStrategy::of(SearchAlgorithm::AStar)};
     ds::DynamicArray<RouteStop> stops;
     stops.pushBack(RouteStop {1, "PKG-1008", "N5", StopOutcome::Pending});
     DeliveryRoute* pRoute = DeliveryRoute::assign(7, Courier {3, "Pum Uno"}, stops, agent, hubflow::test::actor());
 
     pRoute->resolveStop(1, StopOutcome::Delivered, hubflow::test::actor());
     const std::size_t eventsAfterFirst {pRoute->pendingEvents()};
-    const RouteStop&  repeated = pRoute->resolveStop(1, StopOutcome::Delivered, hubflow::test::actor());
+    const RouteStop& repeated = pRoute->resolveStop(1, StopOutcome::Delivered, hubflow::test::actor());
 
     EXPECT_EQ(repeated.outcome, StopOutcome::Delivered);
     EXPECT_EQ(pRoute->pendingEvents(), eventsAfterFirst);

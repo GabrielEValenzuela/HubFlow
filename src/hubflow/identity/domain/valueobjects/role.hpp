@@ -4,26 +4,26 @@
 namespace hubflow::identity::domain
 {
 
-/// @brief Rol del usuario en la operación.
-enum class Role
-{
-    Admin,
-    Operador,
-    Pum
-};
+    /// @brief Rol del usuario en la operación.
+    enum class Role
+    {
+        Admin,
+        Operador,
+        Pum
+    };
 
-/// @brief Acciones del negocio sujetas a autorización. Qué rol puede cada una es un dato (ver AccessPolicy).
-enum class Permission
-{
-    ManageUsers,
-    OperateShipments,
-    OperateSortingDesk,
-    AssignRoutes,
-    ResolveStops,
-    ViewIndexes,
-    ViewAudit,
-    ManageCatalogs
-};
+    /// @brief Acciones del negocio sujetas a autorización. Qué rol puede cada una es un dato (ver AccessPolicy).
+    enum class Permission
+    {
+        ManageUsers,
+        OperateShipments,
+        OperateSortingDesk,
+        AssignRoutes,
+        ResolveStops,
+        ViewIndexes,
+        ViewAudit,
+        ManageCatalogs
+    };
 
 } // namespace hubflow::identity::domain
 

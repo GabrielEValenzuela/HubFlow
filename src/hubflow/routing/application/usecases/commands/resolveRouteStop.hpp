@@ -10,24 +10,24 @@
 namespace hubflow::routing::application
 {
 
-/// @brief Implementación de ResolveRouteStopUseCase.
-class ResolveRouteStop final : public ResolveRouteStopUseCase
-{
-public:
-    ResolveRouteStop(logistics::application::LogisticsModel& logistics,
-                     RoutingModel&                           routing,
-                     shared::application::EventBus&          bus,
-                     const shared::application::Clock&       clock);
+    /// @brief Implementación de ResolveRouteStopUseCase.
+    class ResolveRouteStop final : public ResolveRouteStopUseCase
+    {
+    public:
+        ResolveRouteStop(logistics::application::LogisticsModel& logistics,
+                         RoutingModel& routing,
+                         shared::application::EventBus& bus,
+                         const shared::application::Clock& clock);
 
-private:
-    const domain::DeliveryRoute& execute(const shared::application::Principal& principal,
-                                         const ResolveStopRequest&             request) override;
+    private:
+        const domain::DeliveryRoute& execute(const shared::application::Principal& principal,
+                                             const ResolveStopRequest& request) override;
 
-    logistics::application::LogisticsModel& m_logistics;
-    RoutingModel&                           m_routing;
-    shared::application::EventBus&          m_bus;
-    const shared::application::Clock&       m_clock;
-};
+        logistics::application::LogisticsModel& m_logistics;
+        RoutingModel& m_routing;
+        shared::application::EventBus& m_bus;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::routing::application
 

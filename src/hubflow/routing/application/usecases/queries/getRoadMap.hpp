@@ -7,17 +7,17 @@
 namespace hubflow::routing::application
 {
 
-/// @brief Implementación de GetRoadMapUseCase.
-class GetRoadMap final : public GetRoadMapUseCase
-{
-public:
-    explicit GetRoadMap(const RoutingModel& model);
+    /// @brief Implementación de GetRoadMapUseCase.
+    class GetRoadMap final : public GetRoadMapUseCase
+    {
+    public:
+        explicit GetRoadMap(const RoutingModel& model);
 
-private:
-    const domain::RoadMap& execute() const override;
+    private:
+        const domain::RoadMap& execute() const override;
 
-    const RoutingModel& m_model;
-};
+        const RoutingModel& m_model;
+    };
 
 } // namespace hubflow::routing::application
 

@@ -11,34 +11,34 @@
 namespace hubflow::logistics::application
 {
 
-/**
- * @brief Modelo en memoria del centro de distribución.
- *
- * Reúne los datos maestros (zonas, niveles de servicio y características), el catálogo de envíos, los grupos de
- * envíos que viajan juntos y la lista de pendientes. El catálogo es dueño de los envíos; la lista de pendientes es una
- * proyección mantenida por PendingShipmentsProjector a partir de los eventos de dominio y ordenada por la política de
- * prioridad, que por defecto consulta los niveles de servicio del catálogo.
- */
-struct LogisticsModel
-{
-    LogisticsModel()
-        : zones {domain::CatalogNouns {"zone", "la zona", "una zona"}}
-        , services {domain::CatalogNouns {"service_level", "el servicio", "un servicio"}}
-        , features {domain::CatalogNouns {"feature", "la característica", "una característica"}}
-        , priorityPolicy {services}
-        , pending {priorityPolicy}
+    /**
+     * @brief Modelo en memoria del centro de distribución.
+     *
+     * Reúne los datos maestros (zonas, niveles de servicio y características), el catálogo de envíos, los grupos de
+     * envíos que viajan juntos y la lista de pendientes. El catálogo es dueño de los envíos; la lista de pendientes es
+     * una proyección mantenida por PendingShipmentsProjector a partir de los eventos de dominio y ordenada por la
+     * política de prioridad, que por defecto consulta los niveles de servicio del catálogo.
+     */
+    struct LogisticsModel
     {
-    }
+        LogisticsModel()
+            : zones {domain::CatalogNouns {"zone", "la zona", "una zona"}}
+            , services {domain::CatalogNouns {"service_level", "el servicio", "un servicio"}}
+            , features {domain::CatalogNouns {"feature", "la característica", "una característica"}}
+            , priorityPolicy {services}
+            , pending {priorityPolicy}
+        {
+        }
 
-    domain::ZoneCatalog           zones;
-    domain::ServiceLevelCatalog   services;
-    domain::FeatureCatalog        features;
-    domain::ShipmentCatalog       catalog;
-    domain::ShipmentGroupBook     groups;
-    domain::CatalogPriorityPolicy priorityPolicy;
-    domain::PendingShipments      pending;
-    domain::TicketDispenser       tickets;
-};
+        domain::ZoneCatalog zones;
+        domain::ServiceLevelCatalog services;
+        domain::FeatureCatalog features;
+        domain::ShipmentCatalog catalog;
+        domain::ShipmentGroupBook groups;
+        domain::CatalogPriorityPolicy priorityPolicy;
+        domain::PendingShipments pending;
+        domain::TicketDispenser tickets;
+    };
 
 } // namespace hubflow::logistics::application
 

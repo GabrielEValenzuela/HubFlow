@@ -6,15 +6,15 @@
 namespace hubflow::shared::domain
 {
 
-/// @brief Puerto por el que un agregado entrega sus eventos al resto del sistema.
-class DomainEventPublisher
-{
-public:
-    virtual ~DomainEventPublisher() = default;
+    /// @brief Puerto por el que un agregado entrega sus eventos al resto del sistema.
+    class DomainEventPublisher
+    {
+    public:
+        virtual ~DomainEventPublisher() = default;
 
-    /// @brief Publica un evento; el publicador no toma ownership.
-    virtual void publish(const DomainEvent& event) = 0;
-};
+        /// @brief Publica un evento; el publicador no toma ownership.
+        virtual void publish(const DomainEvent& event) = 0;
+    };
 
 } // namespace hubflow::shared::domain
 

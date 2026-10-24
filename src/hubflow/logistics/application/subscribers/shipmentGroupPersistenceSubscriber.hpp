@@ -8,18 +8,18 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Guarda los grupos de envíos que viajan juntos cuando se forman y los borra cuando se deshacen.
-class ShipmentGroupPersistenceSubscriber final : public shared::domain::DomainEventVisitor
-{
-public:
-    explicit ShipmentGroupPersistenceSubscriber(ShipmentGroupRepository& repository);
+    /// @brief Guarda los grupos de envíos que viajan juntos cuando se forman y los borra cuando se deshacen.
+    class ShipmentGroupPersistenceSubscriber final : public shared::domain::DomainEventVisitor
+    {
+    public:
+        explicit ShipmentGroupPersistenceSubscriber(ShipmentGroupRepository& repository);
 
-private:
-    void on(const domain::ShipmentGroupFormed& event) override;
-    void on(const domain::ShipmentGroupDissolved& event) override;
+    private:
+        void on(const domain::ShipmentGroupFormed& event) override;
+        void on(const domain::ShipmentGroupDissolved& event) override;
 
-    ShipmentGroupRepository& m_repository;
-};
+        ShipmentGroupRepository& m_repository;
+    };
 
 } // namespace hubflow::logistics::application
 

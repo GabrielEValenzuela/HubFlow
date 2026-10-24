@@ -7,37 +7,37 @@
 namespace hubflow::logistics::domain
 {
 
-/// @brief Base de los eventos de un grupo: el estado del grupo en ese momento.
-class ShipmentGroupEvent : public shared::domain::DomainEvent
-{
-public:
-    ShipmentGroupEvent(ShipmentGroupState state, shared::domain::ActorContext context);
+    /// @brief Base de los eventos de un grupo: el estado del grupo en ese momento.
+    class ShipmentGroupEvent : public shared::domain::DomainEvent
+    {
+    public:
+        ShipmentGroupEvent(ShipmentGroupState state, shared::domain::ActorContext context);
 
-    const ShipmentGroupState& state() const noexcept;
+        const ShipmentGroupState& state() const noexcept;
 
-private:
-    ShipmentGroupState m_state;
-};
+    private:
+        ShipmentGroupState m_state;
+    };
 
-/// @brief Varios envíos pasaron a viajar juntos.
-class ShipmentGroupFormed final : public ShipmentGroupEvent
-{
-public:
-    using ShipmentGroupEvent::ShipmentGroupEvent;
+    /// @brief Varios envíos pasaron a viajar juntos.
+    class ShipmentGroupFormed final : public ShipmentGroupEvent
+    {
+    public:
+        using ShipmentGroupEvent::ShipmentGroupEvent;
 
-private:
-    void accept(shared::domain::DomainEventVisitor& visitor) const override;
-};
+    private:
+        void accept(shared::domain::DomainEventVisitor& visitor) const override;
+    };
 
-/// @brief Un grupo se deshizo: sus envíos vuelven a tratarse por separado.
-class ShipmentGroupDissolved final : public ShipmentGroupEvent
-{
-public:
-    using ShipmentGroupEvent::ShipmentGroupEvent;
+    /// @brief Un grupo se deshizo: sus envíos vuelven a tratarse por separado.
+    class ShipmentGroupDissolved final : public ShipmentGroupEvent
+    {
+    public:
+        using ShipmentGroupEvent::ShipmentGroupEvent;
 
-private:
-    void accept(shared::domain::DomainEventVisitor& visitor) const override;
-};
+    private:
+        void accept(shared::domain::DomainEventVisitor& visitor) const override;
+    };
 
 } // namespace hubflow::logistics::domain
 

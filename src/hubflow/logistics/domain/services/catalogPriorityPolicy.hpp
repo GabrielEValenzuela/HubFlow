@@ -7,23 +7,23 @@
 namespace hubflow::logistics::domain
 {
 
-/**
- * @brief Criterio por defecto: la prioridad que el catálogo asigna al nivel de servicio del envío.
- *
- * Un servicio que el catálogo no conoce tiene prioridad 0, es decir, sale último. Como los niveles de servicio son
- * datos, agregar uno con mayor prioridad lo hace salir primero sin cambiar ninguna otra pieza.
- */
-class CatalogPriorityPolicy final : public PriorityPolicy
-{
-public:
-    explicit CatalogPriorityPolicy(const ServiceLevelCatalog& services) noexcept;
+    /**
+     * @brief Criterio por defecto: la prioridad que el catálogo asigna al nivel de servicio del envío.
+     *
+     * Un servicio que el catálogo no conoce tiene prioridad 0, es decir, sale último. Como los niveles de servicio son
+     * datos, agregar uno con mayor prioridad lo hace salir primero sin cambiar ninguna otra pieza.
+     */
+    class CatalogPriorityPolicy final : public PriorityPolicy
+    {
+    public:
+        explicit CatalogPriorityPolicy(const ServiceLevelCatalog& services) noexcept;
 
-private:
-    unsigned priorityOf(const Shipment& shipment) const override;
-    unsigned highestPriority() const override;
+    private:
+        unsigned priorityOf(const Shipment& shipment) const override;
+        unsigned highestPriority() const override;
 
-    const ServiceLevelCatalog& m_services;
-};
+        const ServiceLevelCatalog& m_services;
+    };
 
 } // namespace hubflow::logistics::domain
 

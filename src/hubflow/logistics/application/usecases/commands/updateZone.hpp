@@ -10,25 +10,25 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de UpdateZoneUseCase.
-class UpdateZone final : public UpdateZoneUseCase
-{
-public:
-    UpdateZone(LogisticsModel&                   model,
-               const domain::PlantOccupancy&     occupancy,
-               shared::application::EventBus&    bus,
-               const shared::application::Clock& clock);
+    /// @brief Implementación de UpdateZoneUseCase.
+    class UpdateZone final : public UpdateZoneUseCase
+    {
+    public:
+        UpdateZone(LogisticsModel& model,
+                   const domain::PlantOccupancy& occupancy,
+                   shared::application::EventBus& bus,
+                   const shared::application::Clock& clock);
 
-private:
-    const domain::Zone& execute(const shared::application::Principal& principal,
-                                const std::string&                    code,
-                                const UpdateZoneRequest&              request) override;
+    private:
+        const domain::Zone& execute(const shared::application::Principal& principal,
+                                    const std::string& code,
+                                    const UpdateZoneRequest& request) override;
 
-    LogisticsModel&                   m_model;
-    const domain::PlantOccupancy&     m_occupancy;
-    shared::application::EventBus&    m_bus;
-    const shared::application::Clock& m_clock;
-};
+        LogisticsModel& m_model;
+        const domain::PlantOccupancy& m_occupancy;
+        shared::application::EventBus& m_bus;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::logistics::application
 

@@ -7,17 +7,17 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de ListZonesUseCase.
-class ListZones final : public ListZonesUseCase
-{
-public:
-    explicit ListZones(const LogisticsModel& model);
+    /// @brief Implementación de ListZonesUseCase.
+    class ListZones final : public ListZonesUseCase
+    {
+    public:
+        explicit ListZones(const LogisticsModel& model);
 
-private:
-    const domain::ZoneCatalog& execute(const shared::application::Principal& principal) const override;
+    private:
+        const domain::ZoneCatalog& execute(const shared::application::Principal& principal) const override;
 
-    const LogisticsModel& m_model;
-};
+        const LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::logistics::application
 

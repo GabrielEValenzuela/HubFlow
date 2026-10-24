@@ -5,18 +5,18 @@
 namespace hubflow::sorting::application
 {
 
-PrepareSortingBatch::PrepareSortingBatch(domain::SortingDesk& desk)
-    : m_desk {desk}
-{
-}
+    PrepareSortingBatch::PrepareSortingBatch(domain::SortingDesk& desk)
+        : m_desk {desk}
+    {
+    }
 
-const domain::SortingBatch& PrepareSortingBatch::execute(const shared::application::Principal& principal,
-                                                         std::uint64_t                         batchId)
-{
-    principal.require(identity::domain::Permission::OperateSortingDesk);
-    domain::SortingBatch& batch = m_desk.require(batchId);
-    batch.prepare();
-    return batch;
-}
+    const domain::SortingBatch& PrepareSortingBatch::execute(const shared::application::Principal& principal,
+                                                             std::uint64_t batchId)
+    {
+        principal.require(identity::domain::Permission::OperateSortingDesk);
+        domain::SortingBatch& batch = m_desk.require(batchId);
+        batch.prepare();
+        return batch;
+    }
 
 } // namespace hubflow::sorting::application

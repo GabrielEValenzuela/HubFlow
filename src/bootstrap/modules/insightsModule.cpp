@@ -15,51 +15,51 @@
 namespace hubflow::bootstrap
 {
 
-struct InsightsModule::Parts
-{
-    explicit Parts(const logistics::application::LogisticsModel& logistics)
-        : lookupInBst {logistics}
-        , getBst {logistics}
-        , lookupInBPlusTree {logistics}
-        , rangeInBPlusTree {logistics}
-        , getBPlusTree {logistics}
-        , compareShipmentStates {logistics}
-        , getCodeSet {logistics}
-        , combineCodeSets {logistics}
+    struct InsightsModule::Parts
+    {
+        explicit Parts(const logistics::application::LogisticsModel& logistics)
+            : lookupInBst {logistics}
+            , getBst {logistics}
+            , lookupInBPlusTree {logistics}
+            , rangeInBPlusTree {logistics}
+            , getBPlusTree {logistics}
+            , compareShipmentStates {logistics}
+            , getCodeSet {logistics}
+            , combineCodeSets {logistics}
+        {
+        }
+
+        insights::application::LookupInBst lookupInBst;
+        insights::application::GetBst getBst;
+        insights::application::LookupInBPlusTree lookupInBPlusTree;
+        insights::application::RangeInBPlusTree rangeInBPlusTree;
+        insights::application::GetBPlusTree getBPlusTree;
+        insights::application::CompareShipmentStates compareShipmentStates;
+        insights::application::GetCodeSet getCodeSet;
+        insights::application::CombineCodeSets combineCodeSets;
+        std::unique_ptr<platform::Controller> spController;
+    };
+
+    InsightsModule::InsightsModule(const logistics::application::LogisticsModel& logistics)
+        : m_spParts {std::make_unique<Parts>(logistics)}
     {
     }
 
-    insights::application::LookupInBst           lookupInBst;
-    insights::application::GetBst                getBst;
-    insights::application::LookupInBPlusTree     lookupInBPlusTree;
-    insights::application::RangeInBPlusTree      rangeInBPlusTree;
-    insights::application::GetBPlusTree          getBPlusTree;
-    insights::application::CompareShipmentStates compareShipmentStates;
-    insights::application::GetCodeSet            getCodeSet;
-    insights::application::CombineCodeSets       combineCodeSets;
-    std::unique_ptr<platform::Controller>        spController;
-};
+    InsightsModule::~InsightsModule() = default;
 
-InsightsModule::InsightsModule(const logistics::application::LogisticsModel& logistics)
-    : m_spParts {std::make_unique<Parts>(logistics)}
-{
-}
-
-InsightsModule::~InsightsModule() = default;
-
-void InsightsModule::registerRoutes(platform::ApiRouter& router)
-{
-    Parts& parts       = *m_spParts;
-    parts.spController = std::make_unique<insights::adapters::InsightController>(
-        insights::adapters::InsightUseCases {parts.getBst,
-                                             parts.lookupInBst,
-                                             parts.getBPlusTree,
-                                             parts.lookupInBPlusTree,
-                                             parts.rangeInBPlusTree,
-                                             parts.compareShipmentStates,
-                                             parts.getCodeSet,
-                                             parts.combineCodeSets});
-    parts.spController->registerRoutes(router);
-}
+    void InsightsModule::registerRoutes(platform::ApiRouter& router)
+    {
+        Parts& parts = *m_spParts;
+        parts.spController = std::make_unique<insights::adapters::InsightController>(
+            insights::adapters::InsightUseCases {parts.getBst,
+                                                 parts.lookupInBst,
+                                                 parts.getBPlusTree,
+                                                 parts.lookupInBPlusTree,
+                                                 parts.rangeInBPlusTree,
+                                                 parts.compareShipmentStates,
+                                                 parts.getCodeSet,
+                                                 parts.combineCodeSets});
+        parts.spController->registerRoutes(router);
+    }
 
 } // namespace hubflow::bootstrap

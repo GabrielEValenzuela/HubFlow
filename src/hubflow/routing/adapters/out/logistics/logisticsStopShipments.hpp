@@ -7,17 +7,17 @@
 namespace hubflow::routing::adapters
 {
 
-/// @brief Resuelve los datos de entrega de cada parada consultando el catálogo del contexto de logística.
-class LogisticsStopShipments final : public application::StopShipmentDirectory
-{
-public:
-    explicit LogisticsStopShipments(const logistics::application::LogisticsModel& model);
+    /// @brief Resuelve los datos de entrega de cada parada consultando el catálogo del contexto de logística.
+    class LogisticsStopShipments final : public application::StopShipmentDirectory
+    {
+    public:
+        explicit LogisticsStopShipments(const logistics::application::LogisticsModel& model);
 
-private:
-    std::optional<application::StopShipmentDetails> detailsOf(const std::string& shipmentCode) const override;
+    private:
+        std::optional<application::StopShipmentDetails> detailsOf(const std::string& shipmentCode) const override;
 
-    const logistics::application::LogisticsModel& m_model;
-};
+        const logistics::application::LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::routing::adapters
 

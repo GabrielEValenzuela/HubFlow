@@ -9,31 +9,31 @@
 namespace hubflow::logistics::adapters
 {
 
-/// @brief Casos de uso de seguimiento de la operación.
-struct OperationsUseCases
-{
-    const application::SummarizeZoneUseCase&        summarizeZone;
-    const application::FindHeaviestShipmentUseCase& findHeaviest;
-    const application::GetOperationsMetricsUseCase& metrics;
-};
+    /// @brief Casos de uso de seguimiento de la operación.
+    struct OperationsUseCases
+    {
+        const application::SummarizeZoneUseCase& summarizeZone;
+        const application::FindHeaviestShipmentUseCase& findHeaviest;
+        const application::GetOperationsMetricsUseCase& metrics;
+    };
 
-/**
- * @brief Seguimiento de la operación (todas son consultas).
- *
- * - @c GET /zones/:zone/summary: cantidad, peso y envíos express pendientes de una zona.
- * - @c GET /zones/:zone/heaviest-shipment: el envío pendiente más pesado de la zona.
- * - @c GET /metrics: totales por estado y por zona.
- */
-class OperationsController final : public platform::Controller
-{
-public:
-    explicit OperationsController(OperationsUseCases useCases);
+    /**
+     * @brief Seguimiento de la operación (todas son consultas).
+     *
+     * - @c GET /zones/:zone/summary: cantidad, peso y envíos express pendientes de una zona.
+     * - @c GET /zones/:zone/heaviest-shipment: el envío pendiente más pesado de la zona.
+     * - @c GET /metrics: totales por estado y por zona.
+     */
+    class OperationsController final : public platform::Controller
+    {
+    public:
+        explicit OperationsController(OperationsUseCases useCases);
 
-private:
-    void registerRoutes(platform::ApiRouter& router) override;
+    private:
+        void registerRoutes(platform::ApiRouter& router) override;
 
-    OperationsUseCases m_useCases;
-};
+        OperationsUseCases m_useCases;
+    };
 
 } // namespace hubflow::logistics::adapters
 

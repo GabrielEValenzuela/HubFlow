@@ -7,20 +7,20 @@
 namespace hubflow::insights::application
 {
 
-/// @brief Implementación de CombineCodeSetsUseCase.
-class CombineCodeSets final : public CombineCodeSetsUseCase
-{
-public:
-    explicit CombineCodeSets(const logistics::application::LogisticsModel& model);
+    /// @brief Implementación de CombineCodeSetsUseCase.
+    class CombineCodeSets final : public CombineCodeSetsUseCase
+    {
+    public:
+        explicit CombineCodeSets(const logistics::application::LogisticsModel& model);
 
-private:
-    SetCombination execute(const shared::application::Principal& principal,
-                           SetOperationKind                      operation,
-                           const SetSelector&                    first,
-                           const SetSelector&                    second) const override;
+    private:
+        SetCombination execute(const shared::application::Principal& principal,
+                               SetOperationKind operation,
+                               const SetSelector& first,
+                               const SetSelector& second) const override;
 
-    const logistics::application::LogisticsModel& m_model;
-};
+        const logistics::application::LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::insights::application
 

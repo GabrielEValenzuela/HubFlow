@@ -8,23 +8,23 @@
 namespace hubflow::identity::adapters
 {
 
-/**
- * @brief Sesiones de usuario.
- *
- * - @c POST /sessions: inicia sesión con email y contraseña (público, no admite @c Idempotency-Key).
- * - @c GET /sessions/current: usuario de la sesión actual.
- */
-class SessionController final : public platform::Controller
-{
-public:
-    SessionController(const application::SignInUseCase& signIn, const application::FindUserUseCase& findUser);
+    /**
+     * @brief Sesiones de usuario.
+     *
+     * - @c POST /sessions: inicia sesión con email y contraseña (público, no admite @c Idempotency-Key).
+     * - @c GET /sessions/current: usuario de la sesión actual.
+     */
+    class SessionController final : public platform::Controller
+    {
+    public:
+        SessionController(const application::SignInUseCase& signIn, const application::FindUserUseCase& findUser);
 
-private:
-    void registerRoutes(platform::ApiRouter& router) override;
+    private:
+        void registerRoutes(platform::ApiRouter& router) override;
 
-    const application::SignInUseCase&   m_signIn;
-    const application::FindUserUseCase& m_findUser;
-};
+        const application::SignInUseCase& m_signIn;
+        const application::FindUserUseCase& m_findUser;
+    };
 
 } // namespace hubflow::identity::adapters
 

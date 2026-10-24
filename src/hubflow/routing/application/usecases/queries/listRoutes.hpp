@@ -7,18 +7,18 @@
 namespace hubflow::routing::application
 {
 
-/// @brief Implementación de ListRoutesUseCase.
-class ListRoutes final : public ListRoutesUseCase
-{
-public:
-    explicit ListRoutes(const RoutingModel& model);
+    /// @brief Implementación de ListRoutesUseCase.
+    class ListRoutes final : public ListRoutesUseCase
+    {
+    public:
+        explicit ListRoutes(const RoutingModel& model);
 
-private:
-    ds::DynamicArray<const domain::DeliveryRoute*>
-    execute(const shared::application::Principal& principal) const override;
+    private:
+        ds::DynamicArray<const domain::DeliveryRoute*>
+        execute(const shared::application::Principal& principal) const override;
 
-    const RoutingModel& m_model;
-};
+        const RoutingModel& m_model;
+    };
 
 } // namespace hubflow::routing::application
 

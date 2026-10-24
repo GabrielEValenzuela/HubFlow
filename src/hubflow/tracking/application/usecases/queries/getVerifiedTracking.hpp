@@ -10,23 +10,23 @@
 namespace hubflow::tracking::application
 {
 
-/// @brief Implementación de GetVerifiedTrackingUseCase.
-class GetVerifiedTracking final : public GetVerifiedTrackingUseCase
-{
-public:
-    GetVerifiedTracking(const TrackedShipmentDirectory&   directory,
-                        const DeliveryProgressSource&     progress,
-                        const TrackingTokenIssuer&        tokens,
-                        const shared::application::Clock& clock);
+    /// @brief Implementación de GetVerifiedTrackingUseCase.
+    class GetVerifiedTracking final : public GetVerifiedTrackingUseCase
+    {
+    public:
+        GetVerifiedTracking(const TrackedShipmentDirectory& directory,
+                            const DeliveryProgressSource& progress,
+                            const TrackingTokenIssuer& tokens,
+                            const shared::application::Clock& clock);
 
-private:
-    VerifiedTracking execute(const std::string& code, const std::string& token) const override;
+    private:
+        VerifiedTracking execute(const std::string& code, const std::string& token) const override;
 
-    const TrackedShipmentDirectory&   m_directory;
-    const DeliveryProgressSource&     m_progress;
-    const TrackingTokenIssuer&        m_tokens;
-    const shared::application::Clock& m_clock;
-};
+        const TrackedShipmentDirectory& m_directory;
+        const DeliveryProgressSource& m_progress;
+        const TrackingTokenIssuer& m_tokens;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::tracking::application
 

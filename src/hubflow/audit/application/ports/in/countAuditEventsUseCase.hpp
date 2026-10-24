@@ -9,27 +9,27 @@
 namespace hubflow::audit::application
 {
 
-/**
- * @brief Cuenta los registros de auditoría existentes (para paginar el listado).
- *
- * @par Quién puede ejecutarlo
- * Sólo ADMIN.
- *
- * @par Errores
- * - Forbidden: el solicitante no es ADMIN.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class CountAuditEventsUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Cuenta los registros de auditoría existentes (para paginar el listado).
+     *
+     * @par Quién puede ejecutarlo
+     * Sólo ADMIN.
+     *
+     * @par Errores
+     * - Forbidden: el solicitante no es ADMIN.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class CountAuditEventsUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~CountAuditEventsUseCase() = default;
+        virtual ~CountAuditEventsUseCase() = default;
 
-    virtual std::size_t execute(const shared::application::Principal& principal) const = 0;
-};
+        virtual std::size_t execute(const shared::application::Principal& principal) const = 0;
+    };
 
 } // namespace hubflow::audit::application
 

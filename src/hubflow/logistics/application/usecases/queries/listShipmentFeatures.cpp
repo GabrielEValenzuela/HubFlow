@@ -3,14 +3,14 @@
 namespace hubflow::logistics::application
 {
 
-ListShipmentFeatures::ListShipmentFeatures(const LogisticsModel& model)
-    : m_model {model}
-{
-}
+    ListShipmentFeatures::ListShipmentFeatures(const LogisticsModel& model)
+        : m_model {model}
+    {
+    }
 
-const domain::FeatureCatalog& ListShipmentFeatures::execute(const shared::application::Principal&) const
-{
-    return m_model.features;
-}
+    const domain::FeatureCatalog& ListShipmentFeatures::execute(const shared::application::Principal&) const
+    {
+        return m_model.features;
+    }
 
 } // namespace hubflow::logistics::application

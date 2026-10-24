@@ -8,43 +8,44 @@
 namespace hubflow::logistics::domain
 {
 
-/**
- * @brief Historial bidireccional de movimientos de un envío; forma parte del agregado Shipment.
- *
- * Se apoya en una lista doblemente enlazada propia: agregar es O(1) gracias al puntero a la cola
- * y el recorrido inverso usa los enlaces @c pPrev. El historial muere con su envío.
- */
-class MovementHistory final
-{
-public:
-    /// @brief Agrega al final asignando el siguiente número secuencial. O(1).
-    const Movement& record(ShipmentStatus status, const std::string& note, const shared::domain::ActorContext& context);
-
-    /// @brief Restaura un movimiento persistido respetando su número. O(1).
-    void restore(const Movement& movement);
-
-    /// @brief Del más antiguo al más reciente. O(n).
-    template <typename TVisitor>
-    void forEachChronological(TVisitor visit) const
+    /**
+     * @brief Historial bidireccional de movimientos de un envío; forma parte del agregado Shipment.
+     *
+     * Se apoya en una lista doblemente enlazada propia: agregar es O(1) gracias al puntero a la cola
+     * y el recorrido inverso usa los enlaces @c pPrev. El historial muere con su envío.
+     */
+    class MovementHistory final
     {
-        m_movements.forEach(visit);
-    }
+    public:
+        /// @brief Agrega al final asignando el siguiente número secuencial. O(1).
+        const Movement&
+        record(ShipmentStatus status, const std::string& note, const shared::domain::ActorContext& context);
 
-    /// @brief Del más reciente al más antiguo, usando los punteros anteriores. O(n).
-    template <typename TVisitor>
-    void forEachReverse(TVisitor visit) const
-    {
-        m_movements.forEachReverse(visit);
-    }
+        /// @brief Restaura un movimiento persistido respetando su número. O(1).
+        void restore(const Movement& movement);
 
-    /// @brief Último movimiento, o nullptr si el historial está vacío.
-    const Movement* latest() const noexcept;
+        /// @brief Del más antiguo al más reciente. O(n).
+        template<typename TVisitor>
+        void forEachChronological(TVisitor visit) const
+        {
+            m_movements.forEach(visit);
+        }
 
-    std::size_t size() const noexcept;
+        /// @brief Del más reciente al más antiguo, usando los punteros anteriores. O(n).
+        template<typename TVisitor>
+        void forEachReverse(TVisitor visit) const
+        {
+            m_movements.forEachReverse(visit);
+        }
 
-private:
-    ds::DoublyLinkedList<Movement> m_movements;
-};
+        /// @brief Último movimiento, o nullptr si el historial está vacío.
+        const Movement* latest() const noexcept;
+
+        std::size_t size() const noexcept;
+
+    private:
+        ds::DoublyLinkedList<Movement> m_movements;
+    };
 
 } // namespace hubflow::logistics::domain
 

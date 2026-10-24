@@ -10,22 +10,23 @@
 namespace hubflow::shared::application
 {
 
-/// @brief Usuario autenticado que invoca un caso de uso.
-struct Principal
-{
-    std::uint64_t          userId {0};
-    std::string            name;
-    identity::domain::Role role {identity::domain::Role::Operador};
+    /// @brief Usuario autenticado que invoca un caso de uso.
+    struct Principal
+    {
+        std::uint64_t userId {0};
+        std::string name;
+        identity::domain::Role role {identity::domain::Role::Operador};
 
-    /// @brief Política con la que se evalúan los permisos; debe sobrevivir al Principal.
-    const identity::domain::AccessPolicy* pPolicy {nullptr};
+        /// @brief Política con la que se evalúan los permisos; debe sobrevivir al Principal.
+        const identity::domain::AccessPolicy* pPolicy {nullptr};
 
-    /// @throws business_error (Forbidden) si el rol no tiene @p permission según la política (o si no hay política).
-    void require(identity::domain::Permission permission) const;
+        /// @throws business_error (Forbidden) si el rol no tiene @p permission según la política (o si no hay
+        /// política).
+        void require(identity::domain::Permission permission) const;
 
-    /// @brief Contexto de dominio (autor + instante) para la operación actual.
-    domain::ActorContext contextAt(const Clock& clock) const;
-};
+        /// @brief Contexto de dominio (autor + instante) para la operación actual.
+        domain::ActorContext contextAt(const Clock& clock) const;
+    };
 
 } // namespace hubflow::shared::application
 

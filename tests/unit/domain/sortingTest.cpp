@@ -17,58 +17,58 @@ using namespace hubflow::sorting::domain;
 
 namespace
 {
-class SortingFixture : public ::testing::Test
-{
-protected:
-    void SetUp() override
+    class SortingFixture : public ::testing::Test
     {
-        const char* codes[] {"PKG-1009", "PKG-1002", "PKG-1005", "PKG-1008", "PKG-1001", "PKG-1004", "PKG-1007"};
-        double      weight {1.0};
-        for (const char* pCode : codes)
+    protected:
+        void SetUp() override
         {
-            Shipment& shipment = catalog.adopt(Shipment::receive(
-                hubflow::test::draft(pCode, "ESTANDAR", "NORTE", weight), tickets.next(), hubflow::test::actor()));
-            pending.insert(&shipment);
-            weight += 0.5;
+            const char* codes[] {"PKG-1009", "PKG-1002", "PKG-1005", "PKG-1008", "PKG-1001", "PKG-1004", "PKG-1007"};
+            double weight {1.0};
+            for (const char* pCode : codes)
+            {
+                Shipment& shipment = catalog.adopt(Shipment::receive(
+                    hubflow::test::draft(pCode, "ESTANDAR", "NORTE", weight), tickets.next(), hubflow::test::actor()));
+                pending.insert(&shipment);
+                weight += 0.5;
+            }
         }
+
+        static std::vector<std::string> codesOf(const SortingBatch& batch)
+        {
+            std::vector<std::string> codes;
+            for (std::size_t i = 0; i < batch.size(); ++i)
+            {
+                codes.push_back(batch.shipmentAt(i).code());
+            }
+            return codes;
+        }
+
+        ShipmentCatalog catalog;
+        ShipmentGroupBook groups;
+        hubflow::test::ReferencePriorities priorities;
+        PendingShipments pending {priorities.policy};
+        TicketDispenser tickets;
+    };
+
+    const BatchSearch& linear()
+    {
+        static const LinearBatchSearch s_linear;
+        return s_linear;
     }
 
-    static std::vector<std::string> codesOf(const SortingBatch& batch)
+    const BatchSearch& binary()
     {
-        std::vector<std::string> codes;
-        for (std::size_t i = 0; i < batch.size(); ++i)
-        {
-            codes.push_back(batch.shipmentAt(i).code());
-        }
-        return codes;
+        static const BinaryBatchSearch s_binary;
+        return s_binary;
     }
 
-    ShipmentCatalog                    catalog;
-    ShipmentGroupBook                  groups;
-    hubflow::test::ReferencePriorities priorities;
-    PendingShipments                   pending {priorities.policy};
-    TicketDispenser                    tickets;
-};
+    class SortingBatchTest : public SortingFixture
+    {
+    };
 
-const BatchSearch& linear()
-{
-    static const LinearBatchSearch s_linear;
-    return s_linear;
-}
-
-const BatchSearch& binary()
-{
-    static const BinaryBatchSearch s_binary;
-    return s_binary;
-}
-
-class SortingBatchTest : public SortingFixture
-{
-};
-
-class BatchSearchTest : public SortingFixture
-{
-};
+    class BatchSearchTest : public SortingFixture
+    {
+    };
 } // namespace
 
 TEST_F(SortingBatchTest, SortsByCodeAndByWeightKeepingReferences)
@@ -105,14 +105,14 @@ TEST_F(SortingBatchTest, EmptyZoneIsReported)
 
 TEST(SortingBatchEdgeCases, SingleElementBatchSortsTrivially)
 {
-    ShipmentCatalog                    catalog;
+    ShipmentCatalog catalog;
     hubflow::test::ReferencePriorities priorities;
-    PendingShipments                   pending {priorities.policy};
-    TicketDispenser                    tickets;
-    Shipment&                          only = catalog.adopt(
+    PendingShipments pending {priorities.policy};
+    TicketDispenser tickets;
+    Shipment& only = catalog.adopt(
         Shipment::receive(hubflow::test::draft("PKG-0001", "EXPRESS"), tickets.next(), hubflow::test::actor()));
     pending.insert(&only);
-    SortingBatch    batch {1, "NORTE", pending};
+    SortingBatch batch {1, "NORTE", pending};
     const SortStats stats = batch.sort(ShipmentOrdering::of(SortCriteria::WeightDescending));
     EXPECT_EQ(stats.comparisons, 0U);
     EXPECT_EQ(&batch.shipmentAt(0), &only);

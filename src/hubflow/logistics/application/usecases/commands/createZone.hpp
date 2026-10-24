@@ -9,20 +9,20 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de CreateZoneUseCase.
-class CreateZone final : public CreateZoneUseCase
-{
-public:
-    CreateZone(LogisticsModel& model, shared::application::EventBus& bus, const shared::application::Clock& clock);
+    /// @brief Implementación de CreateZoneUseCase.
+    class CreateZone final : public CreateZoneUseCase
+    {
+    public:
+        CreateZone(LogisticsModel& model, shared::application::EventBus& bus, const shared::application::Clock& clock);
 
-private:
-    const domain::Zone& execute(const shared::application::Principal& principal,
-                                const CreateZoneRequest&              request) override;
+    private:
+        const domain::Zone& execute(const shared::application::Principal& principal,
+                                    const CreateZoneRequest& request) override;
 
-    LogisticsModel&                   m_model;
-    shared::application::EventBus&    m_bus;
-    const shared::application::Clock& m_clock;
-};
+        LogisticsModel& m_model;
+        shared::application::EventBus& m_bus;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::logistics::application
 

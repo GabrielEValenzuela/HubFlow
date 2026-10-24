@@ -22,63 +22,63 @@ using hubflow::test::actor;
 
 namespace
 {
-class FakeOccupancy final : public PlantOccupancy
-{
-public:
-    bool shipments {false};
-    bool withService {false};
-    bool routes {false};
-    bool mapNodes {false};
+    class FakeOccupancy final : public PlantOccupancy
+    {
+    public:
+        bool shipments {false};
+        bool withService {false};
+        bool routes {false};
+        bool mapNodes {false};
 
-private:
-    bool hasShipmentsInZone(const std::string&) const override
-    {
-        return shipments;
-    }
+    private:
+        bool hasShipmentsInZone(const std::string&) const override
+        {
+            return shipments;
+        }
 
-    bool hasShipmentsWithService(const std::string&) const override
-    {
-        return withService;
-    }
+        bool hasShipmentsWithService(const std::string&) const override
+        {
+            return withService;
+        }
 
-    bool hasRoutesInProgressInZone(const std::string&) const override
-    {
-        return routes;
-    }
+        bool hasRoutesInProgressInZone(const std::string&) const override
+        {
+            return routes;
+        }
 
-    bool hasActiveMapNodesInZone(const std::string&) const override
-    {
-        return mapNodes;
-    }
-};
+        bool hasActiveMapNodesInZone(const std::string&) const override
+        {
+            return mapNodes;
+        }
+    };
 
-class LowestFirstPolicy final : public PriorityPolicy
-{
-private:
-    unsigned priorityOf(const Shipment& shipment) const override
+    class LowestFirstPolicy final : public PriorityPolicy
     {
-        return shipment.service() == "ESTANDAR" ? 9 : 1;
-    }
+    private:
+        unsigned priorityOf(const Shipment& shipment) const override
+        {
+            return shipment.service() == "ESTANDAR" ? 9 : 1;
+        }
 
-    unsigned highestPriority() const override
-    {
-        return 9;
-    }
-};
+        unsigned highestPriority() const override
+        {
+            return 9;
+        }
+    };
 
-std::string codeOfFailure(const std::function<void()>& action)
-{
-    std::string code;
-    try
+    std::string codeOfFailure(const std::function<void()>& action)
     {
-        action();
+        std::string code;
+        try
+        {
+            action();
+        }
+        catch (const business_error& error)
+        {
+            code = error.code();
+        }
+        return code;
     }
-    catch (const business_error& error)
-    {
-        code = error.code();
-    }
-    return code;
-}
 } // namespace
 
 TEST(CatalogCodeTest, AcceptsUppercaseDigitsAndUnderscoreOnly)
@@ -111,32 +111,17 @@ TEST(ZoneTest, OpensRenamesAndRaisesOneEventPerRealChange)
 
 TEST(ZoneTest, DeactivationIsRefusedForEachReasonAndAppliedOnlyWhenFree)
 {
-    Zone*         pZone = Zone::restore({"OESTE", "Oeste", true});
+    Zone* pZone = Zone::restore({"OESTE", "Oeste", true});
     FakeOccupancy occupancy;
 
     occupancy.shipments = true;
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      pZone->revise(std::nullopt, false, occupancy, actor());
-                  }),
-              "zone.has_shipments");
+    EXPECT_EQ(codeOfFailure([&] { pZone->revise(std::nullopt, false, occupancy, actor()); }), "zone.has_shipments");
     occupancy.shipments = false;
-    occupancy.routes    = true;
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      pZone->revise(std::nullopt, false, occupancy, actor());
-                  }),
-              "zone.has_routes");
-    occupancy.routes   = false;
+    occupancy.routes = true;
+    EXPECT_EQ(codeOfFailure([&] { pZone->revise(std::nullopt, false, occupancy, actor()); }), "zone.has_routes");
+    occupancy.routes = false;
     occupancy.mapNodes = true;
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      pZone->revise(std::nullopt, false, occupancy, actor());
-                  }),
-              "zone.has_map_nodes");
+    EXPECT_EQ(codeOfFailure([&] { pZone->revise(std::nullopt, false, occupancy, actor()); }), "zone.has_map_nodes");
     EXPECT_TRUE(pZone->isActive());
     EXPECT_EQ(pZone->pendingEvents(), 0U);
 
@@ -153,7 +138,7 @@ TEST(ZoneTest, DeactivationIsRefusedForEachReasonAndAppliedOnlyWhenFree)
 
 TEST(ZoneTest, RenameAndDeactivateTogetherAreAllOrNothing)
 {
-    Zone*         pZone = Zone::restore({"OESTE", "Oeste", true});
+    Zone* pZone = Zone::restore({"OESTE", "Oeste", true});
     FakeOccupancy occupancy;
     occupancy.shipments = true;
     EXPECT_THROW(pZone->revise(std::string {"Otro nombre"}, false, occupancy, actor()), business_error);
@@ -171,11 +156,7 @@ TEST(ServiceLevelTest, ValidatesPriorityAndRefusesDeactivationWithShipmentsInPla
     EXPECT_EQ(pService->priority(), 5U);
     FakeOccupancy occupancy;
     occupancy.withService = true;
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      pService->revise(std::nullopt, false, occupancy, actor());
-                  }),
+    EXPECT_EQ(codeOfFailure([&] { pService->revise(std::nullopt, false, occupancy, actor()); }),
               "service_level.has_shipments");
     occupancy.withService = false;
     pService->revise(std::nullopt, false, occupancy, actor());
@@ -197,18 +178,8 @@ TEST(ReferenceCatalogTest, RejectsDuplicatesAndReportsMissing)
 {
     ZoneCatalog zones {CatalogNouns {"zone", "la zona", "una zona"}};
     zones.adopt(Zone::open("OESTE", "Oeste", actor()));
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      zones.adopt(Zone::open("OESTE", "Otra", actor()));
-                  }),
-              "zone.duplicate");
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      zones.require("ESTE");
-                  }),
-              "zone.not_found");
+    EXPECT_EQ(codeOfFailure([&] { zones.adopt(Zone::open("OESTE", "Otra", actor())); }), "zone.duplicate");
+    EXPECT_EQ(codeOfFailure([&] { zones.require("ESTE"); }), "zone.not_found");
     EXPECT_EQ(zones.size(), 1U);
     EXPECT_EQ(zones.find("ESTE"), nullptr);
 }
@@ -217,9 +188,9 @@ TEST(PriorityPolicyTest, ANewServiceWithHigherPriorityGoesFirstWithoutTouchingTh
 {
     test::ReferencePriorities priorities;
     priorities.services.adopt(ServiceLevel::restore({"RELAMPAGO", "Relámpago", 10, true}));
-    ShipmentCatalog  catalog;
+    ShipmentCatalog catalog;
     PendingShipments pending {priorities.policy};
-    TicketDispenser  tickets;
+    TicketDispenser tickets;
     for (const auto& [code, service] : std::vector<std::pair<std::string, std::string>> {
              {"PKG-0001", "EXPRESS"}, {"PKG-0002", "ESTANDAR"}, {"PKG-0003", "RELAMPAGO"}, {"PKG-0004", "RELAMPAGO"}})
     {
@@ -227,11 +198,7 @@ TEST(PriorityPolicyTest, ANewServiceWithHigherPriorityGoesFirstWithoutTouchingTh
     }
 
     std::vector<std::string> order;
-    pending.forEach(
-        [&order](const Shipment& shipment)
-        {
-            order.push_back(shipment.code());
-        });
+    pending.forEach([&order](const Shipment& shipment) { order.push_back(shipment.code()); });
     EXPECT_EQ(order, (std::vector<std::string> {"PKG-0003", "PKG-0004", "PKG-0001", "PKG-0002"}));
     const PriorityPolicy& policy = priorities.policy;
     EXPECT_EQ(policy.highestPriority(), 10U);
@@ -240,9 +207,9 @@ TEST(PriorityPolicyTest, ANewServiceWithHigherPriorityGoesFirstWithoutTouchingTh
 TEST(PriorityPolicyTest, ThePendingListObeysWhateverPolicyItIsGiven)
 {
     const LowestFirstPolicy policy;
-    ShipmentCatalog         catalog;
-    PendingShipments        pending {policy};
-    TicketDispenser         tickets;
+    ShipmentCatalog catalog;
+    PendingShipments pending {policy};
+    TicketDispenser tickets;
     for (const auto& [code, service] : std::vector<std::pair<std::string, std::string>> {
              {"PKG-0001", "EXPRESS"}, {"PKG-0002", "ESTANDAR"}, {"PKG-0003", "EXPRESS"}})
     {
@@ -250,18 +217,14 @@ TEST(PriorityPolicyTest, ThePendingListObeysWhateverPolicyItIsGiven)
     }
 
     std::vector<std::string> order;
-    pending.forEach(
-        [&order](const Shipment& shipment)
-        {
-            order.push_back(shipment.code());
-        });
+    pending.forEach([&order](const Shipment& shipment) { order.push_back(shipment.code()); });
     EXPECT_EQ(order, (std::vector<std::string> {"PKG-0002", "PKG-0001", "PKG-0003"}));
 }
 
 TEST(ShipmentFeaturesTest, AShipmentCarriesZeroOrManyDistinctFeatures)
 {
     TicketDispenser tickets;
-    auto            withFeatures = test::draft("PKG-0001", "EXPRESS");
+    auto withFeatures = test::draft("PKG-0001", "EXPRESS");
     withFeatures.features.pushBack("FRAGIL");
     withFeatures.features.pushBack("REFRIGERADO");
     withFeatures.features.pushBack("FRAGIL");
@@ -296,17 +259,10 @@ TEST(RoadMapGrowthTest, ANewPointJoinsTheNetworkAtomically)
     EXPECT_THROW(map.declareNode(west, links, actor()), business_error);
     ds::DynamicArray<routing::domain::RoadLink> shortcut;
     shortcut.pushBack({"HUB", 1.0});
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      map.declareNode({"O2", "Atajo", false, "OESTE", 0.0, 10.0, true}, shortcut, actor());
-                  }),
-              "road_edge.inadmissible");
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      map.declareNode({"O3", "Isla", false, "OESTE", 0.0, 0.0, true}, {}, actor());
-                  }),
+    EXPECT_EQ(
+        codeOfFailure([&] { map.declareNode({"O2", "Atajo", false, "OESTE", 0.0, 10.0, true}, shortcut, actor()); }),
+        "road_edge.inadmissible");
+    EXPECT_EQ(codeOfFailure([&] { map.declareNode({"O3", "Isla", false, "OESTE", 0.0, 0.0, true}, {}, actor()); }),
               "road_node.unconnected");
     ds::DynamicArray<routing::domain::RoadLink> toNowhere;
     toNowhere.pushBack({"ZZZ", 50.0});
@@ -325,11 +281,6 @@ TEST(RoadMapGrowthTest, ZoneAndAvailabilityChangesAreIdempotentAndTheHubStays)
     EXPECT_EQ(map.pendingEvents(), 1U);
     map.reviseNode("N1", std::string {"CENTRO"}, false, actor());
     EXPECT_EQ(map.pendingEvents(), 1U);
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      map.reviseNode("HUB", std::nullopt, false, actor());
-                  }),
-              "road_node.hub_required");
+    EXPECT_EQ(codeOfFailure([&] { map.reviseNode("HUB", std::nullopt, false, actor()); }), "road_node.hub_required");
     EXPECT_THROW(map.reviseNode("NOPE", std::nullopt, false, actor()), business_error);
 }

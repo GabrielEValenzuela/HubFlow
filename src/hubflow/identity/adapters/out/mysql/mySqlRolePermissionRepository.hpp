@@ -7,17 +7,17 @@
 namespace hubflow::identity::adapters
 {
 
-/// @brief Qué puede hacer cada rol, guardado en la tabla @c role_permissions.
-class MySqlRolePermissionRepository final : public application::RolePermissionRepository
-{
-public:
-    explicit MySqlRolePermissionRepository(platform::MySqlConnection& connection);
+    /// @brief Qué puede hacer cada rol, guardado en la tabla @c role_permissions.
+    class MySqlRolePermissionRepository final : public application::RolePermissionRepository
+    {
+    public:
+        explicit MySqlRolePermissionRepository(platform::MySqlConnection& connection);
 
-private:
-    void loadAll(application::GrantRestorer& restorer) const override;
+    private:
+        void loadAll(application::GrantRestorer& restorer) const override;
 
-    platform::MySqlConnection& m_connection;
-};
+        platform::MySqlConnection& m_connection;
+    };
 
 } // namespace hubflow::identity::adapters
 

@@ -7,17 +7,17 @@
 namespace hubflow::insights::application
 {
 
-/// @brief Implementación de LookupInBstUseCase.
-class LookupInBst final : public LookupInBstUseCase
-{
-public:
-    explicit LookupInBst(const logistics::application::LogisticsModel& model);
+    /// @brief Implementación de LookupInBstUseCase.
+    class LookupInBst final : public LookupInBstUseCase
+    {
+    public:
+        explicit LookupInBst(const logistics::application::LogisticsModel& model);
 
-private:
-    BstLookup execute(const shared::application::Principal& principal, const std::string& code) const override;
+    private:
+        BstLookup execute(const shared::application::Principal& principal, const std::string& code) const override;
 
-    const logistics::application::LogisticsModel& m_model;
-};
+        const logistics::application::LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::insights::application
 

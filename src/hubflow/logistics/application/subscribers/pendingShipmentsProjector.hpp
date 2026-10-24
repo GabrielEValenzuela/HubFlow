@@ -7,25 +7,25 @@
 namespace hubflow::logistics::application
 {
 
-/**
- * @brief Mantiene la lista de pendientes consistente con los eventos de envío.
- *
- * - ShipmentRegistered / ShipmentRescheduled → inserta por prioridad (estable).
- * - ShipmentDispatched → quita el nodo (el envío sigue vivo en el catálogo).
- * - ShipmentDelivered → nada: ya no estaba en pendientes y nunca vuelve.
- */
-class PendingShipmentsProjector final : public shared::domain::DomainEventVisitor
-{
-public:
-    explicit PendingShipmentsProjector(LogisticsModel& model);
+    /**
+     * @brief Mantiene la lista de pendientes consistente con los eventos de envío.
+     *
+     * - ShipmentRegistered / ShipmentRescheduled → inserta por prioridad (estable).
+     * - ShipmentDispatched → quita el nodo (el envío sigue vivo en el catálogo).
+     * - ShipmentDelivered → nada: ya no estaba en pendientes y nunca vuelve.
+     */
+    class PendingShipmentsProjector final : public shared::domain::DomainEventVisitor
+    {
+    public:
+        explicit PendingShipmentsProjector(LogisticsModel& model);
 
-private:
-    void on(const domain::ShipmentRegistered& event) override;
-    void on(const domain::ShipmentDispatched& event) override;
-    void on(const domain::ShipmentRescheduled& event) override;
+    private:
+        void on(const domain::ShipmentRegistered& event) override;
+        void on(const domain::ShipmentDispatched& event) override;
+        void on(const domain::ShipmentRescheduled& event) override;
 
-    LogisticsModel& m_model;
-};
+        LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::logistics::application
 

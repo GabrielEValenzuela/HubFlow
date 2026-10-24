@@ -16,66 +16,66 @@ using nlohmann::json;
 
 namespace
 {
-class RecordingExporter final : public routing::application::RoutePlanExporter
-{
-public:
-    std::vector<std::uint64_t> exported;
-
-private:
-    void exportPlan(const routing::domain::RoadMap&, const routing::domain::DeliveryRoute& route) override
+    class RecordingExporter final : public routing::application::RoutePlanExporter
     {
-        exported.push_back(route.id());
-    }
-};
+    public:
+        std::vector<std::uint64_t> exported;
 
-class FailingExporter final : public routing::application::RoutePlanExporter
-{
-private:
-    void exportPlan(const routing::domain::RoadMap&, const routing::domain::DeliveryRoute&) override
+    private:
+        void exportPlan(const routing::domain::RoadMap&, const routing::domain::DeliveryRoute& route) override
+        {
+            exported.push_back(route.id());
+        }
+    };
+
+    class FailingExporter final : public routing::application::RoutePlanExporter
     {
-        throw std::runtime_error {"disco lleno"};
-    }
-};
+    private:
+        void exportPlan(const routing::domain::RoadMap&, const routing::domain::DeliveryRoute&) override
+        {
+            throw std::runtime_error {"disco lleno"};
+        }
+    };
 
-const routing::domain::DeliveryRoute& assignNorthRoute(test::ApplicationHarness& app)
-{
-    const auto courierId =
-        app.registerUser
-            .execute(app.admin(),
-                     identity::application::RegisterUserRequest {
-                         "pum1@hubflow.local", "Repartidor", identity::domain::Role::Pum, "clave-segura"})
-            .id;
-    const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
-    app.prepareSortingBatch.execute(app.operador(), batch.id());
-    for (int i = 0; i < 3; ++i)
+    const routing::domain::DeliveryRoute& assignNorthRoute(test::ApplicationHarness& app)
     {
-        app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
+        const auto courierId =
+            app.registerUser
+                .execute(app.admin(),
+                         identity::application::RegisterUserRequest {
+                             "pum1@hubflow.local", "Repartidor", identity::domain::Role::Pum, "clave-segura"})
+                .id;
+        const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
+        app.prepareSortingBatch.execute(app.operador(), batch.id());
+        for (int i = 0; i < 3; ++i)
+        {
+            app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
+        }
+        return app.assignDeliveryRoute.execute(
+            app.operador(),
+            routing::application::AssignRouteRequest {batch.id(), courierId, routing::domain::SearchAlgorithm::AStar});
     }
-    return app.assignDeliveryRoute.execute(
-        app.operador(),
-        routing::application::AssignRouteRequest {batch.id(), courierId, routing::domain::SearchAlgorithm::AStar});
-}
 
-json readJson(const std::filesystem::path& file)
-{
-    std::ifstream input {file};
-    return json::parse(input);
-}
+    json readJson(const std::filesystem::path& file)
+    {
+        std::ifstream input {file};
+        return json::parse(input);
+    }
 
-std::filesystem::path freshDirectory(const std::string& name)
-{
-    const auto directory = std::filesystem::temp_directory_path() / name;
-    std::filesystem::remove_all(directory);
-    return directory;
-}
+    std::filesystem::path freshDirectory(const std::string& name)
+    {
+        const auto directory = std::filesystem::temp_directory_path() / name;
+        std::filesystem::remove_all(directory);
+        return directory;
+    }
 } // namespace
 
 TEST(RoutePlanExport, AssigningARouteAsksTheExporterOnce)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
-    RecordingExporter                               exporter;
+    RecordingExporter exporter;
     routing::application::RoutePlanExportSubscriber subscriber {app.routing, exporter};
     app.bus.subscribe(subscriber);
 
@@ -86,7 +86,7 @@ TEST(RoutePlanExport, AssigningARouteAsksTheExporterOnce)
 
 TEST(RoutePlanExport, InitialStateDescribesTheProblem)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     const auto& route = assignNorthRoute(app);
@@ -114,7 +114,7 @@ TEST(RoutePlanExport, InitialStateDescribesTheProblem)
 
 TEST(RoutePlanExport, SequenceGoesFromHubThroughEveryStopBackToHub)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     const auto& route = assignNorthRoute(app);
@@ -158,11 +158,11 @@ TEST(RoutePlanExport, SequenceGoesFromHubThroughEveryStopBackToHub)
 
 TEST(RoutePlanExport, FileExporterWritesBothDocumentsPerRoute)
 {
-    const auto               directory = freshDirectory("hubflow-route-export-test");
-    test::Storage            storage;
+    const auto directory = freshDirectory("hubflow-route-export-test");
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
-    routing::adapters::JsonFileRoutePlanExporter    exporter {directory.string()};
+    routing::adapters::JsonFileRoutePlanExporter exporter {directory.string()};
     routing::application::RoutePlanExportSubscriber subscriber {app.routing, exporter};
     app.bus.subscribe(subscriber);
 
@@ -176,12 +176,12 @@ TEST(RoutePlanExport, FileExporterWritesBothDocumentsPerRoute)
 
 TEST(RoutePlanExport, ExportFailureDoesNotFailRouteAssignment)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
-    FailingExporter                                     failing;
+    FailingExporter failing;
     routing::adapters::FailureTolerantRoutePlanExporter tolerant {failing};
-    routing::application::RoutePlanExportSubscriber     subscriber {app.routing, tolerant};
+    routing::application::RoutePlanExportSubscriber subscriber {app.routing, tolerant};
     app.bus.subscribe(subscriber);
 
     const auto& route = assignNorthRoute(app);

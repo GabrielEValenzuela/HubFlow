@@ -9,21 +9,22 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de DispatchNextShipmentUseCase.
-class DispatchNextShipment final : public DispatchNextShipmentUseCase
-{
-public:
-    DispatchNextShipment(LogisticsModel&                   model,
-                         shared::application::EventBus&    bus,
-                         const shared::application::Clock& clock);
+    /// @brief Implementación de DispatchNextShipmentUseCase.
+    class DispatchNextShipment final : public DispatchNextShipmentUseCase
+    {
+    public:
+        DispatchNextShipment(LogisticsModel& model,
+                             shared::application::EventBus& bus,
+                             const shared::application::Clock& clock);
 
-private:
-    const domain::Shipment& execute(const shared::application::Principal& principal, const std::string& note) override;
+    private:
+        const domain::Shipment& execute(const shared::application::Principal& principal,
+                                        const std::string& note) override;
 
-    LogisticsModel&                   m_model;
-    shared::application::EventBus&    m_bus;
-    const shared::application::Clock& m_clock;
-};
+        LogisticsModel& m_model;
+        shared::application::EventBus& m_bus;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::logistics::application
 

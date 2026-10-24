@@ -7,109 +7,111 @@
 
 namespace hubflow::bootstrap
 {
-namespace
-{
-using identity::application::RegisterUserRequest;
-using identity::domain::Role;
-using logistics::domain::ShipmentDraft;
-
-constexpr const char* OPERATOR_EMAIL {"operador@hubflow.local"};
-constexpr const char* SYSTEM_NAME {"Sistema"};
-constexpr double      PARCEL_LENGTH_CM {10.0};
-constexpr double      PARCEL_WIDTH_CM {10.0};
-constexpr double      PARCEL_HEIGHT_CM {10.0};
-
-struct SeedUser
-{
-    const char* email;
-    const char* name;
-    Role        role;
-};
-
-const SeedUser SEED_USERS[] {{"admin@hubflow.local", "Marta Ibáñez", Role::Admin},
-                             {OPERATOR_EMAIL, "Laura Gómez", Role::Operador},
-                             {"pum1@hubflow.local", "Carlos Medina", Role::Pum},
-                             {"pum2@hubflow.local", "Diego Ferreyra", Role::Pum}};
-
-ShipmentDraft packageOf(const char*  code,
-                        const char*  recipient,
-                        const char*  phone,
-                        const char*  postalCode,
-                        const char*  zone,
-                        const double weightKg,
-                        const char*  service,
-                        const char*  deliveryPoint)
-{
-    ShipmentDraft draft;
-    draft.code                = code;
-    draft.recipient           = recipient;
-    draft.recipientPhone      = phone;
-    draft.recipientPostalCode = postalCode;
-    draft.zone                = zone;
-    draft.service             = service;
-    draft.deliveryPoint       = deliveryPoint;
-    draft.parcels.pushBack(
-        logistics::domain::ParcelData {weightKg, PARCEL_LENGTH_CM, PARCEL_WIDTH_CM, PARCEL_HEIGHT_CM});
-    return draft;
-}
-
-std::vector<ShipmentDraft> initialShipments()
-{
-    return {
-        packageOf("PKG-1001", "Ana Torres", "+54 11 4521-7788", "C1425ABC", "CENTRO", 1.20, "ESTANDAR", "C1"),
-        packageOf("PKG-1002", "Bruno Díaz", "11 5532-4410", "1640", "NORTE", 0.75, "EXPRESS", "N2"),
-        packageOf("PKG-1003", "Carla Ruiz", "(011) 4207-3391", "1870", "SUR", 4.10, "PRIORITARIO", "S3"),
-        packageOf("PKG-1004", "Diego López", "11 6048-2275", "C1043AAZ", "CENTRO", 2.30, "ESTANDAR", "C2"),
-        packageOf("PKG-1005", "Elena Castro", "+54 9 11 3345-9082", "B1642EJC", "NORTE", 1.90, "PRIORITARIO", "N3"),
-        packageOf("PKG-1006", "Franco Gómez", "11 4208-1166", "1824", "SUR", 0.50, "EXPRESS", "S5"),
-        packageOf("PKG-1007", "Gabriela Soto", "11 5239-6604", "1414", "CENTRO", 6.20, "ESTANDAR", "C4"),
-        packageOf("PKG-1008", "Hugo Pérez", "+54 11 4798-5521", "1650", "NORTE", 3.40, "PRIORITARIO", "N5"),
-    };
-}
-} // namespace
-
-UserSeeder::UserSeeder(identity::application::RegisterUser&         registerUser,
-                       const identity::application::UserRepository& users,
-                       const shared::application::Clock&            clock,
-                       std::string                                  seedPassword)
-    : m_registerUser {registerUser}
-    , m_users {users}
-    , m_clock {clock}
-    , m_seedPassword {std::move(seedPassword)}
-{
-}
-
-void UserSeeder::seedUsers()
-{
-    if (m_users.count() == 0)
+    namespace
     {
-        const shared::domain::ActorContext system {0, SYSTEM_NAME, m_clock.now()};
-        for (const auto& seed : SEED_USERS)
+        using identity::application::RegisterUserRequest;
+        using identity::domain::Role;
+        using logistics::domain::ShipmentDraft;
+
+        constexpr const char* OPERATOR_EMAIL {"operador@hubflow.local"};
+        constexpr const char* SYSTEM_NAME {"Sistema"};
+        constexpr double PARCEL_LENGTH_CM {10.0};
+        constexpr double PARCEL_WIDTH_CM {10.0};
+        constexpr double PARCEL_HEIGHT_CM {10.0};
+
+        struct SeedUser
         {
-            m_registerUser.bootstrap(RegisterUserRequest {seed.email, seed.name, seed.role, m_seedPassword}, system);
+            const char* email;
+            const char* name;
+            Role role;
+        };
+
+        const SeedUser SEED_USERS[] {{"admin@hubflow.local", "Marta Ibáñez", Role::Admin},
+                                     {OPERATOR_EMAIL, "Laura Gómez", Role::Operador},
+                                     {"pum1@hubflow.local", "Carlos Medina", Role::Pum},
+                                     {"pum2@hubflow.local", "Diego Ferreyra", Role::Pum}};
+
+        ShipmentDraft packageOf(const char* code,
+                                const char* recipient,
+                                const char* phone,
+                                const char* postalCode,
+                                const char* zone,
+                                const double weightKg,
+                                const char* service,
+                                const char* deliveryPoint)
+        {
+            ShipmentDraft draft;
+            draft.code = code;
+            draft.recipient = recipient;
+            draft.recipientPhone = phone;
+            draft.recipientPostalCode = postalCode;
+            draft.zone = zone;
+            draft.service = service;
+            draft.deliveryPoint = deliveryPoint;
+            draft.parcels.pushBack(
+                logistics::domain::ParcelData {weightKg, PARCEL_LENGTH_CM, PARCEL_WIDTH_CM, PARCEL_HEIGHT_CM});
+            return draft;
+        }
+
+        std::vector<ShipmentDraft> initialShipments()
+        {
+            return {
+                packageOf("PKG-1001", "Ana Torres", "+54 11 4521-7788", "C1425ABC", "CENTRO", 1.20, "ESTANDAR", "C1"),
+                packageOf("PKG-1002", "Bruno Díaz", "11 5532-4410", "1640", "NORTE", 0.75, "EXPRESS", "N2"),
+                packageOf("PKG-1003", "Carla Ruiz", "(011) 4207-3391", "1870", "SUR", 4.10, "PRIORITARIO", "S3"),
+                packageOf("PKG-1004", "Diego López", "11 6048-2275", "C1043AAZ", "CENTRO", 2.30, "ESTANDAR", "C2"),
+                packageOf(
+                    "PKG-1005", "Elena Castro", "+54 9 11 3345-9082", "B1642EJC", "NORTE", 1.90, "PRIORITARIO", "N3"),
+                packageOf("PKG-1006", "Franco Gómez", "11 4208-1166", "1824", "SUR", 0.50, "EXPRESS", "S5"),
+                packageOf("PKG-1007", "Gabriela Soto", "11 5239-6604", "1414", "CENTRO", 6.20, "ESTANDAR", "C4"),
+                packageOf("PKG-1008", "Hugo Pérez", "+54 11 4798-5521", "1650", "NORTE", 3.40, "PRIORITARIO", "N5"),
+            };
+        }
+    } // namespace
+
+    UserSeeder::UserSeeder(identity::application::RegisterUser& registerUser,
+                           const identity::application::UserRepository& users,
+                           const shared::application::Clock& clock,
+                           std::string seedPassword)
+        : m_registerUser {registerUser}
+        , m_users {users}
+        , m_clock {clock}
+        , m_seedPassword {std::move(seedPassword)}
+    {
+    }
+
+    void UserSeeder::seedUsers()
+    {
+        if (m_users.count() == 0)
+        {
+            const shared::domain::ActorContext system {0, SYSTEM_NAME, m_clock.now()};
+            for (const auto& seed : SEED_USERS)
+            {
+                m_registerUser.bootstrap(RegisterUserRequest {seed.email, seed.name, seed.role, m_seedPassword},
+                                         system);
+            }
         }
     }
-}
 
-ShipmentSeeder::ShipmentSeeder(logistics::application::RegisterShipmentUseCase& registerShipment,
-                               const ShipmentSeedCollaborators&                 collaborators)
-    : m_registerShipment {registerShipment}
-    , m_collaborators {collaborators}
-{
-}
-
-void ShipmentSeeder::seedShipments()
-{
-    if (m_collaborators.logistics.catalog.size() == 0)
+    ShipmentSeeder::ShipmentSeeder(logistics::application::RegisterShipmentUseCase& registerShipment,
+                                   const ShipmentSeedCollaborators& collaborators)
+        : m_registerShipment {registerShipment}
+        , m_collaborators {collaborators}
     {
-        const auto                           operador = m_collaborators.users.byEmail(OPERATOR_EMAIL);
-        const shared::application::Principal author {
-            operador.has_value() ? operador->id : 0, SYSTEM_NAME, Role::Operador, &m_collaborators.policy};
-        for (const auto& draft : initialShipments())
+    }
+
+    void ShipmentSeeder::seedShipments()
+    {
+        if (m_collaborators.logistics.catalog.size() == 0)
         {
-            m_registerShipment.execute(author, draft);
+            const auto operador = m_collaborators.users.byEmail(OPERATOR_EMAIL);
+            const shared::application::Principal author {
+                operador.has_value() ? operador->id : 0, SYSTEM_NAME, Role::Operador, &m_collaborators.policy};
+            for (const auto& draft : initialShipments())
+            {
+                m_registerShipment.execute(author, draft);
+            }
         }
     }
-}
 
 } // namespace hubflow::bootstrap

@@ -7,17 +7,17 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de ListServiceLevelsUseCase.
-class ListServiceLevels final : public ListServiceLevelsUseCase
-{
-public:
-    explicit ListServiceLevels(const LogisticsModel& model);
+    /// @brief Implementación de ListServiceLevelsUseCase.
+    class ListServiceLevels final : public ListServiceLevelsUseCase
+    {
+    public:
+        explicit ListServiceLevels(const LogisticsModel& model);
 
-private:
-    const domain::ServiceLevelCatalog& execute(const shared::application::Principal& principal) const override;
+    private:
+        const domain::ServiceLevelCatalog& execute(const shared::application::Principal& principal) const override;
 
-    const LogisticsModel& m_model;
-};
+        const LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::logistics::application
 

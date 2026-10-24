@@ -7,43 +7,43 @@
 namespace hubflow::platform
 {
 
-/// @brief Parámetros de conexión a MySQL.
-struct DatabaseSettings
-{
-    std::string   host {"127.0.0.1"};
-    std::uint16_t port {3306};
-    std::string   user {"hubflow"};
-    std::string   password {"hubflow"};
-    std::string   schema {"hubflow"};
-    unsigned      connectRetries {30};
-};
+    /// @brief Parámetros de conexión a MySQL.
+    struct DatabaseSettings
+    {
+        std::string host {"127.0.0.1"};
+        std::uint16_t port {3306};
+        std::string user {"hubflow"};
+        std::string password {"hubflow"};
+        std::string schema {"hubflow"};
+        unsigned connectRetries {30};
+    };
 
-/// @brief Configuración del proceso, leída de variables de entorno.
-struct Settings
-{
-    std::string      bindAddress {"0.0.0.0"};
-    std::uint16_t    port {8080};
-    std::string      webRoot {"web"};
-    std::string      exportDirectory {"exports"};
-    std::string      jwtSecret;
-    std::string      seedPassword {"hubflow123"};
-    std::string      trackingCodes {"public"};
-    std::string      publicBaseUrl {"http://localhost:8480"};
-    DatabaseSettings database;
+    /// @brief Configuración del proceso, leída de variables de entorno.
+    struct Settings
+    {
+        std::string bindAddress {"0.0.0.0"};
+        std::uint16_t port {8080};
+        std::string webRoot {"web"};
+        std::string exportDirectory {"exports"};
+        std::string jwtSecret;
+        std::string seedPassword {"hubflow123"};
+        std::string trackingCodes {"public"};
+        std::string publicBaseUrl {"http://localhost:8480"};
+        DatabaseSettings database;
 
-    /**
-     * @brief Lee HUBFLOW_PORT, HUBFLOW_WEB_ROOT, HUBFLOW_EXPORT_DIR, HUBFLOW_JWT_SECRET,
-     * HUBFLOW_SEED_PASSWORD, HUBFLOW_TRACKING_CODES (@c public o @c sequential, por defecto @c public),
-     * HUBFLOW_PUBLIC_BASE_URL (dirección pública del sitio, sin barra final) y DB_HOST,
-     * DB_PORT, DB_USER, DB_PASSWORD, DB_NAME.
-     * @throws std::invalid_argument si falta el secreto JWT o tiene menos de 32 caracteres, o si
-     * HUBFLOW_TRACKING_CODES no es @c public ni @c sequential.
-     */
-    static Settings fromEnvironment();
+        /**
+         * @brief Lee HUBFLOW_PORT, HUBFLOW_WEB_ROOT, HUBFLOW_EXPORT_DIR, HUBFLOW_JWT_SECRET,
+         * HUBFLOW_SEED_PASSWORD, HUBFLOW_TRACKING_CODES (@c public o @c sequential, por defecto @c public),
+         * HUBFLOW_PUBLIC_BASE_URL (dirección pública del sitio, sin barra final) y DB_HOST,
+         * DB_PORT, DB_USER, DB_PASSWORD, DB_NAME.
+         * @throws std::invalid_argument si falta el secreto JWT o tiene menos de 32 caracteres, o si
+         * HUBFLOW_TRACKING_CODES no es @c public ni @c sequential.
+         */
+        static Settings fromEnvironment();
 
-    /// @brief Dirección de la página pública de seguimiento, con barra final: la que va en etiquetas y avisos.
-    std::string trackingLinkBase() const;
-};
+        /// @brief Dirección de la página pública de seguimiento, con barra final: la que va en etiquetas y avisos.
+        std::string trackingLinkBase() const;
+    };
 
 } // namespace hubflow::platform
 

@@ -9,21 +9,21 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de DissolveShipmentGroupUseCase.
-class DissolveShipmentGroup final : public DissolveShipmentGroupUseCase
-{
-public:
-    DissolveShipmentGroup(LogisticsModel&                   model,
-                          shared::application::EventBus&    bus,
-                          const shared::application::Clock& clock);
+    /// @brief Implementación de DissolveShipmentGroupUseCase.
+    class DissolveShipmentGroup final : public DissolveShipmentGroupUseCase
+    {
+    public:
+        DissolveShipmentGroup(LogisticsModel& model,
+                              shared::application::EventBus& bus,
+                              const shared::application::Clock& clock);
 
-private:
-    void execute(const shared::application::Principal& principal, const std::string& groupId) override;
+    private:
+        void execute(const shared::application::Principal& principal, const std::string& groupId) override;
 
-    LogisticsModel&                   m_model;
-    shared::application::EventBus&    m_bus;
-    const shared::application::Clock& m_clock;
-};
+        LogisticsModel& m_model;
+        shared::application::EventBus& m_bus;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::logistics::application
 

@@ -16,97 +16,97 @@ using shared::domain::ErrorKind;
 
 namespace
 {
-std::uint64_t createCourier(test::ApplicationHarness& app, const std::string& email)
-{
-    return app.registerUser
-        .execute(app.admin(),
-                 identity::application::RegisterUserRequest {
-                     email, "Repartidor", identity::domain::Role::Pum, "clave-segura"})
-        .id;
-}
-
-std::string registerAt(test::ApplicationHarness& app, const std::string& point, const std::size_t parcels)
-{
-    logistics::domain::ShipmentDraft shipment;
-    shipment.recipient           = "Cliente";
-    shipment.recipientPhone      = "11 5555-0000";
-    shipment.recipientPostalCode = "1000";
-    shipment.zone                = "NORTE";
-    shipment.service             = "ESTANDAR";
-    shipment.deliveryPoint       = point;
-    for (std::size_t parcelIndex = 0; parcelIndex < parcels; ++parcelIndex)
+    std::uint64_t createCourier(test::ApplicationHarness& app, const std::string& email)
     {
-        shipment.parcels.pushBack(ParcelData {1.0 + static_cast<double>(parcelIndex), 20.0, 20.0, 10.0});
-    }
-    return app.registerShipment.execute(app.operador(), shipment).code();
-}
-
-ds::DynamicArray<std::string> listOf(const std::string& first, const std::string& second = "")
-{
-    ds::DynamicArray<std::string> list;
-    list.pushBack(first);
-    if (!second.empty())
-    {
-        list.pushBack(second);
-    }
-    return list;
-}
-
-ErrorKind kindOf(const std::function<void()>& action)
-{
-    ErrorKind kind {ErrorKind::Validation};
-    try
-    {
-        action();
-        kind = ErrorKind::Forbidden;
-    }
-    catch (const business_error& error)
-    {
-        kind = error.errorKind();
-    }
-    return kind;
-}
-
-struct Scenario
-{
-    explicit Scenario(test::Storage& storage)
-        : app {storage}
-    {
-        first   = registerAt(app, "N2", 3);
-        second  = registerAt(app, "N2", 1);
-        alone   = registerAt(app, "N3", 2);
-        courier = createCourier(app, "pum1@hubflow.local");
+        return app.registerUser
+            .execute(app.admin(),
+                     identity::application::RegisterUserRequest {
+                         email, "Repartidor", identity::domain::Role::Pum, "clave-segura"})
+            .id;
     }
 
-    std::uint64_t openBatch()
+    std::string registerAt(test::ApplicationHarness& app, const std::string& point, const std::size_t parcels)
     {
-        const auto id = app.openSortingBatch.execute(app.operador(), "NORTE").id();
-        app.sortSortingBatch.execute(app.operador(), id, sorting::domain::SortCriteria::CodeAscending);
-        app.prepareSortingBatch.execute(app.operador(), id);
-        return id;
+        logistics::domain::ShipmentDraft shipment;
+        shipment.recipient = "Cliente";
+        shipment.recipientPhone = "11 5555-0000";
+        shipment.recipientPostalCode = "1000";
+        shipment.zone = "NORTE";
+        shipment.service = "ESTANDAR";
+        shipment.deliveryPoint = point;
+        for (std::size_t parcelIndex = 0; parcelIndex < parcels; ++parcelIndex)
+        {
+            shipment.parcels.pushBack(ParcelData {1.0 + static_cast<double>(parcelIndex), 20.0, 20.0, 10.0});
+        }
+        return app.registerShipment.execute(app.operador(), shipment).code();
     }
 
-    const routing::domain::DeliveryRoute& routeOfTheGroup()
+    ds::DynamicArray<std::string> listOf(const std::string& first, const std::string& second = "")
     {
-        app.formShipmentGroup.execute(app.operador(), listOf(first, second));
-        const auto batchId = openBatch();
-        app.processSortingBatchItem.execute(app.operador(), batchId, listOf(first, second));
-        return app.assignDeliveryRoute.execute(
-            app.operador(),
-            routing::application::AssignRouteRequest {batchId, courier, routing::domain::SearchAlgorithm::AStar});
+        ds::DynamicArray<std::string> list;
+        list.pushBack(first);
+        if (!second.empty())
+        {
+            list.pushBack(second);
+        }
+        return list;
     }
 
-    test::ApplicationHarness app;
-    std::string              first;
-    std::string              second;
-    std::string              alone;
-    std::uint64_t            courier {0};
-};
+    ErrorKind kindOf(const std::function<void()>& action)
+    {
+        ErrorKind kind {ErrorKind::Validation};
+        try
+        {
+            action();
+            kind = ErrorKind::Forbidden;
+        }
+        catch (const business_error& error)
+        {
+            kind = error.errorKind();
+        }
+        return kind;
+    }
+
+    struct Scenario
+    {
+        explicit Scenario(test::Storage& storage)
+            : app {storage}
+        {
+            first = registerAt(app, "N2", 3);
+            second = registerAt(app, "N2", 1);
+            alone = registerAt(app, "N3", 2);
+            courier = createCourier(app, "pum1@hubflow.local");
+        }
+
+        std::uint64_t openBatch()
+        {
+            const auto id = app.openSortingBatch.execute(app.operador(), "NORTE").id();
+            app.sortSortingBatch.execute(app.operador(), id, sorting::domain::SortCriteria::CodeAscending);
+            app.prepareSortingBatch.execute(app.operador(), id);
+            return id;
+        }
+
+        const routing::domain::DeliveryRoute& routeOfTheGroup()
+        {
+            app.formShipmentGroup.execute(app.operador(), listOf(first, second));
+            const auto batchId = openBatch();
+            app.processSortingBatchItem.execute(app.operador(), batchId, listOf(first, second));
+            return app.assignDeliveryRoute.execute(
+                app.operador(),
+                routing::application::AssignRouteRequest {batchId, courier, routing::domain::SearchAlgorithm::AStar});
+        }
+
+        test::ApplicationHarness app;
+        std::string first;
+        std::string second;
+        std::string alone;
+        std::uint64_t courier {0};
+    };
 } // namespace
 
 TEST(ParcelsAndGroupsFlow, RegistrationAssignsIdentityAndTrackingCodeAndKeepsParcels)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
 
     const auto code = registerAt(app, "N2", 3);
@@ -122,17 +122,14 @@ TEST(ParcelsAndGroupsFlow, RegistrationAssignsIdentityAndTrackingCodeAndKeepsPar
 TEST(ParcelsAndGroupsFlow, TheDeskRefusesToLoadAGroupMemberWithoutTheRestOfItsGroup)
 {
     test::Storage storage;
-    Scenario      scenario {storage};
-    auto&         app = scenario.app;
+    Scenario scenario {storage};
+    auto& app = scenario.app;
     app.formShipmentGroup.execute(app.operador(), listOf(scenario.first, scenario.second));
     const auto batchId = scenario.openBatch();
-    const auto queued  = app.getSortingBatch.execute(app.operador(), batchId).preparation().size();
+    const auto queued = app.getSortingBatch.execute(app.operador(), batchId).preparation().size();
 
-    const auto kind = kindOf(
-        [&]
-        {
-            app.processSortingBatchItem.execute(app.operador(), batchId, listOf(scenario.first));
-        });
+    const auto kind =
+        kindOf([&] { app.processSortingBatchItem.execute(app.operador(), batchId, listOf(scenario.first)); });
 
     EXPECT_EQ(kind, ErrorKind::Conflict);
     EXPECT_EQ(app.getSortingBatch.execute(app.operador(), batchId).preparation().size(), queued);
@@ -146,8 +143,8 @@ TEST(ParcelsAndGroupsFlow, TheDeskRefusesToLoadAGroupMemberWithoutTheRestOfItsGr
 TEST(ParcelsAndGroupsFlow, LoadingTheNextPackageBringsItsWholeGroup)
 {
     test::Storage storage;
-    Scenario      scenario {storage};
-    auto&         app = scenario.app;
+    Scenario scenario {storage};
+    auto& app = scenario.app;
     app.formShipmentGroup.execute(app.operador(), listOf(scenario.first, scenario.second));
     const auto batchId = scenario.openBatch();
 
@@ -164,7 +161,7 @@ TEST(ParcelsAndGroupsFlow, LoadingTheNextPackageBringsItsWholeGroup)
 TEST(ParcelsAndGroupsFlow, AGroupIsOneStopOnTheRoute)
 {
     test::Storage storage;
-    Scenario      scenario {storage};
+    Scenario scenario {storage};
 
     const auto& route = scenario.routeOfTheGroup();
 
@@ -180,10 +177,10 @@ TEST(ParcelsAndGroupsFlow, AGroupIsOneStopOnTheRoute)
 TEST(ParcelsAndGroupsFlow, DeliveringTheStopNeedsEveryParcelOrAnExplicitDeliverAll)
 {
     test::Storage storage;
-    Scenario      scenario {storage};
-    auto&         app   = scenario.app;
-    const auto&   route = scenario.routeOfTheGroup();
-    const auto    pum   = app.pum(scenario.courier);
+    Scenario scenario {storage};
+    auto& app = scenario.app;
+    const auto& route = scenario.routeOfTheGroup();
+    const auto pum = app.pum(scenario.courier);
 
     const auto kind = kindOf(
         [&]
@@ -207,10 +204,10 @@ TEST(ParcelsAndGroupsFlow, DeliveringTheStopNeedsEveryParcelOrAnExplicitDeliverA
 TEST(ParcelsAndGroupsFlow, ConfirmingEveryParcelAllowsClosingTheStopAsDelivered)
 {
     test::Storage storage;
-    Scenario      scenario {storage};
-    auto&         app   = scenario.app;
-    const auto&   route = scenario.routeOfTheGroup();
-    const auto    pum   = app.pum(scenario.courier);
+    Scenario scenario {storage};
+    auto& app = scenario.app;
+    const auto& route = scenario.routeOfTheGroup();
+    const auto pum = app.pum(scenario.courier);
     for (std::size_t ordinal = 1; ordinal <= 3; ++ordinal)
     {
         app.confirmStopParcel.execute(
@@ -227,11 +224,11 @@ TEST(ParcelsAndGroupsFlow, ConfirmingEveryParcelAllowsClosingTheStopAsDelivered)
 
 TEST(ParcelsAndGroupsFlow, PartialDeliveryReschedulesTheGroupAndKeepsDeliveredParcelsAcrossARestart)
 {
-    test::Storage                                    storage;
-    Scenario                                         scenario {storage};
-    auto&                                            app   = scenario.app;
-    const auto&                                      route = scenario.routeOfTheGroup();
-    const auto                                       pum   = app.pum(scenario.courier);
+    test::Storage storage;
+    Scenario scenario {storage};
+    auto& app = scenario.app;
+    const auto& route = scenario.routeOfTheGroup();
+    const auto pum = app.pum(scenario.courier);
     const routing::application::ConfirmParcelRequest one {route.id(), 1, scenario.first, 1};
     const routing::application::ConfirmParcelRequest two {route.id(), 1, scenario.first, 2};
     app.confirmStopParcel.execute(pum, one);
@@ -253,7 +250,7 @@ TEST(ParcelsAndGroupsFlow, PartialDeliveryReschedulesTheGroupAndKeepsDeliveredPa
     EXPECT_NE(app.findShipmentGroupOfShipment.execute(app.operador(), scenario.first), nullptr);
 
     test::ApplicationHarness restarted {storage};
-    const auto&              restored = restarted.getShipment.execute(restarted.operador(), scenario.first);
+    const auto& restored = restarted.getShipment.execute(restarted.operador(), scenario.first);
     EXPECT_EQ(restored.pendingParcelCount(), 1U);
     EXPECT_TRUE(restored.parcel(0).isDelivered());
     EXPECT_FALSE(restored.parcel(2).isDelivered());
@@ -270,8 +267,8 @@ TEST(ParcelsAndGroupsFlow, PartialDeliveryReschedulesTheGroupAndKeepsDeliveredPa
 TEST(ParcelsAndGroupsFlow, ReschedulingOneMemberReschedulesTheWholeGroup)
 {
     test::Storage storage;
-    Scenario      scenario {storage};
-    auto&         app = scenario.app;
+    Scenario scenario {storage};
+    auto& app = scenario.app;
     scenario.routeOfTheGroup();
 
     app.rescheduleShipment.execute(app.operador(), scenario.second, "Nadie en casa");
@@ -284,8 +281,8 @@ TEST(ParcelsAndGroupsFlow, ReschedulingOneMemberReschedulesTheWholeGroup)
 TEST(ParcelsAndGroupsFlow, DispatchingTheHeadOfTheListDispatchesItsGroup)
 {
     test::Storage storage;
-    Scenario      scenario {storage};
-    auto&         app = scenario.app;
+    Scenario scenario {storage};
+    auto& app = scenario.app;
     app.formShipmentGroup.execute(app.operador(), listOf(scenario.first, scenario.second));
 
     app.dispatchNextShipment.execute(app.operador(), "");
@@ -300,22 +297,17 @@ TEST(ParcelsAndGroupsFlow, DispatchingTheHeadOfTheListDispatchesItsGroup)
 TEST(ParcelsAndGroupsFlow, DissolvingAGroupIsRepeatableAndFreesItsMembers)
 {
     test::Storage storage;
-    Scenario      scenario {storage};
-    auto&         app   = scenario.app;
-    const auto&   group = app.formShipmentGroup.execute(app.operador(), listOf(scenario.first, scenario.second));
-    const auto    id    = group.id();
+    Scenario scenario {storage};
+    auto& app = scenario.app;
+    const auto& group = app.formShipmentGroup.execute(app.operador(), listOf(scenario.first, scenario.second));
+    const auto id = group.id();
     EXPECT_EQ(storage.shipmentGroups.groups.size(), 1U);
 
     app.dissolveShipmentGroup.execute(app.operador(), id);
 
     EXPECT_EQ(storage.shipmentGroups.groups.size(), 0U);
     EXPECT_EQ(app.findShipmentGroupOfShipment.execute(app.operador(), scenario.first), nullptr);
-    EXPECT_EQ(kindOf(
-                  [&]
-                  {
-                      app.dissolveShipmentGroup.execute(app.operador(), id);
-                  }),
-              ErrorKind::NotFound);
+    EXPECT_EQ(kindOf([&] { app.dissolveShipmentGroup.execute(app.operador(), id); }), ErrorKind::NotFound);
     const auto batchId = scenario.openBatch();
     EXPECT_NO_THROW(app.processSortingBatchItem.execute(app.operador(), batchId, listOf(scenario.first)));
 }
@@ -323,38 +315,27 @@ TEST(ParcelsAndGroupsFlow, DissolvingAGroupIsRepeatableAndFreesItsMembers)
 TEST(ParcelsAndGroupsFlow, AGroupInDeliveryCannotBeDissolvedAndOnlyPlantStaffManagesGroups)
 {
     test::Storage storage;
-    Scenario      scenario {storage};
-    auto&         app = scenario.app;
+    Scenario scenario {storage};
+    auto& app = scenario.app;
     scenario.routeOfTheGroup();
     std::string groupId;
     app.listShipmentGroups.execute(app.operador())
-        .forEach(
-            [&groupId](const logistics::domain::ShipmentGroup& group)
-            {
-                groupId = group.id();
-            });
+        .forEach([&groupId](const logistics::domain::ShipmentGroup& group) { groupId = group.id(); });
 
-    EXPECT_EQ(kindOf(
-                  [&]
-                  {
-                      app.dissolveShipmentGroup.execute(app.operador(), groupId);
-                  }),
-              ErrorKind::Conflict);
-    EXPECT_EQ(kindOf(
-                  [&]
-                  {
-                      app.formShipmentGroup.execute(app.pum(scenario.courier), listOf(scenario.alone, scenario.second));
-                  }),
-              ErrorKind::Forbidden);
+    EXPECT_EQ(kindOf([&] { app.dissolveShipmentGroup.execute(app.operador(), groupId); }), ErrorKind::Conflict);
+    EXPECT_EQ(
+        kindOf([&]
+               { app.formShipmentGroup.execute(app.pum(scenario.courier), listOf(scenario.alone, scenario.second)); }),
+        ErrorKind::Forbidden);
 }
 
 TEST(ParcelsAndGroupsFlow, AnotherCourierCannotConfirmParcelsOfThisRoute)
 {
     test::Storage storage;
-    Scenario      scenario {storage};
-    auto&         app   = scenario.app;
-    const auto&   route = scenario.routeOfTheGroup();
-    const auto    other = createCourier(app, "pum2@hubflow.local");
+    Scenario scenario {storage};
+    auto& app = scenario.app;
+    const auto& route = scenario.routeOfTheGroup();
+    const auto other = createCourier(app, "pum2@hubflow.local");
 
     const auto kind = kindOf(
         [&]

@@ -8,18 +8,19 @@
 namespace hubflow::audit::adapters
 {
 
-/// @brief Bitácora de auditoría: @c GET /audit-events (administrador), más recientes primero, paginada.
-class AuditController final : public platform::Controller
-{
-public:
-    AuditController(const application::ListAuditEventsUseCase& list, const application::CountAuditEventsUseCase& count);
+    /// @brief Bitácora de auditoría: @c GET /audit-events (administrador), más recientes primero, paginada.
+    class AuditController final : public platform::Controller
+    {
+    public:
+        AuditController(const application::ListAuditEventsUseCase& list,
+                        const application::CountAuditEventsUseCase& count);
 
-private:
-    void registerRoutes(platform::ApiRouter& router) override;
+    private:
+        void registerRoutes(platform::ApiRouter& router) override;
 
-    const application::ListAuditEventsUseCase&  m_list;
-    const application::CountAuditEventsUseCase& m_count;
-};
+        const application::ListAuditEventsUseCase& m_list;
+        const application::CountAuditEventsUseCase& m_count;
+    };
 
 } // namespace hubflow::audit::adapters
 

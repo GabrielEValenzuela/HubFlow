@@ -7,17 +7,17 @@
 namespace hubflow::routing::adapters
 {
 
-/// @brief Resuelve si una zona existe y está habilitada consultando el catálogo de zonas del contexto de logística.
-class LogisticsZoneDirectory final : public application::ZoneDirectory
-{
-public:
-    explicit LogisticsZoneDirectory(const logistics::application::LogisticsModel& model) noexcept;
+    /// @brief Resuelve si una zona existe y está habilitada consultando el catálogo de zonas del contexto de logística.
+    class LogisticsZoneDirectory final : public application::ZoneDirectory
+    {
+    public:
+        explicit LogisticsZoneDirectory(const logistics::application::LogisticsModel& model) noexcept;
 
-private:
-    bool isActive(const std::string& zoneCode) const override;
+    private:
+        bool isActive(const std::string& zoneCode) const override;
 
-    const logistics::application::LogisticsModel& m_model;
-};
+        const logistics::application::LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::routing::adapters
 

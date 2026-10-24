@@ -10,26 +10,26 @@
 namespace hubflow::tracking::application
 {
 
-/// @brief Implementación de VerifyTrackingUseCase.
-class VerifyTracking final : public VerifyTrackingUseCase
-{
-public:
-    /// @brief Segundos de vigencia de una constancia: 15 minutos.
-    static constexpr std::int64_t TOKEN_LIFETIME_SECONDS {15 * 60};
+    /// @brief Implementación de VerifyTrackingUseCase.
+    class VerifyTracking final : public VerifyTrackingUseCase
+    {
+    public:
+        /// @brief Segundos de vigencia de una constancia: 15 minutos.
+        static constexpr std::int64_t TOKEN_LIFETIME_SECONDS {15 * 60};
 
-    VerifyTracking(const TrackedShipmentDirectory&   directory,
-                   shared::application::RateLimiter& limiter,
-                   const TrackingTokenIssuer&        tokens,
-                   const shared::application::Clock& clock);
+        VerifyTracking(const TrackedShipmentDirectory& directory,
+                       shared::application::RateLimiter& limiter,
+                       const TrackingTokenIssuer& tokens,
+                       const shared::application::Clock& clock);
 
-private:
-    TrackingAccess execute(const VerificationRequest& request) override;
+    private:
+        TrackingAccess execute(const VerificationRequest& request) override;
 
-    const TrackedShipmentDirectory&   m_directory;
-    shared::application::RateLimiter& m_limiter;
-    const TrackingTokenIssuer&        m_tokens;
-    const shared::application::Clock& m_clock;
-};
+        const TrackedShipmentDirectory& m_directory;
+        shared::application::RateLimiter& m_limiter;
+        const TrackingTokenIssuer& m_tokens;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::tracking::application
 

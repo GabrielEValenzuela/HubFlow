@@ -4,13 +4,13 @@
 namespace hubflow::sorting::domain
 {
 
-/// @brief Criterio por el que está ordenado un lote.
-enum class SortCriteria
-{
-    None,
-    CodeAscending,
-    WeightDescending
-};
+    /// @brief Criterio por el que está ordenado un lote.
+    enum class SortCriteria
+    {
+        None,
+        CodeAscending,
+        WeightDescending
+    };
 
 } // namespace hubflow::sorting::domain
 

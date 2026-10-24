@@ -10,34 +10,30 @@
 
 namespace
 {
-std::vector<std::string> items(const hubflow::ds::Set<std::string>& set)
-{
-    std::vector<std::string> values;
-    set.forEach(
-        [&values](const std::string& value)
+    std::vector<std::string> items(const hubflow::ds::Set<std::string>& set)
+    {
+        std::vector<std::string> values;
+        set.forEach([&values](const std::string& value) { values.push_back(value); });
+        return values;
+    }
+
+    hubflow::ds::Set<std::string> setOf(std::initializer_list<const char*> values)
+    {
+        hubflow::ds::Set<std::string> set;
+        for (const char* pValue : values)
         {
-            values.push_back(value);
-        });
-    return values;
-}
-
-hubflow::ds::Set<std::string> setOf(std::initializer_list<const char*> values)
-{
-    hubflow::ds::Set<std::string> set;
-    for (const char* pValue : values)
-    {
-        set.insert(pValue);
+            set.insert(pValue);
+        }
+        return set;
     }
-    return set;
-}
 
-struct AscendingIntPriority
-{
-    bool operator()(const int first, const int second) const
+    struct AscendingIntPriority
     {
-        return first < second;
-    }
-};
+        bool operator()(const int first, const int second) const
+        {
+            return first < second;
+        }
+    };
 } // namespace
 
 TEST(BitSet, SetUnsetIsSetCountAndAnySet)
@@ -60,7 +56,7 @@ TEST(BitSet, SetUnsetIsSetCountAndAnySet)
 
 TEST(BitSet, BitwiseOperators)
 {
-    const auto first  = hubflow::ds::BitSet<5>::fromWord(0b01111);
+    const auto first = hubflow::ds::BitSet<5>::fromWord(0b01111);
     const auto second = hubflow::ds::BitSet<5>::fromWord(0b10111);
     EXPECT_EQ((first & second).toWord(), 0b00111U);
     EXPECT_EQ((first | second).toWord(), 0b11111U);
@@ -84,7 +80,7 @@ TEST(Set, KeepsUniqueSortedElements)
 
 TEST(Set, UnionIntersectionAndDifference)
 {
-    const auto north   = setOf({"PKG-1002", "PKG-1005", "PKG-1008"});
+    const auto north = setOf({"PKG-1002", "PKG-1005", "PKG-1008"});
     const auto express = setOf({"PKG-1002", "PKG-1006"});
     EXPECT_EQ(items(north.intersect(express)), (std::vector<std::string> {"PKG-1002"}));
     EXPECT_EQ(items(north.unite(express)), (std::vector<std::string> {"PKG-1002", "PKG-1005", "PKG-1006", "PKG-1008"}));
@@ -94,8 +90,8 @@ TEST(Set, UnionIntersectionAndDifference)
 TEST(Set, EdgeCasesWithEmptyAndDisjointSets)
 {
     const hubflow::ds::Set<std::string> emptySet;
-    const auto                          firstSet  = setOf({"PKG-1001", "PKG-1003"});
-    const auto                          secondSet = setOf({"PKG-1002"});
+    const auto firstSet = setOf({"PKG-1001", "PKG-1003"});
+    const auto secondSet = setOf({"PKG-1002"});
     EXPECT_EQ(items(firstSet.unite(emptySet)), items(firstSet));
     EXPECT_TRUE(firstSet.intersect(secondSet).isEmpty());
     EXPECT_TRUE(emptySet.difference(firstSet).isEmpty());
@@ -124,32 +120,18 @@ TEST(MinHeap, PopsInPriorityOrder)
 TEST(Graph, StoresUndirectedWeightedEdges)
 {
     hubflow::ds::Graph<std::string> graph;
-    const auto                      harbor   = graph.addVertex("Harbor");
-    const auto                      junction = graph.addVertex("Junction");
-    const auto                      depot    = graph.addVertex("Depot");
+    const auto harbor = graph.addVertex("Harbor");
+    const auto junction = graph.addVertex("Junction");
+    const auto depot = graph.addVertex("Depot");
     graph.addEdge(harbor, junction, 1.5);
     graph.addEdge(junction, depot, 2.0);
 
     std::vector<std::size_t> neighbours;
     graph.forEachNeighbor(junction,
-                          [&neighbours](std::size_t destination, double)
-                          {
-                              neighbours.push_back(destination);
-                          });
+                          [&neighbours](std::size_t destination, double) { neighbours.push_back(destination); });
     EXPECT_EQ(neighbours, (std::vector<std::size_t> {harbor, depot}));
     EXPECT_EQ(graph.edgeCount(), 2U);
-    EXPECT_EQ(graph.findVertex(
-                  [](const std::string& name)
-                  {
-                      return name == "Depot";
-                  }),
-              depot);
-    EXPECT_FALSE(graph
-                     .findVertex(
-                         [](const std::string& name)
-                         {
-                             return name == "Z";
-                         })
-                     .has_value());
+    EXPECT_EQ(graph.findVertex([](const std::string& name) { return name == "Depot"; }), depot);
+    EXPECT_FALSE(graph.findVertex([](const std::string& name) { return name == "Z"; }).has_value());
     EXPECT_THROW(graph.addEdge(harbor, harbor, 1.0), std::invalid_argument);
 }

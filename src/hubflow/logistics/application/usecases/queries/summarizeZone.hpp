@@ -7,18 +7,18 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de SummarizeZoneUseCase.
-class SummarizeZone final : public SummarizeZoneUseCase
-{
-public:
-    explicit SummarizeZone(const LogisticsModel& model);
+    /// @brief Implementación de SummarizeZoneUseCase.
+    class SummarizeZone final : public SummarizeZoneUseCase
+    {
+    public:
+        explicit SummarizeZone(const LogisticsModel& model);
 
-private:
-    domain::ZoneSummary execute(const shared::application::Principal& principal,
-                                const std::string&                    zoneCode) const override;
+    private:
+        domain::ZoneSummary execute(const shared::application::Principal& principal,
+                                    const std::string& zoneCode) const override;
 
-    const LogisticsModel& m_model;
-};
+        const LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::logistics::application
 

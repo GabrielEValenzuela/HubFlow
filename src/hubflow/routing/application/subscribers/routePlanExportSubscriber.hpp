@@ -8,18 +8,18 @@
 namespace hubflow::routing::application
 {
 
-/// @brief Exporta el plan de cada hoja de ruta apenas se asigna a un PUM.
-class RoutePlanExportSubscriber final : public shared::domain::DomainEventVisitor
-{
-public:
-    RoutePlanExportSubscriber(const RoutingModel& model, RoutePlanExporter& exporter);
+    /// @brief Exporta el plan de cada hoja de ruta apenas se asigna a un PUM.
+    class RoutePlanExportSubscriber final : public shared::domain::DomainEventVisitor
+    {
+    public:
+        RoutePlanExportSubscriber(const RoutingModel& model, RoutePlanExporter& exporter);
 
-private:
-    void on(const domain::DeliveryRouteAssigned& event) override;
+    private:
+        void on(const domain::DeliveryRouteAssigned& event) override;
 
-    const RoutingModel& m_model;
-    RoutePlanExporter&  m_exporter;
-};
+        const RoutingModel& m_model;
+        RoutePlanExporter& m_exporter;
+    };
 
 } // namespace hubflow::routing::application
 

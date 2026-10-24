@@ -17,24 +17,20 @@ using namespace hubflow::shared::domain;
 
 namespace
 {
-std::vector<std::string> items(const insights::domain::CodeSet& set)
-{
-    std::vector<std::string> values;
-    set.forEach(
-        [&values](const std::string& value)
-        {
-            values.push_back(value);
-        });
-    return values;
-}
+    std::vector<std::string> items(const insights::domain::CodeSet& set)
+    {
+        std::vector<std::string> values;
+        set.forEach([&values](const std::string& value) { values.push_back(value); });
+        return values;
+    }
 } // namespace
 
 TEST(User, RegistersValidatesAndAuthenticates)
 {
-    const test::IdleCouriers                idleCouriers;
-    const hubflow::test::PlainHasher        plain;
+    const test::IdleCouriers idleCouriers;
+    const hubflow::test::PlainHasher plain;
     const identity::domain::PasswordHasher& hasher = plain;
-    identity::domain::User*                 pUser  = identity::domain::User::registerNew(4,
+    identity::domain::User* pUser = identity::domain::User::registerNew(4,
                                                                         "Ana@HubFlow.local",
                                                                         "Ana Torres",
                                                                         identity::domain::Role::Operador,
@@ -101,14 +97,14 @@ TEST(CodeSets, BuildsByZoneAndServiceAndCombines)
     {
         catalog.adopt(logistics::domain::Shipment::receive(draft, tickets.next(), hubflow::test::actor()));
     }
-    const insights::domain::ZoneCriterion    north {"NORTE"};
+    const insights::domain::ZoneCriterion north {"NORTE"};
     const insights::domain::ServiceCriterion express {"EXPRESS"};
     const insights::domain::CodeSet a = static_cast<const insights::domain::SetCriterion&>(north).collect(catalog);
     const insights::domain::CodeSet b = static_cast<const insights::domain::SetCriterion&>(express).collect(catalog);
 
-    const insights::domain::UnionOperation        unite;
+    const insights::domain::UnionOperation unite;
     const insights::domain::IntersectionOperation intersect;
-    const insights::domain::DifferenceOperation   difference;
+    const insights::domain::DifferenceOperation difference;
     EXPECT_EQ(items(a), (std::vector<std::string> {"PKG-1002", "PKG-1005", "PKG-1008"}));
     EXPECT_EQ(items(b), (std::vector<std::string> {"PKG-1002", "PKG-1006"}));
     EXPECT_EQ(items(static_cast<const insights::domain::SetOperation&>(intersect).apply(a, b)),
@@ -122,7 +118,7 @@ TEST(CodeSets, BuildsByZoneAndServiceAndCombines)
 TEST(StateComparison, UsesBitwiseOperations)
 {
     logistics::domain::TicketDispenser tickets;
-    logistics::domain::Shipment*       pFirst = logistics::domain::Shipment::receive(
+    logistics::domain::Shipment* pFirst = logistics::domain::Shipment::receive(
         hubflow::test::draft("PKG-0001", "EXPRESS"), tickets.next(), hubflow::test::actor());
     logistics::domain::Shipment* pSecond = logistics::domain::Shipment::receive(
         hubflow::test::draft("PKG-0002", "EXPRESS"), tickets.next(), hubflow::test::actor());

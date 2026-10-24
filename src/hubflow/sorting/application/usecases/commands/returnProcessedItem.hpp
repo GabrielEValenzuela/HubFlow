@@ -7,19 +7,20 @@
 namespace hubflow::sorting::application
 {
 
-/// @brief Implementación de ReturnProcessedItemUseCase.
-class ReturnProcessedItem final : public ReturnProcessedItemUseCase
-{
-public:
-    ReturnProcessedItem(domain::SortingDesk& desk, const logistics::domain::ShipmentGroupBook& groups);
+    /// @brief Implementación de ReturnProcessedItemUseCase.
+    class ReturnProcessedItem final : public ReturnProcessedItemUseCase
+    {
+    public:
+        ReturnProcessedItem(domain::SortingDesk& desk, const logistics::domain::ShipmentGroupBook& groups);
 
-private:
-    ds::DynamicArray<logistics::domain::Shipment*>
-    execute(const shared::application::Principal& principal, std::uint64_t batchId, const std::string& code) override;
+    private:
+        ds::DynamicArray<logistics::domain::Shipment*> execute(const shared::application::Principal& principal,
+                                                               std::uint64_t batchId,
+                                                               const std::string& code) override;
 
-    domain::SortingDesk&                        m_desk;
-    const logistics::domain::ShipmentGroupBook& m_groups;
-};
+        domain::SortingDesk& m_desk;
+        const logistics::domain::ShipmentGroupBook& m_groups;
+    };
 
 } // namespace hubflow::sorting::application
 

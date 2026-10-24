@@ -7,17 +7,17 @@
 namespace hubflow::insights::application
 {
 
-/// @brief Implementación de GetBstUseCase.
-class GetBst final : public GetBstUseCase
-{
-public:
-    explicit GetBst(const logistics::application::LogisticsModel& model);
+    /// @brief Implementación de GetBstUseCase.
+    class GetBst final : public GetBstUseCase
+    {
+    public:
+        explicit GetBst(const logistics::application::LogisticsModel& model);
 
-private:
-    const logistics::domain::ShipmentBst& execute(const shared::application::Principal& principal) const override;
+    private:
+        const logistics::domain::ShipmentBst& execute(const shared::application::Principal& principal) const override;
 
-    const logistics::application::LogisticsModel& m_model;
-};
+        const logistics::application::LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::insights::application
 

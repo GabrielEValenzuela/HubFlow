@@ -22,37 +22,37 @@ using hubflow::test::draft;
 
 namespace
 {
-ShipmentDraft threeParcels(const std::string& code, const std::string& point = "N1")
-{
-    ShipmentDraft shipment = draft(code, "EXPRESS");
-    shipment.deliveryPoint = point;
-    shipment.parcels.clear();
-    shipment.parcels.pushBack(ParcelData {2.0, 30.0, 20.0, 10.0});
-    shipment.parcels.pushBack(ParcelData {1.0, 60.0, 50.0, 40.0});
-    shipment.parcels.pushBack(ParcelData {0.5, 10.0, 10.0, 10.0});
-    return shipment;
-}
-
-class GroupFixture : public ::testing::Test
-{
-protected:
-    Shipment& receive(const ShipmentDraft& shipmentDraft)
+    ShipmentDraft threeParcels(const std::string& code, const std::string& point = "N1")
     {
-        return catalog.adopt(Shipment::receive(shipmentDraft, tickets.next(), actor()));
+        ShipmentDraft shipment = draft(code, "EXPRESS");
+        shipment.deliveryPoint = point;
+        shipment.parcels.clear();
+        shipment.parcels.pushBack(ParcelData {2.0, 30.0, 20.0, 10.0});
+        shipment.parcels.pushBack(ParcelData {1.0, 60.0, 50.0, 40.0});
+        shipment.parcels.pushBack(ParcelData {0.5, 10.0, 10.0, 10.0});
+        return shipment;
     }
 
-    hubflow::ds::DynamicArray<std::string> codes(const std::string& first, const std::string& second)
+    class GroupFixture : public ::testing::Test
     {
-        hubflow::ds::DynamicArray<std::string> list;
-        list.pushBack(first);
-        list.pushBack(second);
-        return list;
-    }
+    protected:
+        Shipment& receive(const ShipmentDraft& shipmentDraft)
+        {
+            return catalog.adopt(Shipment::receive(shipmentDraft, tickets.next(), actor()));
+        }
 
-    ShipmentCatalog   catalog;
-    ShipmentGroupBook groups;
-    TicketDispenser   tickets;
-};
+        hubflow::ds::DynamicArray<std::string> codes(const std::string& first, const std::string& second)
+        {
+            hubflow::ds::DynamicArray<std::string> list;
+            list.pushBack(first);
+            list.pushBack(second);
+            return list;
+        }
+
+        ShipmentCatalog catalog;
+        ShipmentGroupBook groups;
+        TicketDispenser tickets;
+    };
 } // namespace
 
 TEST(Dimensions, VolumetricWeightIsLengthTimesWidthTimesHeightOverFiveThousand)
@@ -120,7 +120,7 @@ TEST_F(GroupFixture, ShipmentNeedsBetweenOneAndTwentyParcels)
 TEST_F(GroupFixture, ShipmentIdMustBeAUuidVersionSeven)
 {
     ShipmentDraft bad = threeParcels("PKG-0001");
-    bad.id            = "not-a-uuid";
+    bad.id = "not-a-uuid";
 
     EXPECT_THROW(Shipment::receive(bad, tickets.next(), actor()), business_error);
     EXPECT_FALSE(ShipmentId::isValid("018f0000-0000-4000-8000-000000000001"));
@@ -172,8 +172,8 @@ TEST_F(GroupFixture, PartialDeliveryKeepsDeliveredParcelsRecordedWhenRescheduled
     shipment.confirmParcel(3, actor());
 
     shipment.reschedule("faltó un bulto", tickets.next(), actor());
-    const ShipmentState state     = shipment.state();
-    Shipment*           pRestored = Shipment::restore(state);
+    const ShipmentState state = shipment.state();
+    Shipment* pRestored = Shipment::restore(state);
 
     EXPECT_EQ(shipment.status(), ShipmentStatus::Reprogramado);
     EXPECT_TRUE(shipment.parcel(0).isDelivered());
@@ -202,10 +202,10 @@ TEST(TrackingCode, AcceptsTheSequentialAndThePublicFormats)
 TEST(TrackingCode, CheckSymbolDetectsATypoAndASwap)
 {
     const std::string body {"7K3M9Q2X"};
-    const char        check {PublicCodeCheck::checkSymbolOf(body)};
+    const char check {PublicCodeCheck::checkSymbolOf(body)};
     ASSERT_NE(check, '\0');
     const std::string good {std::string {"HF-"} + body + check};
-    std::string       typo {good};
+    std::string typo {good};
     typo[4] = typo[4] == 'A' ? 'B' : 'A';
     std::string swapped {good};
     std::swap(swapped[3], swapped[4]);
@@ -219,7 +219,7 @@ TEST(TrackingCode, CheckSymbolDetectsATypoAndASwap)
 TEST(TrackingCode, OrdersLexicographicallyWithinAndAcrossFormats)
 {
     EXPECT_TRUE(TrackingCode {"PKG-1001"} < TrackingCode {"PKG-1002"});
-    const std::string  body {"00000000"};
+    const std::string body {"00000000"};
     const TrackingCode first {std::string {"HF-"} + body + PublicCodeCheck::checkSymbolOf(body)};
 
     EXPECT_TRUE(first < TrackingCode {"PKG-1001"});
@@ -270,7 +270,7 @@ TEST_F(GroupFixture, OnlyShipmentsAwaitingDispatchCanBeGrouped)
 TEST_F(GroupFixture, AGroupInDeliveryCannotBeDissolved)
 {
     receive(threeParcels("PKG-0001", "N2"));
-    Shipment&      second = receive(threeParcels("PKG-0002", "N2"));
+    Shipment& second = receive(threeParcels("PKG-0002", "N2"));
     ShipmentGroup& group =
         groups.form("018f0000-0000-7000-8000-00000000000a", codes("PKG-0001", "PKG-0002"), catalog, actor());
     EXPECT_NO_THROW(groups.ensureDissolvable(group, catalog));

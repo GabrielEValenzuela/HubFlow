@@ -24,219 +24,220 @@ using namespace hubflow;
 
 namespace
 {
-constexpr const char* MIGRATIONS[] {"001_schema.sql",
-                                    "002_road_map.sql",
-                                    "003_idempotency.sql",
-                                    "004_catalogs.sql",
-                                    "005_shipments_parcels_groups.sql",
-                                    "006_customer_tracking.sql"};
-constexpr const char* TABLES[] {"notifications",
-                                "route_stop_companions",
-                                "shipment_group_members",
-                                "shipment_groups",
-                                "parcels",
-                                "shipment_feature_links",
-                                "shipment_features",
-                                "service_levels",
-                                "zones",
-                                "role_permissions",
-                                "idempotency_keys",
-                                "audit_events",
-                                "route_stops",
-                                "routes",
-                                "movements",
-                                "shipments",
-                                "road_edges",
-                                "road_nodes",
-                                "users"};
+    constexpr const char* MIGRATIONS[] {"001_schema.sql",
+                                        "002_road_map.sql",
+                                        "003_idempotency.sql",
+                                        "004_catalogs.sql",
+                                        "005_shipments_parcels_groups.sql",
+                                        "006_customer_tracking.sql"};
+    constexpr const char* TABLES[] {"notifications",
+                                    "route_stop_companions",
+                                    "shipment_group_members",
+                                    "shipment_groups",
+                                    "parcels",
+                                    "shipment_feature_links",
+                                    "shipment_features",
+                                    "service_levels",
+                                    "zones",
+                                    "role_permissions",
+                                    "idempotency_keys",
+                                    "audit_events",
+                                    "route_stops",
+                                    "routes",
+                                    "movements",
+                                    "shipments",
+                                    "road_edges",
+                                    "road_nodes",
+                                    "users"};
 
-std::string valueOf(const char* pName, const std::string& fallback)
-{
-    const char* pValue = std::getenv(pName);
-    return pValue == nullptr || *pValue == '\0' ? fallback : std::string {pValue};
-}
-
-std::string contentsOf(const std::string& file)
-{
-    std::ifstream     input {std::string {HUBFLOW_MIGRATIONS_DIR} + "/" + file};
-    std::stringstream buffer;
-    buffer << input.rdbuf();
-    return buffer.str();
-}
-
-class ShipmentCollector final : public logistics::application::ShipmentRestorer
-{
-public:
-    std::vector<logistics::domain::ShipmentState>                    states;
-    std::vector<std::pair<std::string, logistics::domain::Movement>> movements;
-
-private:
-    void restoreShipment(const logistics::domain::ShipmentState& state) override
+    std::string valueOf(const char* pName, const std::string& fallback)
     {
-        states.push_back(state);
+        const char* pValue = std::getenv(pName);
+        return pValue == nullptr || *pValue == '\0' ? fallback : std::string {pValue};
     }
 
-    void restoreMovement(const std::string& code, const logistics::domain::Movement& movement) override
+    std::string contentsOf(const std::string& file)
     {
-        movements.emplace_back(code, movement);
-    }
-};
-
-class GroupCollector final : public logistics::application::ShipmentGroupRestorer
-{
-public:
-    std::vector<logistics::domain::ShipmentGroupState> groups;
-
-private:
-    void restoreGroup(const logistics::domain::ShipmentGroupState& state) override
-    {
-        groups.push_back(state);
-    }
-};
-
-logistics::domain::ShipmentDraft draftOf(const std::string& code, const std::string& id)
-{
-    logistics::domain::ShipmentDraft draft;
-    draft.id                  = id;
-    draft.code                = code;
-    draft.recipient           = "Marta Lopez";
-    draft.recipientPhone      = "1155550000";
-    draft.recipientPostalCode = "1640";
-    draft.zone                = "NORTE";
-    draft.service             = "EXPRESS";
-    draft.deliveryPoint       = "N2";
-    draft.parcels.pushBack(logistics::domain::ParcelData {2.5, 30.0, 20.0, 10.0});
-    return draft;
-}
-
-class CatalogCollector final : public logistics::application::CatalogRestorer
-{
-public:
-    std::vector<logistics::domain::ZoneState>            zones;
-    std::vector<logistics::domain::ServiceLevelState>    services;
-    std::vector<logistics::domain::ShipmentFeatureState> features;
-
-private:
-    void restoreZone(const logistics::domain::ZoneState& state) override
-    {
-        zones.push_back(state);
+        std::ifstream input {std::string {HUBFLOW_MIGRATIONS_DIR} + "/" + file};
+        std::stringstream buffer;
+        buffer << input.rdbuf();
+        return buffer.str();
     }
 
-    void restoreServiceLevel(const logistics::domain::ServiceLevelState& state) override
+    class ShipmentCollector final : public logistics::application::ShipmentRestorer
     {
-        services.push_back(state);
-    }
+    public:
+        std::vector<logistics::domain::ShipmentState> states;
+        std::vector<std::pair<std::string, logistics::domain::Movement>> movements;
 
-    void restoreFeature(const logistics::domain::ShipmentFeatureState& state) override
-    {
-        features.push_back(state);
-    }
-};
-
-class GrantCollector final : public identity::application::GrantRestorer
-{
-public:
-    std::vector<std::pair<identity::domain::Role, identity::domain::Permission>> grants;
-
-private:
-    void restoreGrant(const identity::domain::Role role, const identity::domain::Permission permission) override
-    {
-        grants.emplace_back(role, permission);
-    }
-};
-
-class RouteCollector final : public routing::application::RouteRestorer
-{
-public:
-    std::vector<routing::domain::RouteRecord> records;
-
-private:
-    void restoreRoute(const routing::domain::RouteRecord& record) override
-    {
-        records.push_back(record);
-    }
-};
-
-class AuditCollector final : public audit::application::AuditEntryVisitor
-{
-public:
-    std::vector<audit::application::AuditEntry> entries;
-
-private:
-    void visit(const audit::application::AuditEntry& entry) override
-    {
-        entries.push_back(entry);
-    }
-};
-
-class MySqlRepositories : public ::testing::Test
-{
-protected:
-    void SetUp() override
-    {
-        if (std::getenv("DB_HOST") == nullptr)
+    private:
+        void restoreShipment(const logistics::domain::ShipmentState& state) override
         {
-            GTEST_SKIP() << "DB_HOST no está definido: se omiten las pruebas con base de datos";
+            states.push_back(state);
         }
-        platform::DatabaseSettings settings;
-        settings.host           = valueOf("DB_HOST", settings.host);
-        settings.port           = static_cast<std::uint16_t>(std::stoul(valueOf("DB_PORT", "3306")));
-        settings.user           = valueOf("DB_USER", settings.user);
-        settings.password       = valueOf("DB_PASSWORD", settings.password);
-        settings.schema         = valueOf("DB_TEST_NAME", "hubflow_test");
-        settings.connectRetries = 3;
-        m_spConnection          = std::make_unique<platform::MySqlConnection>(settings);
-        m_spConnection->executeScript("SET FOREIGN_KEY_CHECKS = 0");
-        for (const char* pTable : TABLES)
+
+        void restoreMovement(const std::string& code, const logistics::domain::Movement& movement) override
         {
-            m_spConnection->executeScript(std::string {"DROP TABLE IF EXISTS "} + pTable);
+            movements.emplace_back(code, movement);
         }
-        m_spConnection->executeScript("SET FOREIGN_KEY_CHECKS = 1");
-        for (const char* pFile : MIGRATIONS)
+    };
+
+    class GroupCollector final : public logistics::application::ShipmentGroupRestorer
+    {
+    public:
+        std::vector<logistics::domain::ShipmentGroupState> groups;
+
+    private:
+        void restoreGroup(const logistics::domain::ShipmentGroupState& state) override
         {
-            m_spConnection->executeScript(contentsOf(pFile));
+            groups.push_back(state);
         }
-    }
+    };
 
-    platform::MySqlConnection& connection()
+    logistics::domain::ShipmentDraft draftOf(const std::string& code, const std::string& id)
     {
-        return *m_spConnection;
+        logistics::domain::ShipmentDraft draft;
+        draft.id = id;
+        draft.code = code;
+        draft.recipient = "Marta Lopez";
+        draft.recipientPhone = "1155550000";
+        draft.recipientPostalCode = "1640";
+        draft.zone = "NORTE";
+        draft.service = "EXPRESS";
+        draft.deliveryPoint = "N2";
+        draft.parcels.pushBack(logistics::domain::ParcelData {2.5, 30.0, 20.0, 10.0});
+        return draft;
     }
 
-    identity::domain::UserState addCourier(identity::application::UserRepository& users)
+    class CatalogCollector final : public logistics::application::CatalogRestorer
     {
-        identity::domain::UserState user;
-        user.id           = users.nextIdentity();
-        user.email        = "pum1@hubflow.local";
-        user.name         = "Pum Uno";
-        user.role         = identity::domain::Role::Pum;
-        user.passwordHash = "hash";
-        users.add(user);
-        return user;
-    }
+    public:
+        std::vector<logistics::domain::ZoneState> zones;
+        std::vector<logistics::domain::ServiceLevelState> services;
+        std::vector<logistics::domain::ShipmentFeatureState> features;
 
-    logistics::domain::ShipmentState addShipment(logistics::application::ShipmentRepository& shipments,
-                                                 const std::string&                          code)
+    private:
+        void restoreZone(const logistics::domain::ZoneState& state) override
+        {
+            zones.push_back(state);
+        }
+
+        void restoreServiceLevel(const logistics::domain::ServiceLevelState& state) override
+        {
+            services.push_back(state);
+        }
+
+        void restoreFeature(const logistics::domain::ShipmentFeatureState& state) override
+        {
+            features.push_back(state);
+        }
+    };
+
+    class GrantCollector final : public identity::application::GrantRestorer
     {
-        logistics::domain::ShipmentState state;
-        state.draft  = draftOf(code,
-                              "018f0000-0000-7000-8000-" +
-                                  std::string(12 - std::min<std::size_t>(12, code.size() - 4), '0') + code.substr(4));
-        state.ticket = 7;
-        shipments.add(state);
-        return state;
-    }
+    public:
+        std::vector<std::pair<identity::domain::Role, identity::domain::Permission>> grants;
 
-private:
-    std::unique_ptr<platform::MySqlConnection> m_spConnection;
-};
+    private:
+        void restoreGrant(const identity::domain::Role role, const identity::domain::Permission permission) override
+        {
+            grants.emplace_back(role, permission);
+        }
+    };
+
+    class RouteCollector final : public routing::application::RouteRestorer
+    {
+    public:
+        std::vector<routing::domain::RouteRecord> records;
+
+    private:
+        void restoreRoute(const routing::domain::RouteRecord& record) override
+        {
+            records.push_back(record);
+        }
+    };
+
+    class AuditCollector final : public audit::application::AuditEntryVisitor
+    {
+    public:
+        std::vector<audit::application::AuditEntry> entries;
+
+    private:
+        void visit(const audit::application::AuditEntry& entry) override
+        {
+            entries.push_back(entry);
+        }
+    };
+
+    class MySqlRepositories : public ::testing::Test
+    {
+    protected:
+        void SetUp() override
+        {
+            if (std::getenv("DB_HOST") == nullptr)
+            {
+                GTEST_SKIP() << "DB_HOST no está definido: se omiten las pruebas con base de datos";
+            }
+            platform::DatabaseSettings settings;
+            settings.host = valueOf("DB_HOST", settings.host);
+            settings.port = static_cast<std::uint16_t>(std::stoul(valueOf("DB_PORT", "3306")));
+            settings.user = valueOf("DB_USER", settings.user);
+            settings.password = valueOf("DB_PASSWORD", settings.password);
+            settings.schema = valueOf("DB_TEST_NAME", "hubflow_test");
+            settings.connectRetries = 3;
+            m_spConnection = std::make_unique<platform::MySqlConnection>(settings);
+            m_spConnection->executeScript("SET FOREIGN_KEY_CHECKS = 0");
+            for (const char* pTable : TABLES)
+            {
+                m_spConnection->executeScript(std::string {"DROP TABLE IF EXISTS "} + pTable);
+            }
+            m_spConnection->executeScript("SET FOREIGN_KEY_CHECKS = 1");
+            for (const char* pFile : MIGRATIONS)
+            {
+                m_spConnection->executeScript(contentsOf(pFile));
+            }
+        }
+
+        platform::MySqlConnection& connection()
+        {
+            return *m_spConnection;
+        }
+
+        identity::domain::UserState addCourier(identity::application::UserRepository& users)
+        {
+            identity::domain::UserState user;
+            user.id = users.nextIdentity();
+            user.email = "pum1@hubflow.local";
+            user.name = "Pum Uno";
+            user.role = identity::domain::Role::Pum;
+            user.passwordHash = "hash";
+            users.add(user);
+            return user;
+        }
+
+        logistics::domain::ShipmentState addShipment(logistics::application::ShipmentRepository& shipments,
+                                                     const std::string& code)
+        {
+            logistics::domain::ShipmentState state;
+            state.draft =
+                draftOf(code,
+                        "018f0000-0000-7000-8000-" + std::string(12 - std::min<std::size_t>(12, code.size() - 4), '0') +
+                            code.substr(4));
+            state.ticket = 7;
+            shipments.add(state);
+            return state;
+        }
+
+    private:
+        std::unique_ptr<platform::MySqlConnection> m_spConnection;
+    };
 } // namespace
 
 TEST_F(MySqlRepositories, UsersRoundTripByIdAndEmail)
 {
     identity::adapters::MySqlUserRepository usersAdapter {connection()};
-    identity::application::UserRepository&  users = usersAdapter;
-    const auto                              first = addCourier(users);
+    identity::application::UserRepository& users = usersAdapter;
+    const auto first = addCourier(users);
 
     auto stored = users.byEmail("pum1@hubflow.local");
     ASSERT_TRUE(stored.has_value());
@@ -253,12 +254,12 @@ TEST_F(MySqlRepositories, UsersRoundTripByIdAndEmail)
 TEST_F(MySqlRepositories, ShipmentsAndMovementsSurviveReload)
 {
     logistics::adapters::MySqlShipmentRepository shipmentsAdapter {connection()};
-    logistics::application::ShipmentRepository&  shipments = shipmentsAdapter;
-    auto                                         state     = addShipment(shipments, "PKG-9001");
+    logistics::application::ShipmentRepository& shipments = shipmentsAdapter;
+    auto state = addShipment(shipments, "PKG-9001");
     shipments.appendMovement("PKG-9001",
                              logistics::domain::Movement {
                                  1, logistics::domain::ShipmentStatus::Recibido, "Recibido", "Operador", 1700000000});
-    state.status   = logistics::domain::ShipmentStatus::Clasificado;
+    state.status = logistics::domain::ShipmentStatus::Clasificado;
     state.attempts = 1;
     shipments.update(state);
 
@@ -280,8 +281,8 @@ TEST_F(MySqlRepositories, ShipmentsAndMovementsSurviveReload)
 TEST_F(MySqlRepositories, ParcelsAndTheirDeliveryFlagsSurviveReload)
 {
     logistics::adapters::MySqlShipmentRepository shipmentsAdapter {connection()};
-    logistics::application::ShipmentRepository&  shipments = shipmentsAdapter;
-    logistics::domain::ShipmentState             state;
+    logistics::application::ShipmentRepository& shipments = shipmentsAdapter;
+    logistics::domain::ShipmentState state;
     state.draft = draftOf("HF-7K3M9Q2X8", "018f0000-0000-7000-8000-00000000a001");
     state.draft.parcels.pushBack(logistics::domain::ParcelData {1.25, 60.0, 50.0, 40.0});
     state.ticket = 1;
@@ -304,14 +305,14 @@ TEST_F(MySqlRepositories, ParcelsAndTheirDeliveryFlagsSurviveReload)
 
 TEST_F(MySqlRepositories, ShipmentGroupsSurviveReloadAndCanBeRemoved)
 {
-    logistics::adapters::MySqlShipmentRepository      shipmentsAdapter {connection()};
-    logistics::application::ShipmentRepository&       shipments = shipmentsAdapter;
+    logistics::adapters::MySqlShipmentRepository shipmentsAdapter {connection()};
+    logistics::application::ShipmentRepository& shipments = shipmentsAdapter;
     logistics::adapters::MySqlShipmentGroupRepository groupsAdapter {connection()};
-    logistics::application::ShipmentGroupRepository&  groups = groupsAdapter;
+    logistics::application::ShipmentGroupRepository& groups = groupsAdapter;
     addShipment(shipments, "PKG-9001");
     addShipment(shipments, "PKG-9002");
     logistics::domain::ShipmentGroupState group;
-    group.id            = "018f0000-0000-7000-8000-00000000b001";
+    group.id = "018f0000-0000-7000-8000-00000000b001";
     group.deliveryPoint = "N2";
     group.codes.pushBack("PKG-9002");
     group.codes.pushBack("PKG-9001");
@@ -332,8 +333,8 @@ TEST_F(MySqlRepositories, ShipmentGroupsSurviveReloadAndCanBeRemoved)
 TEST_F(MySqlRepositories, RoadMapLoadsReferenceCity)
 {
     routing::adapters::MySqlRoadMapRepository mapsAdapter {connection()};
-    routing::application::RoadMapRepository&  maps = mapsAdapter;
-    routing::domain::RoadMap                  map;
+    routing::application::RoadMapRepository& maps = mapsAdapter;
+    routing::domain::RoadMap map;
 
     maps.loadInto(map);
 
@@ -343,17 +344,17 @@ TEST_F(MySqlRepositories, RoadMapLoadsReferenceCity)
 
 TEST_F(MySqlRepositories, RoutesAndStopOutcomesSurviveReload)
 {
-    identity::adapters::MySqlUserRepository      usersAdapter {connection()};
-    identity::application::UserRepository&       users = usersAdapter;
+    identity::adapters::MySqlUserRepository usersAdapter {connection()};
+    identity::application::UserRepository& users = usersAdapter;
     logistics::adapters::MySqlShipmentRepository shipmentsAdapter {connection()};
-    logistics::application::ShipmentRepository&  shipments = shipmentsAdapter;
-    routing::adapters::MySqlRouteRepository      routesAdapter {connection()};
-    routing::application::RouteRepository&       routes  = routesAdapter;
-    const auto                                   courier = addCourier(users);
+    logistics::application::ShipmentRepository& shipments = shipmentsAdapter;
+    routing::adapters::MySqlRouteRepository routesAdapter {connection()};
+    routing::application::RouteRepository& routes = routesAdapter;
+    const auto courier = addCourier(users);
     addShipment(shipments, "PKG-9001");
     routing::domain::RouteRecord record;
-    record.id        = 1;
-    record.courier   = {courier.id, courier.name};
+    record.id = 1;
+    record.courier = {courier.id, courier.name};
     record.algorithm = routing::domain::SearchAlgorithm::AStar;
     record.createdAt = 1700000000;
     addShipment(shipments, "PKG-9002");
@@ -378,7 +379,7 @@ TEST_F(MySqlRepositories, RoutesAndStopOutcomesSurviveReload)
 TEST_F(MySqlRepositories, AuditEntriesAreListedNewestFirst)
 {
     audit::adapters::MySqlAuditLog logAdapter {connection()};
-    audit::application::AuditLog&  log = logAdapter;
+    audit::application::AuditLog& log = logAdapter;
     log.append(audit::application::AuditEntry {0, 100, 1, "Admin", "USER_REGISTERED", "u1", "primero"});
     log.append(audit::application::AuditEntry {0, 200, 1, "Admin", "USER_REGISTERED", "u2", "segundo"});
 
@@ -405,7 +406,7 @@ private:
 TEST_F(MySqlRepositories, CustomerNoticesAreStoredMaskedAndListedNewestFirst)
 {
     tracking::adapters::MySqlCustomerNoticeLog logAdapter {connection()};
-    tracking::application::CustomerNoticeLog&  log = logAdapter;
+    tracking::application::CustomerNoticeLog& log = logAdapter;
     log.append(
         tracking::application::CustomerNotice {"PKG-9001", "SMS", "****4410", "Paquete PKG-9001: Está en camino", 100});
     log.append(
@@ -443,7 +444,7 @@ TEST_F(MySqlRepositories, TheTrackingTokenIsSignedScopedAndExpires)
 TEST_F(MySqlRepositories, IdempotencyStoreKeepsTheFirstResponse)
 {
     shared::adapters::MySqlIdempotencyStore storeAdapter {connection()};
-    shared::application::IdempotencyStore&  store = storeAdapter;
+    shared::application::IdempotencyStore& store = storeAdapter;
     store.save(1, "clave", shared::application::StoredResponse {"POST", "/api/v1/dispatches", 201, "{\"a\":1}"});
     store.save(1, "clave", shared::application::StoredResponse {"POST", "/api/v1/dispatches", 201, "{\"a\":2}"});
 
@@ -457,12 +458,12 @@ TEST_F(MySqlRepositories, IdempotencyStoreKeepsTheFirstResponse)
 
 TEST_F(MySqlRepositories, MigrationSeedsTheReferenceCatalogsAndPermissions)
 {
-    logistics::adapters::MySqlCatalogRepository       catalogsAdapter {connection()};
-    logistics::application::CatalogRepository&        catalogs = catalogsAdapter;
+    logistics::adapters::MySqlCatalogRepository catalogsAdapter {connection()};
+    logistics::application::CatalogRepository& catalogs = catalogsAdapter;
     identity::adapters::MySqlRolePermissionRepository grantsAdapter {connection()};
-    identity::application::RolePermissionRepository&  grants = grantsAdapter;
-    CatalogCollector                                  collector;
-    GrantCollector                                    permissions;
+    identity::application::RolePermissionRepository& grants = grantsAdapter;
+    CatalogCollector collector;
+    GrantCollector permissions;
 
     catalogs.loadAll(collector);
     grants.loadAll(permissions);
@@ -479,7 +480,7 @@ TEST_F(MySqlRepositories, MigrationSeedsTheReferenceCatalogsAndPermissions)
 TEST_F(MySqlRepositories, CatalogChangesAreUpsertedAndKeepTheirOrder)
 {
     logistics::adapters::MySqlCatalogRepository catalogsAdapter {connection()};
-    logistics::application::CatalogRepository&  catalogs = catalogsAdapter;
+    logistics::application::CatalogRepository& catalogs = catalogsAdapter;
     catalogs.saveZone({"OESTE", "Oeste", true});
     catalogs.saveZone({"NORTE", "Zona Norte", false});
     catalogs.saveServiceLevel({"RELAMPAGO", "Relámpago", 10, true});
@@ -499,8 +500,8 @@ TEST_F(MySqlRepositories, CatalogChangesAreUpsertedAndKeepTheirOrder)
 TEST_F(MySqlRepositories, ShipmentFeaturesSurviveReload)
 {
     logistics::adapters::MySqlShipmentRepository shipmentsAdapter {connection()};
-    logistics::application::ShipmentRepository&  shipments = shipmentsAdapter;
-    logistics::domain::ShipmentState             state;
+    logistics::application::ShipmentRepository& shipments = shipmentsAdapter;
+    logistics::domain::ShipmentState state;
     state.draft = draftOf("PKG-9001", "018f0000-0000-7000-8000-000000009001");
     state.draft.features.pushBack("FRAGIL");
     state.draft.features.pushBack("REFRIGERADO");
@@ -518,10 +519,10 @@ TEST_F(MySqlRepositories, ShipmentFeaturesSurviveReload)
 TEST_F(MySqlRepositories, NewMapPointsAndTheirChangesSurviveReload)
 {
     logistics::adapters::MySqlCatalogRepository catalogsAdapter {connection()};
-    logistics::application::CatalogRepository&  catalogs = catalogsAdapter;
+    logistics::application::CatalogRepository& catalogs = catalogsAdapter;
     catalogs.saveZone({"OESTE", "Oeste", true});
-    routing::adapters::MySqlRoadMapRepository   mapsAdapter {connection()};
-    routing::application::RoadMapRepository&    maps = mapsAdapter;
+    routing::adapters::MySqlRoadMapRepository mapsAdapter {connection()};
+    routing::application::RoadMapRepository& maps = mapsAdapter;
     ds::DynamicArray<routing::domain::RoadLink> links;
     links.pushBack({"HUB", 4.5});
     maps.addNode({"O1", "Plaza Oeste", false, "OESTE", 6.0, 10.0, true}, links);
@@ -539,24 +540,24 @@ TEST_F(MySqlRepositories, NewMapPointsAndTheirChangesSurviveReload)
 
 TEST_F(MySqlRepositories, ReassigningARouteIsPersisted)
 {
-    identity::adapters::MySqlUserRepository      usersAdapter {connection()};
-    identity::application::UserRepository&       users = usersAdapter;
+    identity::adapters::MySqlUserRepository usersAdapter {connection()};
+    identity::application::UserRepository& users = usersAdapter;
     logistics::adapters::MySqlShipmentRepository shipmentsAdapter {connection()};
-    logistics::application::ShipmentRepository&  shipments = shipmentsAdapter;
-    routing::adapters::MySqlRouteRepository      routesAdapter {connection()};
-    routing::application::RouteRepository&       routes  = routesAdapter;
-    const auto                                   courier = addCourier(users);
-    identity::domain::UserState                  other;
-    other.id           = users.nextIdentity();
-    other.email        = "pum2@hubflow.local";
-    other.name         = "Pum Dos";
-    other.role         = identity::domain::Role::Pum;
+    logistics::application::ShipmentRepository& shipments = shipmentsAdapter;
+    routing::adapters::MySqlRouteRepository routesAdapter {connection()};
+    routing::application::RouteRepository& routes = routesAdapter;
+    const auto courier = addCourier(users);
+    identity::domain::UserState other;
+    other.id = users.nextIdentity();
+    other.email = "pum2@hubflow.local";
+    other.name = "Pum Dos";
+    other.role = identity::domain::Role::Pum;
     other.passwordHash = "hash";
     users.add(other);
     addShipment(shipments, "PKG-9001");
     routing::domain::RouteRecord record;
-    record.id        = 1;
-    record.courier   = {courier.id, courier.name};
+    record.id = 1;
+    record.courier = {courier.id, courier.name};
     record.createdAt = 1700000000;
     record.stops.pushBack(routing::domain::RouteStop {1, "PKG-9001", "N2", routing::domain::StopOutcome::Pending});
     routes.add(record);

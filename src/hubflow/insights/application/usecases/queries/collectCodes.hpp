@@ -7,8 +7,8 @@
 namespace hubflow::insights::application
 {
 
-/// @brief Reúne los códigos del catálogo que cumplen el criterio pedido.
-domain::CodeSet collectCodes(const logistics::domain::ShipmentCatalog& catalog, const SetSelector& selector);
+    /// @brief Reúne los códigos del catálogo que cumplen el criterio pedido.
+    domain::CodeSet collectCodes(const logistics::domain::ShipmentCatalog& catalog, const SetSelector& selector);
 
 } // namespace hubflow::insights::application
 

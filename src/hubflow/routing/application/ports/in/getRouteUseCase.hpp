@@ -10,29 +10,29 @@
 namespace hubflow::routing::application
 {
 
-/**
- * @brief Devuelve una hoja de ruta por su identificador, con sus paradas y tramos.
- *
- * @par Quién puede ejecutarlo
- * ADMIN y OPERADOR para cualquier ruta; un PUM sólo las propias.
- *
- * @par Errores
- * - Forbidden: el rol no puede resolver paradas o la ruta pertenece a otro PUM.
- * - NotFound: la ruta no existe.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class GetRouteUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Devuelve una hoja de ruta por su identificador, con sus paradas y tramos.
+     *
+     * @par Quién puede ejecutarlo
+     * ADMIN y OPERADOR para cualquier ruta; un PUM sólo las propias.
+     *
+     * @par Errores
+     * - Forbidden: el rol no puede resolver paradas o la ruta pertenece a otro PUM.
+     * - NotFound: la ruta no existe.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class GetRouteUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~GetRouteUseCase() = default;
+        virtual ~GetRouteUseCase() = default;
 
-    virtual const domain::DeliveryRoute& execute(const shared::application::Principal& principal,
-                                                 std::uint64_t                         routeId) const = 0;
-};
+        virtual const domain::DeliveryRoute& execute(const shared::application::Principal& principal,
+                                                     std::uint64_t routeId) const = 0;
+    };
 
 } // namespace hubflow::routing::application
 

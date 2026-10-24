@@ -6,20 +6,20 @@
 namespace hubflow::tracking::application
 {
 
-/// @brief Implementación de ListCustomerNoticesUseCase.
-class ListCustomerNotices final : public ListCustomerNoticesUseCase
-{
-public:
-    explicit ListCustomerNotices(const CustomerNoticeLog& log);
+    /// @brief Implementación de ListCustomerNoticesUseCase.
+    class ListCustomerNotices final : public ListCustomerNoticesUseCase
+    {
+    public:
+        explicit ListCustomerNotices(const CustomerNoticeLog& log);
 
-private:
-    std::size_t execute(const shared::application::Principal& principal,
-                        std::size_t                           limit,
-                        std::size_t                           offset,
-                        CustomerNoticeVisitor&                visitor) const override;
+    private:
+        std::size_t execute(const shared::application::Principal& principal,
+                            std::size_t limit,
+                            std::size_t offset,
+                            CustomerNoticeVisitor& visitor) const override;
 
-    const CustomerNoticeLog& m_log;
-};
+        const CustomerNoticeLog& m_log;
+    };
 
 } // namespace hubflow::tracking::application
 

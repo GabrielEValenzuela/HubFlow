@@ -7,17 +7,17 @@
 namespace hubflow::identity::adapters
 {
 
-/// @brief Responde si un chofer tiene trabajo pendiente mirando las hojas de ruta del contexto de ruteo.
-class RoutingCourierWorkload final : public domain::CourierWorkload
-{
-public:
-    explicit RoutingCourierWorkload(const routing::application::RoutingModel& routing) noexcept;
+    /// @brief Responde si un chofer tiene trabajo pendiente mirando las hojas de ruta del contexto de ruteo.
+    class RoutingCourierWorkload final : public domain::CourierWorkload
+    {
+    public:
+        explicit RoutingCourierWorkload(const routing::application::RoutingModel& routing) noexcept;
 
-private:
-    bool hasRouteInProgress(std::uint64_t courierId) const override;
+    private:
+        bool hasRouteInProgress(std::uint64_t courierId) const override;
 
-    const routing::application::RoutingModel& m_routing;
-};
+        const routing::application::RoutingModel& m_routing;
+    };
 
 } // namespace hubflow::identity::adapters
 

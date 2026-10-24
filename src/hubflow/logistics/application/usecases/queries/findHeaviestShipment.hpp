@@ -7,18 +7,18 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de FindHeaviestShipmentUseCase.
-class FindHeaviestShipment final : public FindHeaviestShipmentUseCase
-{
-public:
-    explicit FindHeaviestShipment(const LogisticsModel& model);
+    /// @brief Implementación de FindHeaviestShipmentUseCase.
+    class FindHeaviestShipment final : public FindHeaviestShipmentUseCase
+    {
+    public:
+        explicit FindHeaviestShipment(const LogisticsModel& model);
 
-private:
-    const domain::Shipment* execute(const shared::application::Principal& principal,
-                                    const std::string&                    zoneCode) const override;
+    private:
+        const domain::Shipment* execute(const shared::application::Principal& principal,
+                                        const std::string& zoneCode) const override;
 
-    const LogisticsModel& m_model;
-};
+        const LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::logistics::application
 

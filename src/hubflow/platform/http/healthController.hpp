@@ -8,24 +8,24 @@
 namespace hubflow::platform
 {
 
-/// @brief Pregunta si la base de datos responde.
-using DatabaseProbe = std::function<bool()>;
+    /// @brief Pregunta si la base de datos responde.
+    using DatabaseProbe = std::function<bool()>;
 
-/**
- * @brief Estado del servicio para orquestadores y para esperar el arranque.
- *
- * - @c GET /health (público): responde 200 con {status, database} si la base de datos responde y 503 si no.
- */
-class HealthController final : public Controller
-{
-public:
-    explicit HealthController(DatabaseProbe probe);
+    /**
+     * @brief Estado del servicio para orquestadores y para esperar el arranque.
+     *
+     * - @c GET /health (público): responde 200 con {status, database} si la base de datos responde y 503 si no.
+     */
+    class HealthController final : public Controller
+    {
+    public:
+        explicit HealthController(DatabaseProbe probe);
 
-private:
-    void registerRoutes(ApiRouter& router) override;
+    private:
+        void registerRoutes(ApiRouter& router) override;
 
-    DatabaseProbe m_probe;
-};
+        DatabaseProbe m_probe;
+    };
 
 } // namespace hubflow::platform
 

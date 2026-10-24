@@ -9,182 +9,182 @@
 
 namespace hubflow::logistics::adapters
 {
-namespace
-{
-using domain::Movement;
-using domain::ShipmentState;
-using platform::SqlColumns;
-using shared::application::Vocabulary;
+    namespace
+    {
+        using domain::Movement;
+        using domain::ShipmentState;
+        using platform::SqlColumns;
+        using shared::application::Vocabulary;
 
-constexpr const char* INSERT_SHIPMENT {R"SQL(
+        constexpr const char* INSERT_SHIPMENT {R"SQL(
     INSERT INTO shipments (id, tracking_code, recipient, recipient_phone, recipient_postal_code, zone, weight_kg, service, delivery_point, status, attempts, state_bits, queue_ticket)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 )SQL"};
 
-constexpr const char* INSERT_PARCEL {R"SQL(
+        constexpr const char* INSERT_PARCEL {R"SQL(
     INSERT INTO parcels (shipment_id, ordinal, weight_kg, length_cm, width_cm, height_cm, delivered)
     VALUES (?, ?, ?, ?, ?, ?, ?)
 )SQL"};
 
-constexpr const char* UPDATE_PARCEL {R"SQL(
+        constexpr const char* UPDATE_PARCEL {R"SQL(
     UPDATE parcels SET delivered = ? WHERE shipment_id = ? AND ordinal = ?
 )SQL"};
 
-constexpr const char* SELECT_PARCELS {R"SQL(
+        constexpr const char* SELECT_PARCELS {R"SQL(
     SELECT shipment_id, ordinal, weight_kg, length_cm, width_cm, height_cm, delivered
     FROM parcels ORDER BY shipment_id, ordinal
 )SQL"};
 
-constexpr const char* INSERT_FEATURE_LINK {R"SQL(
+        constexpr const char* INSERT_FEATURE_LINK {R"SQL(
     INSERT INTO shipment_feature_links (shipment_code, feature_code) VALUES (?, ?)
 )SQL"};
 
-constexpr const char* SELECT_FEATURE_LINKS {R"SQL(
+        constexpr const char* SELECT_FEATURE_LINKS {R"SQL(
     SELECT shipment_code, feature_code FROM shipment_feature_links ORDER BY shipment_code, feature_code
 )SQL"};
 
-constexpr const char* UPDATE_SHIPMENT {R"SQL(
+        constexpr const char* UPDATE_SHIPMENT {R"SQL(
     UPDATE shipments SET status = ?, attempts = ?, state_bits = ?, queue_ticket = ? WHERE id = ?
 )SQL"};
 
-constexpr const char* INSERT_MOVEMENT {R"SQL(
+        constexpr const char* INSERT_MOVEMENT {R"SQL(
     INSERT INTO movements (shipment_code, sequence, status, note, actor_name, occurred_at) VALUES (?, ?, ?, ?, ?, ?)
 )SQL"};
 
-constexpr const char* SELECT_SHIPMENTS {R"SQL(
+        constexpr const char* SELECT_SHIPMENTS {R"SQL(
     SELECT id, tracking_code, recipient, recipient_phone, recipient_postal_code, zone, service, delivery_point, status,
            attempts, state_bits, queue_ticket
     FROM shipments
 )SQL"};
 
-constexpr const char* SELECT_MOVEMENTS {R"SQL(
+        constexpr const char* SELECT_MOVEMENTS {R"SQL(
     SELECT shipment_code, sequence, status, note, actor_name, occurred_at FROM movements ORDER BY shipment_code, sequence
 )SQL"};
-} // namespace
+    } // namespace
 
-MySqlShipmentRepository::MySqlShipmentRepository(platform::MySqlConnection& connection)
-    : m_connection {connection}
-{
-}
+    MySqlShipmentRepository::MySqlShipmentRepository(platform::MySqlConnection& connection)
+        : m_connection {connection}
+    {
+    }
 
-void MySqlShipmentRepository::add(const ShipmentState& state)
-{
-    double totalKg {0.0};
-    for (std::size_t parcelIndex = 0; parcelIndex < state.draft.parcels.size(); ++parcelIndex)
+    void MySqlShipmentRepository::add(const ShipmentState& state)
     {
-        totalKg += state.draft.parcels[parcelIndex].weightKg;
-    }
-    m_connection.execute(INSERT_SHIPMENT,
-                         {state.draft.id,
-                          state.draft.code,
-                          state.draft.recipient,
-                          state.draft.recipientPhone,
-                          state.draft.recipientPostalCode,
-                          state.draft.zone,
-                          totalKg,
-                          state.draft.service,
-                          state.draft.deliveryPoint,
-                          Vocabulary::name(state.status),
-                          std::uint64_t {state.attempts},
-                          std::uint64_t {state.stateBits},
-                          state.ticket});
-    for (std::size_t featureIndex = 0; featureIndex < state.draft.features.size(); ++featureIndex)
-    {
-        m_connection.execute(INSERT_FEATURE_LINK, {state.draft.code, state.draft.features[featureIndex]});
-    }
-    for (std::size_t parcelIndex = 0; parcelIndex < state.draft.parcels.size(); ++parcelIndex)
-    {
-        const auto& parcel = state.draft.parcels[parcelIndex];
-        m_connection.execute(INSERT_PARCEL,
+        double totalKg {0.0};
+        for (std::size_t parcelIndex = 0; parcelIndex < state.draft.parcels.size(); ++parcelIndex)
+        {
+            totalKg += state.draft.parcels[parcelIndex].weightKg;
+        }
+        m_connection.execute(INSERT_SHIPMENT,
                              {state.draft.id,
-                              std::uint64_t {parcelIndex + 1},
-                              parcel.weightKg,
-                              parcel.lengthCm,
-                              parcel.widthCm,
-                              parcel.heightCm,
-                              std::uint64_t {parcel.delivered ? 1U : 0U}});
-    }
-}
-
-void MySqlShipmentRepository::update(const ShipmentState& state)
-{
-    m_connection.execute(UPDATE_SHIPMENT,
-                         {Vocabulary::name(state.status),
-                          std::uint64_t {state.attempts},
-                          std::uint64_t {state.stateBits},
-                          state.ticket,
-                          state.draft.id});
-    for (std::size_t parcelIndex = 0; parcelIndex < state.draft.parcels.size(); ++parcelIndex)
-    {
-        m_connection.execute(UPDATE_PARCEL,
-                             {std::uint64_t {state.draft.parcels[parcelIndex].delivered ? 1U : 0U},
-                              state.draft.id,
-                              std::uint64_t {parcelIndex + 1}});
-    }
-}
-
-void MySqlShipmentRepository::appendMovement(const std::string& code, const Movement& movement)
-{
-    m_connection.execute(INSERT_MOVEMENT,
-                         {code,
-                          std::uint64_t {movement.sequence},
-                          Vocabulary::name(movement.status),
-                          movement.note,
-                          movement.actorName,
-                          std::int64_t {movement.occurredAt}});
-}
-
-void MySqlShipmentRepository::loadAll(application::ShipmentRestorer& restorer) const
-{
-    std::map<std::string, std::vector<std::string>> featuresByShipment;
-    for (const auto& row : m_connection.query(SELECT_FEATURE_LINKS))
-    {
-        featuresByShipment[SqlColumns::text(row, 0)].push_back(SqlColumns::text(row, 1));
-    }
-    std::map<std::string, std::vector<domain::ParcelData>> parcelsByShipment;
-    for (const auto& row : m_connection.query(SELECT_PARCELS))
-    {
-        parcelsByShipment[SqlColumns::text(row, 0)].push_back(domain::ParcelData {SqlColumns::decimal(row, 2),
-                                                                                  SqlColumns::decimal(row, 3),
-                                                                                  SqlColumns::decimal(row, 4),
-                                                                                  SqlColumns::decimal(row, 5),
-                                                                                  SqlColumns::flag(row, 6)});
-    }
-    for (const auto& row : m_connection.query(SELECT_SHIPMENTS))
-    {
-        ShipmentState state;
-        state.draft.id                  = SqlColumns::text(row, 0);
-        state.draft.code                = SqlColumns::text(row, 1);
-        state.draft.recipient           = SqlColumns::text(row, 2);
-        state.draft.recipientPhone      = SqlColumns::text(row, 3);
-        state.draft.recipientPostalCode = SqlColumns::text(row, 4);
-        state.draft.zone                = SqlColumns::text(row, 5);
-        state.draft.service             = SqlColumns::text(row, 6);
-        state.draft.deliveryPoint       = SqlColumns::text(row, 7);
-        state.status    = SqlColumns::term(Vocabulary::shipmentStatus(SqlColumns::text(row, 8)), "status");
-        state.attempts  = static_cast<std::uint32_t>(SqlColumns::unsignedNumber(row, 9));
-        state.stateBits = static_cast<std::uint32_t>(SqlColumns::unsignedNumber(row, 10));
-        state.ticket    = SqlColumns::unsignedNumber(row, 11);
-        for (const auto& feature : featuresByShipment[state.draft.code])
+                              state.draft.code,
+                              state.draft.recipient,
+                              state.draft.recipientPhone,
+                              state.draft.recipientPostalCode,
+                              state.draft.zone,
+                              totalKg,
+                              state.draft.service,
+                              state.draft.deliveryPoint,
+                              Vocabulary::name(state.status),
+                              std::uint64_t {state.attempts},
+                              std::uint64_t {state.stateBits},
+                              state.ticket});
+        for (std::size_t featureIndex = 0; featureIndex < state.draft.features.size(); ++featureIndex)
         {
-            state.draft.features.pushBack(feature);
+            m_connection.execute(INSERT_FEATURE_LINK, {state.draft.code, state.draft.features[featureIndex]});
         }
-        for (const auto& parcel : parcelsByShipment[state.draft.id])
+        for (std::size_t parcelIndex = 0; parcelIndex < state.draft.parcels.size(); ++parcelIndex)
         {
-            state.draft.parcels.pushBack(parcel);
+            const auto& parcel = state.draft.parcels[parcelIndex];
+            m_connection.execute(INSERT_PARCEL,
+                                 {state.draft.id,
+                                  std::uint64_t {parcelIndex + 1},
+                                  parcel.weightKg,
+                                  parcel.lengthCm,
+                                  parcel.widthCm,
+                                  parcel.heightCm,
+                                  std::uint64_t {parcel.delivered ? 1U : 0U}});
         }
-        restorer.restoreShipment(state);
     }
-    for (const auto& row : m_connection.query(SELECT_MOVEMENTS))
+
+    void MySqlShipmentRepository::update(const ShipmentState& state)
     {
-        restorer.restoreMovement(
-            SqlColumns::text(row, 0),
-            Movement {static_cast<std::size_t>(SqlColumns::unsignedNumber(row, 1)),
-                      SqlColumns::term(Vocabulary::shipmentStatus(SqlColumns::text(row, 2)), "status"),
-                      SqlColumns::text(row, 3),
-                      SqlColumns::text(row, 4),
-                      SqlColumns::signedNumber(row, 5)});
+        m_connection.execute(UPDATE_SHIPMENT,
+                             {Vocabulary::name(state.status),
+                              std::uint64_t {state.attempts},
+                              std::uint64_t {state.stateBits},
+                              state.ticket,
+                              state.draft.id});
+        for (std::size_t parcelIndex = 0; parcelIndex < state.draft.parcels.size(); ++parcelIndex)
+        {
+            m_connection.execute(UPDATE_PARCEL,
+                                 {std::uint64_t {state.draft.parcels[parcelIndex].delivered ? 1U : 0U},
+                                  state.draft.id,
+                                  std::uint64_t {parcelIndex + 1}});
+        }
     }
-}
+
+    void MySqlShipmentRepository::appendMovement(const std::string& code, const Movement& movement)
+    {
+        m_connection.execute(INSERT_MOVEMENT,
+                             {code,
+                              std::uint64_t {movement.sequence},
+                              Vocabulary::name(movement.status),
+                              movement.note,
+                              movement.actorName,
+                              std::int64_t {movement.occurredAt}});
+    }
+
+    void MySqlShipmentRepository::loadAll(application::ShipmentRestorer& restorer) const
+    {
+        std::map<std::string, std::vector<std::string>> featuresByShipment;
+        for (const auto& row : m_connection.query(SELECT_FEATURE_LINKS))
+        {
+            featuresByShipment[SqlColumns::text(row, 0)].push_back(SqlColumns::text(row, 1));
+        }
+        std::map<std::string, std::vector<domain::ParcelData>> parcelsByShipment;
+        for (const auto& row : m_connection.query(SELECT_PARCELS))
+        {
+            parcelsByShipment[SqlColumns::text(row, 0)].push_back(domain::ParcelData {SqlColumns::decimal(row, 2),
+                                                                                      SqlColumns::decimal(row, 3),
+                                                                                      SqlColumns::decimal(row, 4),
+                                                                                      SqlColumns::decimal(row, 5),
+                                                                                      SqlColumns::flag(row, 6)});
+        }
+        for (const auto& row : m_connection.query(SELECT_SHIPMENTS))
+        {
+            ShipmentState state;
+            state.draft.id = SqlColumns::text(row, 0);
+            state.draft.code = SqlColumns::text(row, 1);
+            state.draft.recipient = SqlColumns::text(row, 2);
+            state.draft.recipientPhone = SqlColumns::text(row, 3);
+            state.draft.recipientPostalCode = SqlColumns::text(row, 4);
+            state.draft.zone = SqlColumns::text(row, 5);
+            state.draft.service = SqlColumns::text(row, 6);
+            state.draft.deliveryPoint = SqlColumns::text(row, 7);
+            state.status = SqlColumns::term(Vocabulary::shipmentStatus(SqlColumns::text(row, 8)), "status");
+            state.attempts = static_cast<std::uint32_t>(SqlColumns::unsignedNumber(row, 9));
+            state.stateBits = static_cast<std::uint32_t>(SqlColumns::unsignedNumber(row, 10));
+            state.ticket = SqlColumns::unsignedNumber(row, 11);
+            for (const auto& feature : featuresByShipment[state.draft.code])
+            {
+                state.draft.features.pushBack(feature);
+            }
+            for (const auto& parcel : parcelsByShipment[state.draft.id])
+            {
+                state.draft.parcels.pushBack(parcel);
+            }
+            restorer.restoreShipment(state);
+        }
+        for (const auto& row : m_connection.query(SELECT_MOVEMENTS))
+        {
+            restorer.restoreMovement(
+                SqlColumns::text(row, 0),
+                Movement {static_cast<std::size_t>(SqlColumns::unsignedNumber(row, 1)),
+                          SqlColumns::term(Vocabulary::shipmentStatus(SqlColumns::text(row, 2)), "status"),
+                          SqlColumns::text(row, 3),
+                          SqlColumns::text(row, 4),
+                          SqlColumns::signedNumber(row, 5)});
+        }
+    }
 
 } // namespace hubflow::logistics::adapters

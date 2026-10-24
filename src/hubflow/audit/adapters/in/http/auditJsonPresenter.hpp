@@ -7,13 +7,13 @@
 namespace hubflow::audit::adapters
 {
 
-/// @brief Representación externa de las entradas de auditoría.
-class AuditJsonPresenter final
-{
-public:
-    /// @brief Una entrada: instante, autor, tipo de hecho, sujeto y detalle.
-    static platform::Json entry(const application::AuditEntry& entry);
-};
+    /// @brief Representación externa de las entradas de auditoría.
+    class AuditJsonPresenter final
+    {
+    public:
+        /// @brief Una entrada: instante, autor, tipo de hecho, sujeto y detalle.
+        static platform::Json entry(const application::AuditEntry& entry);
+    };
 
 } // namespace hubflow::audit::adapters
 

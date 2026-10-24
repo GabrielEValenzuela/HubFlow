@@ -5,63 +5,59 @@
 namespace hubflow::logistics::domain
 {
 
-ShipmentCatalog::~ShipmentCatalog()
-{
-    m_shipments.forEach(
-        [](Shipment* pShipment)
+    ShipmentCatalog::~ShipmentCatalog()
+    {
+        m_shipments.forEach([](Shipment* pShipment) { delete pShipment; });
+    }
+
+    Shipment& ShipmentCatalog::adopt(Shipment* pShipment)
+    {
+        if (contains(pShipment->code()))
         {
             delete pShipment;
-        });
-}
-
-Shipment& ShipmentCatalog::adopt(Shipment* pShipment)
-{
-    if (contains(pShipment->code()))
-    {
-        delete pShipment;
-        throw shared::domain::business_error {
-            shared::domain::ErrorKind::Conflict, "shipment.duplicate", "Ya existe un envío con ese código"};
+            throw shared::domain::business_error {
+                shared::domain::ErrorKind::Conflict, "shipment.duplicate", "Ya existe un envío con ese código"};
+        }
+        m_shipments.pushBack(pShipment);
+        m_bst.insert(pShipment->code(), pShipment);
+        m_bPlusTree.insert(pShipment->code(), pShipment);
+        return *pShipment;
     }
-    m_shipments.pushBack(pShipment);
-    m_bst.insert(pShipment->code(), pShipment);
-    m_bPlusTree.insert(pShipment->code(), pShipment);
-    return *pShipment;
-}
 
-bool ShipmentCatalog::contains(const std::string& code) const
-{
-    return m_bPlusTree.find(code).pValue != nullptr;
-}
-
-Shipment& ShipmentCatalog::require(const std::string& code) const
-{
-    Shipment* pShipment = m_bPlusTree.find(code).pValue;
-    if (pShipment == nullptr)
+    bool ShipmentCatalog::contains(const std::string& code) const
     {
-        throw shared::domain::business_error {
-            shared::domain::ErrorKind::NotFound, "shipment.not_found", "Envío no encontrado."};
+        return m_bPlusTree.find(code).pValue != nullptr;
     }
-    return *pShipment;
-}
 
-const ds::SinglyLinkedList<Shipment*>& ShipmentCatalog::allShipments() const noexcept
-{
-    return m_shipments;
-}
+    Shipment& ShipmentCatalog::require(const std::string& code) const
+    {
+        Shipment* pShipment = m_bPlusTree.find(code).pValue;
+        if (pShipment == nullptr)
+        {
+            throw shared::domain::business_error {
+                shared::domain::ErrorKind::NotFound, "shipment.not_found", "Envío no encontrado."};
+        }
+        return *pShipment;
+    }
 
-const ShipmentBst& ShipmentCatalog::bst() const noexcept
-{
-    return m_bst;
-}
+    const ds::SinglyLinkedList<Shipment*>& ShipmentCatalog::allShipments() const noexcept
+    {
+        return m_shipments;
+    }
 
-const ShipmentBPlusTree& ShipmentCatalog::bPlusTree() const noexcept
-{
-    return m_bPlusTree;
-}
+    const ShipmentBst& ShipmentCatalog::bst() const noexcept
+    {
+        return m_bst;
+    }
 
-std::size_t ShipmentCatalog::size() const noexcept
-{
-    return m_shipments.size();
-}
+    const ShipmentBPlusTree& ShipmentCatalog::bPlusTree() const noexcept
+    {
+        return m_bPlusTree;
+    }
+
+    std::size_t ShipmentCatalog::size() const noexcept
+    {
+        return m_shipments.size();
+    }
 
 } // namespace hubflow::logistics::domain

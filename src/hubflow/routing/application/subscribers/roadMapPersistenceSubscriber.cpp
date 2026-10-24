@@ -5,19 +5,19 @@
 namespace hubflow::routing::application
 {
 
-RoadMapPersistenceSubscriber::RoadMapPersistenceSubscriber(RoadMapRepository& repository)
-    : m_repository {repository}
-{
-}
+    RoadMapPersistenceSubscriber::RoadMapPersistenceSubscriber(RoadMapRepository& repository)
+        : m_repository {repository}
+    {
+    }
 
-void RoadMapPersistenceSubscriber::on(const domain::RoadNodeAdded& event)
-{
-    m_repository.addNode(event.node(), event.links());
-}
+    void RoadMapPersistenceSubscriber::on(const domain::RoadNodeAdded& event)
+    {
+        m_repository.addNode(event.node(), event.links());
+    }
 
-void RoadMapPersistenceSubscriber::on(const domain::RoadNodeChanged& event)
-{
-    m_repository.updateNode(event.node());
-}
+    void RoadMapPersistenceSubscriber::on(const domain::RoadNodeChanged& event)
+    {
+        m_repository.updateNode(event.node());
+    }
 
 } // namespace hubflow::routing::application

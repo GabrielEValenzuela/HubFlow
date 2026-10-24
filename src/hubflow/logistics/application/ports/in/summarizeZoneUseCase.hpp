@@ -8,30 +8,30 @@
 namespace hubflow::logistics::application
 {
 
-/**
- * @brief Resume los envíos pendientes de una zona (cantidad, peso total y detalle por prioridad) recorriendo la lista
- * de forma recursiva.
- *
- * @par Quién puede ejecutarlo
- * ADMIN y OPERADOR.
- *
- * @par Errores
- * - Forbidden: el rol no puede operar envíos.
- * - NotFound: la zona no existe.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class SummarizeZoneUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Resume los envíos pendientes de una zona (cantidad, peso total y detalle por prioridad) recorriendo la
+     * lista de forma recursiva.
+     *
+     * @par Quién puede ejecutarlo
+     * ADMIN y OPERADOR.
+     *
+     * @par Errores
+     * - Forbidden: el rol no puede operar envíos.
+     * - NotFound: la zona no existe.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class SummarizeZoneUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~SummarizeZoneUseCase() = default;
+        virtual ~SummarizeZoneUseCase() = default;
 
-    virtual domain::ZoneSummary execute(const shared::application::Principal& principal,
-                                        const std::string&                    zoneCode) const = 0;
-};
+        virtual domain::ZoneSummary execute(const shared::application::Principal& principal,
+                                            const std::string& zoneCode) const = 0;
+    };
 
 } // namespace hubflow::logistics::application
 

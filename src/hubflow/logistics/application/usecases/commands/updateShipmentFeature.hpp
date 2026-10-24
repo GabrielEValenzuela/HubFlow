@@ -9,23 +9,23 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de UpdateShipmentFeatureUseCase.
-class UpdateShipmentFeature final : public UpdateShipmentFeatureUseCase
-{
-public:
-    UpdateShipmentFeature(LogisticsModel&                   model,
-                          shared::application::EventBus&    bus,
-                          const shared::application::Clock& clock);
+    /// @brief Implementación de UpdateShipmentFeatureUseCase.
+    class UpdateShipmentFeature final : public UpdateShipmentFeatureUseCase
+    {
+    public:
+        UpdateShipmentFeature(LogisticsModel& model,
+                              shared::application::EventBus& bus,
+                              const shared::application::Clock& clock);
 
-private:
-    const domain::ShipmentFeature& execute(const shared::application::Principal& principal,
-                                           const std::string&                    code,
-                                           const UpdateShipmentFeatureRequest&   request) override;
+    private:
+        const domain::ShipmentFeature& execute(const shared::application::Principal& principal,
+                                               const std::string& code,
+                                               const UpdateShipmentFeatureRequest& request) override;
 
-    LogisticsModel&                   m_model;
-    shared::application::EventBus&    m_bus;
-    const shared::application::Clock& m_clock;
-};
+        LogisticsModel& m_model;
+        shared::application::EventBus& m_bus;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::logistics::application
 

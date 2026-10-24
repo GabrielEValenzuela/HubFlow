@@ -10,24 +10,25 @@
 namespace hubflow::routing::application
 {
 
-/// @brief Implementación de ReassignDeliveryRouteUseCase.
-class ReassignDeliveryRoute final : public ReassignDeliveryRouteUseCase
-{
-public:
-    ReassignDeliveryRoute(RoutingModel&                                routing,
-                          const identity::application::UserRepository& users,
-                          shared::application::EventBus&               bus,
-                          const shared::application::Clock&            clock);
+    /// @brief Implementación de ReassignDeliveryRouteUseCase.
+    class ReassignDeliveryRoute final : public ReassignDeliveryRouteUseCase
+    {
+    public:
+        ReassignDeliveryRoute(RoutingModel& routing,
+                              const identity::application::UserRepository& users,
+                              shared::application::EventBus& bus,
+                              const shared::application::Clock& clock);
 
-private:
-    const domain::DeliveryRoute&
-    execute(const shared::application::Principal& principal, std::uint64_t routeId, std::uint64_t courierId) override;
+    private:
+        const domain::DeliveryRoute& execute(const shared::application::Principal& principal,
+                                             std::uint64_t routeId,
+                                             std::uint64_t courierId) override;
 
-    RoutingModel&                                m_routing;
-    const identity::application::UserRepository& m_users;
-    shared::application::EventBus&               m_bus;
-    const shared::application::Clock&            m_clock;
-};
+        RoutingModel& m_routing;
+        const identity::application::UserRepository& m_users;
+        shared::application::EventBus& m_bus;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::routing::application
 

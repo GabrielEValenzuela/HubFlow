@@ -3,17 +3,17 @@
 namespace hubflow::logistics::domain
 {
 
-QueueTicket TicketDispenser::next() noexcept
-{
-    return QueueTicket {++m_last};
-}
-
-void TicketDispenser::acknowledge(const QueueTicket& issued) noexcept
-{
-    if (issued.number() > m_last)
+    QueueTicket TicketDispenser::next() noexcept
     {
-        m_last = issued.number();
+        return QueueTicket {++m_last};
     }
-}
+
+    void TicketDispenser::acknowledge(const QueueTicket& issued) noexcept
+    {
+        if (issued.number() > m_last)
+        {
+            m_last = issued.number();
+        }
+    }
 
 } // namespace hubflow::logistics::domain

@@ -7,18 +7,18 @@
 namespace hubflow::identity::application
 {
 
-/// @brief Persiste altas y cambios de usuarios a partir de sus eventos.
-class UserPersistenceSubscriber final : public shared::domain::DomainEventVisitor
-{
-public:
-    explicit UserPersistenceSubscriber(UserRepository& repository);
+    /// @brief Persiste altas y cambios de usuarios a partir de sus eventos.
+    class UserPersistenceSubscriber final : public shared::domain::DomainEventVisitor
+    {
+    public:
+        explicit UserPersistenceSubscriber(UserRepository& repository);
 
-private:
-    void on(const domain::UserRegistered& event) override;
-    void on(const domain::UserProfileChanged& event) override;
+    private:
+        void on(const domain::UserRegistered& event) override;
+        void on(const domain::UserProfileChanged& event) override;
 
-    UserRepository& m_repository;
-};
+        UserRepository& m_repository;
+    };
 
 } // namespace hubflow::identity::application
 

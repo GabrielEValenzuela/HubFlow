@@ -11,40 +11,40 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Cambios parciales sobre la característica: sólo se aplican los campos presentes.
-struct UpdateShipmentFeatureRequest
-{
-    std::optional<std::string> name;
-    std::optional<bool>        active;
-};
+    /// @brief Cambios parciales sobre la característica: sólo se aplican los campos presentes.
+    struct UpdateShipmentFeatureRequest
+    {
+        std::optional<std::string> name;
+        std::optional<bool> active;
+    };
 
-/**
- * @brief Cambia el nombre de una característica o la habilita o desactiva. Desactivarla sólo impide etiquetar paquetes
- * nuevos: los que ya la tienen la conservan.
- *
- * @par Quién puede ejecutarlo
- * Sólo ADMIN.
- *
- * @par Errores
- * - Forbidden: el rol no puede administrar la configuración.
- * - NotFound: no existe una característica con ese código.
- * - Validation: nombre inválido.
- *
- * @par Idempotencia
- * Sí. Describe el estado final deseado de los campos enviados: aplicar el mismo cambio dos veces deja el dato
- * exactamente igual y la segunda vez no registra ningún evento.
- */
-class UpdateShipmentFeatureUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Cambia el nombre de una característica o la habilita o desactiva. Desactivarla sólo impide etiquetar
+     * paquetes nuevos: los que ya la tienen la conservan.
+     *
+     * @par Quién puede ejecutarlo
+     * Sólo ADMIN.
+     *
+     * @par Errores
+     * - Forbidden: el rol no puede administrar la configuración.
+     * - NotFound: no existe una característica con ese código.
+     * - Validation: nombre inválido.
+     *
+     * @par Idempotencia
+     * Sí. Describe el estado final deseado de los campos enviados: aplicar el mismo cambio dos veces deja el dato
+     * exactamente igual y la segunda vez no registra ningún evento.
+     */
+    class UpdateShipmentFeatureUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~UpdateShipmentFeatureUseCase() = default;
+        virtual ~UpdateShipmentFeatureUseCase() = default;
 
-    virtual const domain::ShipmentFeature& execute(const shared::application::Principal& principal,
-                                                   const std::string&                    code,
-                                                   const UpdateShipmentFeatureRequest&   request) = 0;
-};
+        virtual const domain::ShipmentFeature& execute(const shared::application::Principal& principal,
+                                                       const std::string& code,
+                                                       const UpdateShipmentFeatureRequest& request) = 0;
+    };
 
 } // namespace hubflow::logistics::application
 

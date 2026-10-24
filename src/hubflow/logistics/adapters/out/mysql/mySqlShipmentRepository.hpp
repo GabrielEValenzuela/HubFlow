@@ -7,20 +7,20 @@
 namespace hubflow::logistics::adapters
 {
 
-/// @brief Envíos, bultos y movimientos en las tablas @c shipments, @c parcels y @c movements.
-class MySqlShipmentRepository final : public application::ShipmentRepository
-{
-public:
-    explicit MySqlShipmentRepository(platform::MySqlConnection& connection);
+    /// @brief Envíos, bultos y movimientos en las tablas @c shipments, @c parcels y @c movements.
+    class MySqlShipmentRepository final : public application::ShipmentRepository
+    {
+    public:
+        explicit MySqlShipmentRepository(platform::MySqlConnection& connection);
 
-private:
-    void add(const domain::ShipmentState& state) override;
-    void update(const domain::ShipmentState& state) override;
-    void appendMovement(const std::string& code, const domain::Movement& movement) override;
-    void loadAll(application::ShipmentRestorer& restorer) const override;
+    private:
+        void add(const domain::ShipmentState& state) override;
+        void update(const domain::ShipmentState& state) override;
+        void appendMovement(const std::string& code, const domain::Movement& movement) override;
+        void loadAll(application::ShipmentRestorer& restorer) const override;
 
-    platform::MySqlConnection& m_connection;
-};
+        platform::MySqlConnection& m_connection;
+    };
 
 } // namespace hubflow::logistics::adapters
 

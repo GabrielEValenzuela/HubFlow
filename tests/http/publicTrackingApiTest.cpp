@@ -10,43 +10,43 @@ using test::HttpHarness;
 
 namespace
 {
-constexpr const char* JSON_TYPE {"application/json"};
+    constexpr const char* JSON_TYPE {"application/json"};
 
-std::string trackingUrl(const std::string& code)
-{
-    return "/api/v1/public/tracking/" + code;
-}
-
-httplib::Result verify(HttpHarness& http, const std::string& code, const json& body)
-{
-    return http.client().Post(trackingUrl(code) + "/verifications", body.dump(), JSON_TYPE);
-}
-
-httplib::Headers bearer(const std::string& token)
-{
-    return httplib::Headers {{"Authorization", "Bearer " + token}};
-}
-
-std::string tokenFor(HttpHarness& http, const std::string& code, const json& body)
-{
-    return HttpHarness::bodyOf(verify(http, code, body)).at("token").get<std::string>();
-}
-
-std::uint64_t routeForNorth(HttpHarness& http)
-{
-    const auto batchId = http.app.openSortingBatch.execute(http.app.operador(), "NORTE").id();
-    http.app.sortSortingBatch.execute(http.app.operador(), batchId, sorting::domain::SortCriteria::CodeAscending);
-    http.app.prepareSortingBatch.execute(http.app.operador(), batchId);
-    for (int i = 0; i < 3; ++i)
+    std::string trackingUrl(const std::string& code)
     {
-        http.app.processSortingBatchItem.execute(http.app.operador(), batchId, {});
+        return "/api/v1/public/tracking/" + code;
     }
-    return http.app.assignDeliveryRoute
-        .execute(
-            http.app.operador(),
-            routing::application::AssignRouteRequest {batchId, http.pumId, routing::domain::SearchAlgorithm::AStar})
-        .id();
-}
+
+    httplib::Result verify(HttpHarness& http, const std::string& code, const json& body)
+    {
+        return http.client().Post(trackingUrl(code) + "/verifications", body.dump(), JSON_TYPE);
+    }
+
+    httplib::Headers bearer(const std::string& token)
+    {
+        return httplib::Headers {{"Authorization", "Bearer " + token}};
+    }
+
+    std::string tokenFor(HttpHarness& http, const std::string& code, const json& body)
+    {
+        return HttpHarness::bodyOf(verify(http, code, body)).at("token").get<std::string>();
+    }
+
+    std::uint64_t routeForNorth(HttpHarness& http)
+    {
+        const auto batchId = http.app.openSortingBatch.execute(http.app.operador(), "NORTE").id();
+        http.app.sortSortingBatch.execute(http.app.operador(), batchId, sorting::domain::SortCriteria::CodeAscending);
+        http.app.prepareSortingBatch.execute(http.app.operador(), batchId);
+        for (int i = 0; i < 3; ++i)
+        {
+            http.app.processSortingBatchItem.execute(http.app.operador(), batchId, {});
+        }
+        return http.app.assignDeliveryRoute
+            .execute(
+                http.app.operador(),
+                routing::application::AssignRouteRequest {batchId, http.pumId, routing::domain::SearchAlgorithm::AStar})
+            .id();
+    }
 } // namespace
 
 TEST(PublicTrackingApi, AnyoneWithTheCodeSeesTheJourneyWithoutLoggingIn)
@@ -114,10 +114,10 @@ TEST(PublicTrackingApi, UnknownCodeAndWrongProofAnswerTheSameProblem)
     HttpHarness http;
     http.app.seedDataset();
 
-    const auto unknown             = http.client().Get(trackingUrl("PKG-9999"));
-    const auto malformed           = http.client().Get(trackingUrl("hola"));
+    const auto unknown = http.client().Get(trackingUrl("PKG-9999"));
+    const auto malformed = http.client().Get(trackingUrl("hola"));
     const auto unknownVerification = verify(http, "PKG-9999", json {{"phoneLast4", "1234"}});
-    const auto wrongProof          = verify(http, "PKG-1002", json {{"phoneLast4", "1234"}});
+    const auto wrongProof = verify(http, "PKG-1002", json {{"phoneLast4", "1234"}});
 
     for (const auto* pResult : {&malformed, &unknownVerification, &wrongProof})
     {
@@ -162,11 +162,11 @@ TEST(PublicTrackingApi, TheExtendedViewNeedsAValidTokenForThatSameCode)
     http.app.seedDataset();
     const auto token = tokenFor(http, "PKG-1002", json {{"postalCode", "1640"}});
 
-    const auto none        = http.client().Get(trackingUrl("PKG-1002"));
-    const auto otherCode   = http.client().Get(trackingUrl("PKG-1003"), bearer(token));
-    const auto garbage     = http.client().Get(trackingUrl("PKG-1002"), bearer("basura"));
+    const auto none = http.client().Get(trackingUrl("PKG-1002"));
+    const auto otherCode = http.client().Get(trackingUrl("PKG-1003"), bearer(token));
+    const auto garbage = http.client().Get(trackingUrl("PKG-1002"), bearer("basura"));
     const auto unknownCode = http.client().Get(trackingUrl("PKG-9999"), bearer(token));
-    const auto staffToken  = http.client().Get(trackingUrl("PKG-1002"), http.as("admin@hubflow.local"));
+    const auto staffToken = http.client().Get(trackingUrl("PKG-1002"), http.as("admin@hubflow.local"));
 
     EXPECT_EQ(none->status, 200);
     EXPECT_EQ(none->body.find("details"), std::string::npos);
@@ -194,7 +194,7 @@ TEST(PublicTrackingApi, VerificationRequiresSomeProofInTheRightShape)
     HttpHarness http;
     http.app.seedDataset();
 
-    const auto empty   = verify(http, "PKG-1002", json::object());
+    const auto empty = verify(http, "PKG-1002", json::object());
     const auto badLast = verify(http, "PKG-1002", json {{"phoneLast4", "12345"}});
 
     EXPECT_EQ(empty->status, 422);
@@ -236,7 +236,7 @@ TEST(PublicTrackingApi, OnTheWayThePackageShowsAnEstimatedWindowAndThenDelivered
     HttpHarness http;
     http.app.seedDataset();
     const auto routeId = routeForNorth(http);
-    const auto token   = tokenFor(http, "PKG-1002", json {{"phoneLast4", "4410"}});
+    const auto token = tokenFor(http, "PKG-1002", json {{"phoneLast4", "4410"}});
 
     const auto onTheWay = HttpHarness::bodyOf(http.client().Get(trackingUrl("PKG-1002"), bearer(token)));
 
@@ -283,7 +283,7 @@ TEST(PublicTrackingApi, OnlyTheAdministratorSeesTheCustomerNotices)
     HttpHarness http;
     http.app.seedDataset();
 
-    const auto asAdmin    = http.client().Get("/api/v1/customer-notices?limit=2", http.as("admin@hubflow.local"));
+    const auto asAdmin = http.client().Get("/api/v1/customer-notices?limit=2", http.as("admin@hubflow.local"));
     const auto asOperator = http.client().Get("/api/v1/customer-notices", http.as("operador@hubflow.local"));
 
     ASSERT_TRUE(asAdmin);
@@ -299,18 +299,18 @@ TEST(PublicTrackingApi, OnlyTheAdministratorSeesTheCustomerNotices)
 TEST(PublicTrackingApi, RegisteringRequiresPhoneAndPostalCodeInAValidFormat)
 {
     HttpHarness http;
-    json        shipment {
-               {"recipient", "Marta Lopez"},
-               {"recipientPhone", "123"},
-               {"recipientPostalCode", "zzz"},
-               {"zone", "NORTE"},
-               {"service", "EXPRESS"},
-               {"deliveryPoint", "N2"},
-               {"parcels", json::array({json {{"weightKg", 1.0}, {"lengthCm", 10}, {"widthCm", 10}, {"heightCm", 10}}})}};
+    json shipment {
+        {"recipient", "Marta Lopez"},
+        {"recipientPhone", "123"},
+        {"recipientPostalCode", "zzz"},
+        {"zone", "NORTE"},
+        {"service", "EXPRESS"},
+        {"deliveryPoint", "N2"},
+        {"parcels", json::array({json {{"weightKg", 1.0}, {"lengthCm", 10}, {"widthCm", 10}, {"heightCm", 10}}})}};
 
     const auto invalid =
         http.client().Post("/api/v1/shipments", http.as("operador@hubflow.local"), shipment.dump(), JSON_TYPE);
-    shipment["recipientPhone"]      = "+54 11 4521-7788";
+    shipment["recipientPhone"] = "+54 11 4521-7788";
     shipment["recipientPostalCode"] = "c1425abc";
     const auto valid =
         http.client().Post("/api/v1/shipments", http.as("operador@hubflow.local"), shipment.dump(), JSON_TYPE);

@@ -26,10 +26,10 @@ using shared::adapters::UuidV7IdentityGenerator;
 
 namespace
 {
-std::uint64_t millisecondsOf(const std::string& uuid)
-{
-    return std::stoull(uuid.substr(0, 8) + uuid.substr(9, 4), nullptr, 16);
-}
+    std::uint64_t millisecondsOf(const std::string& uuid)
+    {
+        return std::stoull(uuid.substr(0, 8) + uuid.substr(9, 4), nullptr, 16);
+    }
 } // namespace
 
 TEST(UuidV7IdentityGenerator, ProducesRfc9562VersionSevenText)
@@ -37,7 +37,7 @@ TEST(UuidV7IdentityGenerator, ProducesRfc9562VersionSevenText)
     UuidV7IdentityGenerator generator;
 
     shared::application::IdentityGenerator& port = generator;
-    const std::string                       id {port.next()};
+    const std::string id {port.next()};
 
     EXPECT_EQ(id.size(), 36U);
     EXPECT_TRUE(UuidText::isValid(id));
@@ -47,10 +47,7 @@ TEST(UuidV7IdentityGenerator, ProducesRfc9562VersionSevenText)
 
 TEST(UuidV7IdentityGenerator, EmbedsTheMillisecondTimestampInTheFirstFortyEightBits)
 {
-    UuidV7IdentityGenerator generator {[]
-                                       {
-                                           return std::uint64_t {1767225600123};
-                                       }};
+    UuidV7IdentityGenerator generator {[] { return std::uint64_t {1767225600123}; }};
 
     shared::application::IdentityGenerator& port = generator;
 
@@ -59,12 +56,9 @@ TEST(UuidV7IdentityGenerator, EmbedsTheMillisecondTimestampInTheFirstFortyEightB
 
 TEST(UuidV7IdentityGenerator, IdentitiesInTheSameMillisecondKeepIncreasingInTextOrder)
 {
-    UuidV7IdentityGenerator                 generator {[]
-                                       {
-                                           return std::uint64_t {1767225600123};
-                                       }};
+    UuidV7IdentityGenerator generator {[] { return std::uint64_t {1767225600123}; }};
     shared::application::IdentityGenerator& port = generator;
-    std::vector<std::string>                ids;
+    std::vector<std::string> ids;
     for (int i = 0; i < 5000; ++i)
     {
         ids.push_back(port.next());
@@ -78,13 +72,10 @@ TEST(UuidV7IdentityGenerator, IdentitiesInTheSameMillisecondKeepIncreasingInText
 
 TEST(UuidV7IdentityGenerator, LaterMillisecondsSortAfterEarlierOnes)
 {
-    std::uint64_t                           now {1767225600000};
-    UuidV7IdentityGenerator                 generator {[&now]
-                                       {
-                                           return now;
-                                       }};
+    std::uint64_t now {1767225600000};
+    UuidV7IdentityGenerator generator {[&now] { return now; }};
     shared::application::IdentityGenerator& port = generator;
-    const std::string                       first {port.next()};
+    const std::string first {port.next()};
     now += 5;
     const std::string second {port.next()};
 
@@ -93,13 +84,10 @@ TEST(UuidV7IdentityGenerator, LaterMillisecondsSortAfterEarlierOnes)
 
 TEST(UuidV7IdentityGenerator, ABackwardsClockNeverReversesTheOrder)
 {
-    std::uint64_t                           now {1767225600500};
-    UuidV7IdentityGenerator                 generator {[&now]
-                                       {
-                                           return now;
-                                       }};
+    std::uint64_t now {1767225600500};
+    UuidV7IdentityGenerator generator {[&now] { return now; }};
     shared::application::IdentityGenerator& port = generator;
-    const std::string                       first {port.next()};
+    const std::string first {port.next()};
     now -= 400;
     const std::string second {port.next()};
 
@@ -108,10 +96,10 @@ TEST(UuidV7IdentityGenerator, ABackwardsClockNeverReversesTheOrder)
 
 TEST(PublicTrackingCodeGenerator, ProducesCheckedCodesThatAreNotSequential)
 {
-    PublicTrackingCodeGenerator                    generator {42};
-    ShipmentCatalog                                catalog;
+    PublicTrackingCodeGenerator generator {42};
+    ShipmentCatalog catalog;
     logistics::application::TrackingCodeGenerator& port = generator;
-    std::set<std::string>                          codes;
+    std::set<std::string> codes;
     for (int i = 0; i < 500; ++i)
     {
         codes.insert(port.next(catalog));
@@ -128,15 +116,15 @@ TEST(PublicTrackingCodeGenerator, ProducesCheckedCodesThatAreNotSequential)
 
 TEST(PublicTrackingCodeGenerator, SkipsCodesAlreadyInUse)
 {
-    ShipmentCatalog                                catalog;
-    hubflow::logistics::domain::TicketDispenser    tickets;
-    PublicTrackingCodeGenerator                    first {7};
+    ShipmentCatalog catalog;
+    hubflow::logistics::domain::TicketDispenser tickets;
+    PublicTrackingCodeGenerator first {7};
     logistics::application::TrackingCodeGenerator& port = first;
-    const std::string                              taken {port.next(catalog)};
-    auto                                           shipmentDraft = test::draft(taken, "EXPRESS");
+    const std::string taken {port.next(catalog)};
+    auto shipmentDraft = test::draft(taken, "EXPRESS");
     catalog.adopt(logistics::domain::Shipment::receive(shipmentDraft, tickets.next(), test::actor()));
 
-    PublicTrackingCodeGenerator                    sameSeed {7};
+    PublicTrackingCodeGenerator sameSeed {7};
     logistics::application::TrackingCodeGenerator& retrying = sameSeed;
 
     EXPECT_NE(retrying.next(catalog), taken);
@@ -144,11 +132,11 @@ TEST(PublicTrackingCodeGenerator, SkipsCodesAlreadyInUse)
 
 TEST(SequentialPkgCodeGenerator, CountsUpAndSkipsTheNumbersInUse)
 {
-    ShipmentCatalog                             catalog;
+    ShipmentCatalog catalog;
     hubflow::logistics::domain::TicketDispenser tickets;
     catalog.adopt(
         logistics::domain::Shipment::receive(test::draft("PKG-1002", "EXPRESS"), tickets.next(), test::actor()));
-    SequentialPkgCodeGenerator                     generator;
+    SequentialPkgCodeGenerator generator;
     logistics::application::TrackingCodeGenerator& port = generator;
 
     EXPECT_EQ(port.next(catalog), "PKG-1001");
@@ -157,8 +145,8 @@ TEST(SequentialPkgCodeGenerator, CountsUpAndSkipsTheNumbersInUse)
 
 TEST(SequentialPkgCodeGenerator, FailsWhenTheNumbersRunOut)
 {
-    ShipmentCatalog                                catalog;
-    SequentialPkgCodeGenerator                     generator {SequentialPkgCodeGenerator::LAST_NUMBER};
+    ShipmentCatalog catalog;
+    SequentialPkgCodeGenerator generator {SequentialPkgCodeGenerator::LAST_NUMBER};
     logistics::application::TrackingCodeGenerator& port = generator;
 
     EXPECT_EQ(port.next(catalog), "PKG-9999");

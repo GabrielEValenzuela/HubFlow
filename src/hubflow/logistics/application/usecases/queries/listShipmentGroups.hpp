@@ -7,17 +7,17 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de ListShipmentGroupsUseCase.
-class ListShipmentGroups final : public ListShipmentGroupsUseCase
-{
-public:
-    explicit ListShipmentGroups(const LogisticsModel& model);
+    /// @brief Implementación de ListShipmentGroupsUseCase.
+    class ListShipmentGroups final : public ListShipmentGroupsUseCase
+    {
+    public:
+        explicit ListShipmentGroups(const LogisticsModel& model);
 
-private:
-    const domain::ShipmentGroupBook& execute(const shared::application::Principal& principal) const override;
+    private:
+        const domain::ShipmentGroupBook& execute(const shared::application::Principal& principal) const override;
 
-    const LogisticsModel& m_model;
-};
+        const LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::logistics::application
 

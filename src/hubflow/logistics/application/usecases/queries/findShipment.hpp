@@ -7,18 +7,19 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de FindShipmentUseCase.
-class FindShipment final : public FindShipmentUseCase
-{
-public:
-    explicit FindShipment(const LogisticsModel& model);
+    /// @brief Implementación de FindShipmentUseCase.
+    class FindShipment final : public FindShipmentUseCase
+    {
+    public:
+        explicit FindShipment(const LogisticsModel& model);
 
-private:
-    domain::LookupResult
-    execute(const shared::application::Principal& principal, const std::string& code, LookupIndex index) const override;
+    private:
+        domain::LookupResult execute(const shared::application::Principal& principal,
+                                     const std::string& code,
+                                     LookupIndex index) const override;
 
-    const LogisticsModel& m_model;
-};
+        const LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::logistics::application
 

@@ -3,19 +3,19 @@
 namespace hubflow::identity::application
 {
 
-AccessPolicyHydrator::AccessPolicyHydrator(domain::AccessPolicy& policy)
-    : m_policy {policy}
-{
-}
+    AccessPolicyHydrator::AccessPolicyHydrator(domain::AccessPolicy& policy)
+        : m_policy {policy}
+    {
+    }
 
-void AccessPolicyHydrator::hydrate(const RolePermissionRepository& repository)
-{
-    repository.loadAll(*this);
-}
+    void AccessPolicyHydrator::hydrate(const RolePermissionRepository& repository)
+    {
+        repository.loadAll(*this);
+    }
 
-void AccessPolicyHydrator::restoreGrant(const domain::Role role, const domain::Permission permission)
-{
-    m_policy.grant(role, permission);
-}
+    void AccessPolicyHydrator::restoreGrant(const domain::Role role, const domain::Permission permission)
+    {
+        m_policy.grant(role, permission);
+    }
 
 } // namespace hubflow::identity::application

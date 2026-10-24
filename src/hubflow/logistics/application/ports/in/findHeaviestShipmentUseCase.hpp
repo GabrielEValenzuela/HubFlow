@@ -8,29 +8,29 @@
 namespace hubflow::logistics::application
 {
 
-/**
- * @brief Encuentra el envío pendiente más pesado de una zona, o ninguno (nullptr) si la zona no tiene pendientes.
- *
- * @par Quién puede ejecutarlo
- * ADMIN y OPERADOR.
- *
- * @par Errores
- * - Forbidden: el rol no puede operar envíos.
- * - NotFound: la zona no existe.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class FindHeaviestShipmentUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Encuentra el envío pendiente más pesado de una zona, o ninguno (nullptr) si la zona no tiene pendientes.
+     *
+     * @par Quién puede ejecutarlo
+     * ADMIN y OPERADOR.
+     *
+     * @par Errores
+     * - Forbidden: el rol no puede operar envíos.
+     * - NotFound: la zona no existe.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class FindHeaviestShipmentUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~FindHeaviestShipmentUseCase() = default;
+        virtual ~FindHeaviestShipmentUseCase() = default;
 
-    virtual const domain::Shipment* execute(const shared::application::Principal& principal,
-                                            const std::string&                    zoneCode) const = 0;
-};
+        virtual const domain::Shipment* execute(const shared::application::Principal& principal,
+                                                const std::string& zoneCode) const = 0;
+    };
 
 } // namespace hubflow::logistics::application
 

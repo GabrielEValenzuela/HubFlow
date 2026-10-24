@@ -9,27 +9,27 @@
 namespace hubflow::identity::application
 {
 
-/**
- * @brief Lista los repartidores PUM activos, que son los únicos a quienes se puede asignar una ruta.
- *
- * @par Quién puede ejecutarlo
- * ADMIN y OPERADOR.
- *
- * @par Errores
- * - Forbidden: el rol no puede asignar rutas.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class ListCouriersUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Lista los repartidores PUM activos, que son los únicos a quienes se puede asignar una ruta.
+     *
+     * @par Quién puede ejecutarlo
+     * ADMIN y OPERADOR.
+     *
+     * @par Errores
+     * - Forbidden: el rol no puede asignar rutas.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class ListCouriersUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~ListCouriersUseCase() = default;
+        virtual ~ListCouriersUseCase() = default;
 
-    virtual ds::DynamicArray<domain::UserState> execute(const shared::application::Principal& principal) const = 0;
-};
+        virtual ds::DynamicArray<domain::UserState> execute(const shared::application::Principal& principal) const = 0;
+    };
 
 } // namespace hubflow::identity::application
 

@@ -4,20 +4,20 @@
 namespace hubflow::routing::domain
 {
 
-/// @brief Resultado de una parada de la hoja de ruta.
-enum class StopOutcome
-{
-    Pending,
-    Delivered,
-    Rescheduled
-};
+    /// @brief Resultado de una parada de la hoja de ruta.
+    enum class StopOutcome
+    {
+        Pending,
+        Delivered,
+        Rescheduled
+    };
 
-/// @brief Estado de una hoja de ruta.
-enum class RouteStatus
-{
-    InProgress,
-    Completed
-};
+    /// @brief Estado de una hoja de ruta.
+    enum class RouteStatus
+    {
+        InProgress,
+        Completed
+    };
 
 } // namespace hubflow::routing::domain
 

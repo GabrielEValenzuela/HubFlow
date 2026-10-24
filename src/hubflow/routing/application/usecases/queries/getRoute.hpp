@@ -7,18 +7,18 @@
 namespace hubflow::routing::application
 {
 
-/// @brief Implementación de GetRouteUseCase.
-class GetRoute final : public GetRouteUseCase
-{
-public:
-    explicit GetRoute(const RoutingModel& model);
+    /// @brief Implementación de GetRouteUseCase.
+    class GetRoute final : public GetRouteUseCase
+    {
+    public:
+        explicit GetRoute(const RoutingModel& model);
 
-private:
-    const domain::DeliveryRoute& execute(const shared::application::Principal& principal,
-                                         std::uint64_t                         routeId) const override;
+    private:
+        const domain::DeliveryRoute& execute(const shared::application::Principal& principal,
+                                             std::uint64_t routeId) const override;
 
-    const RoutingModel& m_model;
-};
+        const RoutingModel& m_model;
+    };
 
 } // namespace hubflow::routing::application
 

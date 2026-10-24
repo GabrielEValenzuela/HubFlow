@@ -7,35 +7,35 @@
 
 namespace hubflow::logistics::application
 {
-struct LogisticsModel;
+    struct LogisticsModel;
 }
 
 namespace hubflow::bootstrap
 {
 
-/**
- * @brief Arma el contexto de análisis: consultas sobre los índices de envíos, comparación de historiales y
- * operaciones entre conjuntos de códigos.
- *
- * Sólo lee el modelo de logística; no guarda nada ni reacciona a eventos.
- */
-class InsightsModule final : public BoundedContextModule
-{
-public:
-    explicit InsightsModule(const logistics::application::LogisticsModel& logistics);
+    /**
+     * @brief Arma el contexto de análisis: consultas sobre los índices de envíos, comparación de historiales y
+     * operaciones entre conjuntos de códigos.
+     *
+     * Sólo lee el modelo de logística; no guarda nada ni reacciona a eventos.
+     */
+    class InsightsModule final : public BoundedContextModule
+    {
+    public:
+        explicit InsightsModule(const logistics::application::LogisticsModel& logistics);
 
-    ~InsightsModule() override;
+        ~InsightsModule() override;
 
-    InsightsModule(const InsightsModule&)            = delete;
-    InsightsModule& operator=(const InsightsModule&) = delete;
+        InsightsModule(const InsightsModule&) = delete;
+        InsightsModule& operator=(const InsightsModule&) = delete;
 
-private:
-    void registerRoutes(platform::ApiRouter& router) override;
+    private:
+        void registerRoutes(platform::ApiRouter& router) override;
 
-    struct Parts;
+        struct Parts;
 
-    std::unique_ptr<Parts> m_spParts;
-};
+        std::unique_ptr<Parts> m_spParts;
+    };
 
 } // namespace hubflow::bootstrap
 

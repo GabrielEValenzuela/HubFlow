@@ -16,50 +16,50 @@
 namespace hubflow::sorting::adapters
 {
 
-/// @brief Casos de uso de la mesa de clasificación que expone el controlador.
-struct SortingUseCases
-{
-    application::OpenSortingBatchUseCase&                  open;
-    application::SortSortingBatchUseCase&                  sort;
-    application::PrepareSortingBatchUseCase&               prepare;
-    application::ProcessSortingBatchItemUseCase&           process;
-    application::ReturnProcessedItemUseCase&               giveBack;
-    const application::GetActiveSortingBatchUseCase&       active;
-    const application::GetSortingBatchUseCase&             batch;
-    const application::LinearSearchInSortingBatchUseCase&  linearSearch;
-    const application::BinarySearchInSortingBatchUseCase&  binarySearch;
-    const application::CompareSortingBatchSearchesUseCase& compare;
-};
+    /// @brief Casos de uso de la mesa de clasificación que expone el controlador.
+    struct SortingUseCases
+    {
+        application::OpenSortingBatchUseCase& open;
+        application::SortSortingBatchUseCase& sort;
+        application::PrepareSortingBatchUseCase& prepare;
+        application::ProcessSortingBatchItemUseCase& process;
+        application::ReturnProcessedItemUseCase& giveBack;
+        const application::GetActiveSortingBatchUseCase& active;
+        const application::GetSortingBatchUseCase& batch;
+        const application::LinearSearchInSortingBatchUseCase& linearSearch;
+        const application::BinarySearchInSortingBatchUseCase& binarySearch;
+        const application::CompareSortingBatchSearchesUseCase& compare;
+    };
 
-/**
- * @brief Mesa de clasificación y despacho de un lote por zona.
- *
- * - @c POST /sorting-batches {zone}: abre un lote con los envíos pendientes de la zona (acepta @c Idempotency-Key).
- * - @c GET /sorting-batches/current, @c GET /sorting-batches/:id: consulta del lote.
- * - @c PATCH /sorting-batches/:id {sortBy}: ordena el lote; mismo criterio, mismo orden.
- * - @c PUT /sorting-batches/:id/preparation-queue: recarga la cola de preparación desde el lote.
- * - @c POST /sorting-batches/:id/processed-items {codes?}: carga al vehículo los envíos indicados o, sin cuerpo, el
- *   siguiente de la cola con los de su grupo (acepta @c Idempotency-Key). Un envío que viaja con otros no se carga sin
- *   ellos: 409.
- * - @c DELETE /sorting-batches/:id/processed-items/:code: devuelve el último procesado (con su grupo); sólo si
- *   @c code es el tope de la pila, y repetirlo responde 404 sin efecto.
- * - @c GET /sorting-batches/:id/searches?code=&algorithm=linear|binary|both: busca un envío en el lote.
- */
-class SortingBatchController final : public platform::Controller
-{
-public:
-    explicit SortingBatchController(SortingUseCases useCases);
+    /**
+     * @brief Mesa de clasificación y despacho de un lote por zona.
+     *
+     * - @c POST /sorting-batches {zone}: abre un lote con los envíos pendientes de la zona (acepta @c Idempotency-Key).
+     * - @c GET /sorting-batches/current, @c GET /sorting-batches/:id: consulta del lote.
+     * - @c PATCH /sorting-batches/:id {sortBy}: ordena el lote; mismo criterio, mismo orden.
+     * - @c PUT /sorting-batches/:id/preparation-queue: recarga la cola de preparación desde el lote.
+     * - @c POST /sorting-batches/:id/processed-items {codes?}: carga al vehículo los envíos indicados o, sin cuerpo, el
+     *   siguiente de la cola con los de su grupo (acepta @c Idempotency-Key). Un envío que viaja con otros no se carga
+     * sin ellos: 409.
+     * - @c DELETE /sorting-batches/:id/processed-items/:code: devuelve el último procesado (con su grupo); sólo si
+     *   @c code es el tope de la pila, y repetirlo responde 404 sin efecto.
+     * - @c GET /sorting-batches/:id/searches?code=&algorithm=linear|binary|both: busca un envío en el lote.
+     */
+    class SortingBatchController final : public platform::Controller
+    {
+    public:
+        explicit SortingBatchController(SortingUseCases useCases);
 
-private:
-    void registerRoutes(platform::ApiRouter& router) override;
+    private:
+        void registerRoutes(platform::ApiRouter& router) override;
 
-    platform::HttpResponse sort(const platform::RequestContext& context) const;
-    platform::HttpResponse search(const platform::RequestContext& context) const;
-    platform::HttpResponse processNext(const platform::RequestContext& context) const;
-    platform::HttpResponse giveBack(const platform::RequestContext& context) const;
+        platform::HttpResponse sort(const platform::RequestContext& context) const;
+        platform::HttpResponse search(const platform::RequestContext& context) const;
+        platform::HttpResponse processNext(const platform::RequestContext& context) const;
+        platform::HttpResponse giveBack(const platform::RequestContext& context) const;
 
-    SortingUseCases m_useCases;
-};
+        SortingUseCases m_useCases;
+    };
 
 } // namespace hubflow::sorting::adapters
 

@@ -7,17 +7,17 @@
 namespace hubflow::audit::application
 {
 
-/// @brief Implementación de CountAuditEventsUseCase.
-class CountAuditEvents final : public CountAuditEventsUseCase
-{
-public:
-    explicit CountAuditEvents(const AuditLog& log);
+    /// @brief Implementación de CountAuditEventsUseCase.
+    class CountAuditEvents final : public CountAuditEventsUseCase
+    {
+    public:
+        explicit CountAuditEvents(const AuditLog& log);
 
-private:
-    std::size_t execute(const shared::application::Principal& principal) const override;
+    private:
+        std::size_t execute(const shared::application::Principal& principal) const override;
 
-    const AuditLog& m_log;
-};
+        const AuditLog& m_log;
+    };
 
 } // namespace hubflow::audit::application
 

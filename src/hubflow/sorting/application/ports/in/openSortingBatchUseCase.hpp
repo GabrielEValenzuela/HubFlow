@@ -8,31 +8,32 @@
 namespace hubflow::sorting::application
 {
 
-/**
- * @brief Abre un lote de la mesa de clasificación con los envíos pendientes de una zona, reemplazando al lote anterior.
- *
- * @par Quién puede ejecutarlo
- * ADMIN y OPERADOR.
- *
- * @par Errores
- * - Forbidden: el rol no puede operar la mesa de clasificación.
- * - NotFound: la zona no existe.
- * - Conflict: la zona no tiene envíos pendientes.
- *
- * @par Idempotencia
- * No. Cada ejecución crea un lote nuevo con su propio identificador y descarta el anterior. Con Idempotency-Key el
- * borde HTTP evita abrir dos lotes por un reintento.
- */
-class OpenSortingBatchUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::NonIdempotent};
+    /**
+     * @brief Abre un lote de la mesa de clasificación con los envíos pendientes de una zona, reemplazando al lote
+     * anterior.
+     *
+     * @par Quién puede ejecutarlo
+     * ADMIN y OPERADOR.
+     *
+     * @par Errores
+     * - Forbidden: el rol no puede operar la mesa de clasificación.
+     * - NotFound: la zona no existe.
+     * - Conflict: la zona no tiene envíos pendientes.
+     *
+     * @par Idempotencia
+     * No. Cada ejecución crea un lote nuevo con su propio identificador y descarta el anterior. Con Idempotency-Key el
+     * borde HTTP evita abrir dos lotes por un reintento.
+     */
+    class OpenSortingBatchUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::NonIdempotent};
 
-    virtual ~OpenSortingBatchUseCase() = default;
+        virtual ~OpenSortingBatchUseCase() = default;
 
-    virtual const domain::SortingBatch& execute(const shared::application::Principal& principal,
-                                                const std::string&                    zone) = 0;
-};
+        virtual const domain::SortingBatch& execute(const shared::application::Principal& principal,
+                                                    const std::string& zone) = 0;
+    };
 
 } // namespace hubflow::sorting::application
 

@@ -32,109 +32,109 @@
 
 namespace hubflow::bootstrap
 {
-namespace
-{
-using namespace routing;
-} // namespace
-
-struct RoutingModule::Parts
-{
-    Parts(const SharedServices& shared, application::RoutingModel& model, const RoutingNeighbours& neighbours)
-        : model {model}
-        , fileExporter {shared.settings.exportDirectory}
-        , exporter {fileExporter}
-        , zoneDirectory {neighbours.logistics}
-        , maps {shared.connection}
-        , routes {shared.connection}
-        , routePersistence {routes}
-        , roadMapPersistence {maps}
-        , routeExport {model, exporter}
-        , assignDeliveryRoute {model,
-                               neighbours.desk,
-                               neighbours.logistics.groups,
-                               neighbours.users,
-                               shared.bus,
-                               shared.clock}
-        , resolveRouteStop {neighbours.logistics, model, shared.bus, shared.clock}
-        , confirmStopParcel {neighbours.logistics, model, shared.bus, shared.clock}
-        , reassignDeliveryRoute {model, neighbours.users, shared.bus, shared.clock}
-        , addRoadNode {model, zoneDirectory, shared.bus, shared.clock}
-        , updateRoadNode {model, zoneDirectory, shared.bus, shared.clock}
-        , getRoadMap {model}
-        , previewRoute {model}
-        , listRoutes {model}
-        , stopShipments {neighbours.logistics}
-        , getRoute {model}
-        , getCourierRouteSheet {getRoute, stopShipments}
+    namespace
     {
-        subscribers.add(SubscriptionPhase::Persistence, routePersistence);
-        subscribers.add(SubscriptionPhase::Persistence, roadMapPersistence);
-        subscribers.add(SubscriptionPhase::Export, routeExport);
+        using namespace routing;
+    } // namespace
+
+    struct RoutingModule::Parts
+    {
+        Parts(const SharedServices& shared, application::RoutingModel& model, const RoutingNeighbours& neighbours)
+            : model {model}
+            , fileExporter {shared.settings.exportDirectory}
+            , exporter {fileExporter}
+            , zoneDirectory {neighbours.logistics}
+            , maps {shared.connection}
+            , routes {shared.connection}
+            , routePersistence {routes}
+            , roadMapPersistence {maps}
+            , routeExport {model, exporter}
+            , assignDeliveryRoute {model,
+                                   neighbours.desk,
+                                   neighbours.logistics.groups,
+                                   neighbours.users,
+                                   shared.bus,
+                                   shared.clock}
+            , resolveRouteStop {neighbours.logistics, model, shared.bus, shared.clock}
+            , confirmStopParcel {neighbours.logistics, model, shared.bus, shared.clock}
+            , reassignDeliveryRoute {model, neighbours.users, shared.bus, shared.clock}
+            , addRoadNode {model, zoneDirectory, shared.bus, shared.clock}
+            , updateRoadNode {model, zoneDirectory, shared.bus, shared.clock}
+            , getRoadMap {model}
+            , previewRoute {model}
+            , listRoutes {model}
+            , stopShipments {neighbours.logistics}
+            , getRoute {model}
+            , getCourierRouteSheet {getRoute, stopShipments}
+        {
+            subscribers.add(SubscriptionPhase::Persistence, routePersistence);
+            subscribers.add(SubscriptionPhase::Persistence, roadMapPersistence);
+            subscribers.add(SubscriptionPhase::Export, routeExport);
+        }
+
+        application::RoutingModel& model;
+        adapters::JsonFileRoutePlanExporter fileExporter;
+        adapters::FailureTolerantRoutePlanExporter exporter;
+        adapters::LogisticsZoneDirectory zoneDirectory;
+        adapters::MySqlRoadMapRepository maps;
+        adapters::MySqlRouteRepository routes;
+        application::RoutePersistenceSubscriber routePersistence;
+        application::RoadMapPersistenceSubscriber roadMapPersistence;
+        application::RoutePlanExportSubscriber routeExport;
+        application::AssignDeliveryRoute assignDeliveryRoute;
+        application::ResolveRouteStop resolveRouteStop;
+        application::ConfirmStopParcel confirmStopParcel;
+        application::ReassignDeliveryRoute reassignDeliveryRoute;
+        application::AddRoadNode addRoadNode;
+        application::UpdateRoadNode updateRoadNode;
+        application::GetRoadMap getRoadMap;
+        application::PreviewRoute previewRoute;
+        application::ListRoutes listRoutes;
+        adapters::LogisticsStopShipments stopShipments;
+        application::GetRoute getRoute;
+        application::GetCourierRouteSheet getCourierRouteSheet;
+        PhasedSubscribers subscribers;
+        std::vector<std::unique_ptr<platform::Controller>> controllers;
+    };
+
+    RoutingModule::RoutingModule(const SharedServices& shared,
+                                 routing::application::RoutingModel& model,
+                                 const RoutingNeighbours& neighbours)
+        : m_spParts {std::make_unique<Parts>(shared, model, neighbours)}
+    {
     }
 
-    application::RoutingModel&                         model;
-    adapters::JsonFileRoutePlanExporter                fileExporter;
-    adapters::FailureTolerantRoutePlanExporter         exporter;
-    adapters::LogisticsZoneDirectory                   zoneDirectory;
-    adapters::MySqlRoadMapRepository                   maps;
-    adapters::MySqlRouteRepository                     routes;
-    application::RoutePersistenceSubscriber            routePersistence;
-    application::RoadMapPersistenceSubscriber          roadMapPersistence;
-    application::RoutePlanExportSubscriber             routeExport;
-    application::AssignDeliveryRoute                   assignDeliveryRoute;
-    application::ResolveRouteStop                      resolveRouteStop;
-    application::ConfirmStopParcel                     confirmStopParcel;
-    application::ReassignDeliveryRoute                 reassignDeliveryRoute;
-    application::AddRoadNode                           addRoadNode;
-    application::UpdateRoadNode                        updateRoadNode;
-    application::GetRoadMap                            getRoadMap;
-    application::PreviewRoute                          previewRoute;
-    application::ListRoutes                            listRoutes;
-    adapters::LogisticsStopShipments                   stopShipments;
-    application::GetRoute                              getRoute;
-    application::GetCourierRouteSheet                  getCourierRouteSheet;
-    PhasedSubscribers                                  subscribers;
-    std::vector<std::unique_ptr<platform::Controller>> controllers;
-};
+    RoutingModule::~RoutingModule() = default;
 
-RoutingModule::RoutingModule(const SharedServices&               shared,
-                             routing::application::RoutingModel& model,
-                             const RoutingNeighbours&            neighbours)
-    : m_spParts {std::make_unique<Parts>(shared, model, neighbours)}
-{
-}
-
-RoutingModule::~RoutingModule() = default;
-
-void RoutingModule::subscribe(const SubscriptionPhase phase, shared::application::EventBus& bus)
-{
-    m_spParts->subscribers.subscribe(phase, bus);
-}
-
-void RoutingModule::hydrate()
-{
-    Parts& parts = *m_spParts;
-    application::RoutingHydrator {parts.model}.hydrate(parts.maps, parts.routes);
-}
-
-void RoutingModule::registerRoutes(platform::ApiRouter& router)
-{
-    Parts& parts = *m_spParts;
-    parts.controllers.push_back(
-        std::make_unique<adapters::RouteController>(adapters::RouteUseCases {parts.assignDeliveryRoute,
-                                                                             parts.resolveRouteStop,
-                                                                             parts.confirmStopParcel,
-                                                                             parts.reassignDeliveryRoute,
-                                                                             parts.listRoutes,
-                                                                             parts.getRoute,
-                                                                             parts.getRoadMap,
-                                                                             parts.getCourierRouteSheet}));
-    parts.controllers.push_back(std::make_unique<adapters::RoadMapController>(
-        parts.getRoadMap, parts.previewRoute, parts.addRoadNode, parts.updateRoadNode));
-    for (auto& spController : parts.controllers)
+    void RoutingModule::subscribe(const SubscriptionPhase phase, shared::application::EventBus& bus)
     {
-        spController->registerRoutes(router);
+        m_spParts->subscribers.subscribe(phase, bus);
     }
-}
+
+    void RoutingModule::hydrate()
+    {
+        Parts& parts = *m_spParts;
+        application::RoutingHydrator {parts.model}.hydrate(parts.maps, parts.routes);
+    }
+
+    void RoutingModule::registerRoutes(platform::ApiRouter& router)
+    {
+        Parts& parts = *m_spParts;
+        parts.controllers.push_back(
+            std::make_unique<adapters::RouteController>(adapters::RouteUseCases {parts.assignDeliveryRoute,
+                                                                                 parts.resolveRouteStop,
+                                                                                 parts.confirmStopParcel,
+                                                                                 parts.reassignDeliveryRoute,
+                                                                                 parts.listRoutes,
+                                                                                 parts.getRoute,
+                                                                                 parts.getRoadMap,
+                                                                                 parts.getCourierRouteSheet}));
+        parts.controllers.push_back(std::make_unique<adapters::RoadMapController>(
+            parts.getRoadMap, parts.previewRoute, parts.addRoadNode, parts.updateRoadNode));
+        for (auto& spController : parts.controllers)
+        {
+            spController->registerRoutes(router);
+        }
+    }
 
 } // namespace hubflow::bootstrap

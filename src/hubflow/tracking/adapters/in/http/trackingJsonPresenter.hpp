@@ -8,15 +8,15 @@
 namespace hubflow::tracking::adapters
 {
 
-/// @brief Traduce las vistas de seguimiento a JSON. Es el único lugar que decide qué campos salen al cliente.
-class TrackingJsonPresenter final
-{
-public:
-    static platform::Json publicTracking(const application::PublicTracking& view);
-    static platform::Json verifiedTracking(const application::VerifiedTracking& view);
-    static platform::Json access(const application::TrackingAccess& access);
-    static platform::Json notice(const application::StoredCustomerNotice& stored);
-};
+    /// @brief Traduce las vistas de seguimiento a JSON. Es el único lugar que decide qué campos salen al cliente.
+    class TrackingJsonPresenter final
+    {
+    public:
+        static platform::Json publicTracking(const application::PublicTracking& view);
+        static platform::Json verifiedTracking(const application::VerifiedTracking& view);
+        static platform::Json access(const application::TrackingAccess& access);
+        static platform::Json notice(const application::StoredCustomerNotice& stored);
+    };
 
 } // namespace hubflow::tracking::adapters
 

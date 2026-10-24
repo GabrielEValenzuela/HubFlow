@@ -15,83 +15,76 @@ using shared::domain::ErrorKind;
 
 namespace
 {
-std::string codeOfFailure(const std::function<void()>& action)
-{
-    std::string code;
-    try
+    std::string codeOfFailure(const std::function<void()>& action)
     {
-        action();
+        std::string code;
+        try
+        {
+            action();
+        }
+        catch (const business_error& error)
+        {
+            code = error.code();
+        }
+        return code;
     }
-    catch (const business_error& error)
+
+    std::uint64_t createCourier(test::ApplicationHarness& app, const std::string& email)
     {
-        code = error.code();
+        return app.registerUser
+            .execute(app.admin(),
+                     identity::application::RegisterUserRequest {
+                         email, "Repartidor", identity::domain::Role::Pum, "clave-segura"})
+            .id;
     }
-    return code;
-}
 
-std::uint64_t createCourier(test::ApplicationHarness& app, const std::string& email)
-{
-    return app.registerUser
-        .execute(app.admin(),
-                 identity::application::RegisterUserRequest {
-                     email, "Repartidor", identity::domain::Role::Pum, "clave-segura"})
-        .id;
-}
+    void openWestZone(test::ApplicationHarness& app)
+    {
+        app.createZone.execute(app.admin(), logistics::application::CreateZoneRequest {"OESTE", "Oeste"});
+        routing::application::AddRoadNodeRequest plaza {"O1", "Plaza Oeste", "OESTE", 6.0, 10.0, {}};
+        plaza.links.pushBack({"HUB", 4.5});
+        app.addRoadNode.execute(app.admin(), plaza);
+        routing::application::AddRoadNodeRequest parque {"O2", "Parque Oeste", "OESTE", 3.0, 12.0, {}};
+        parque.links.pushBack({"O1", 4.0});
+        app.addRoadNode.execute(app.admin(), parque);
+    }
 
-void openWestZone(test::ApplicationHarness& app)
-{
-    app.createZone.execute(app.admin(), logistics::application::CreateZoneRequest {"OESTE", "Oeste"});
-    routing::application::AddRoadNodeRequest plaza {"O1", "Plaza Oeste", "OESTE", 6.0, 10.0, {}};
-    plaza.links.pushBack({"HUB", 4.5});
-    app.addRoadNode.execute(app.admin(), plaza);
-    routing::application::AddRoadNodeRequest parque {"O2", "Parque Oeste", "OESTE", 3.0, 12.0, {}};
-    parque.links.pushBack({"O1", 4.0});
-    app.addRoadNode.execute(app.admin(), parque);
-}
+    logistics::domain::ShipmentDraft westShipment(const std::string& code, const std::string& service = "EXPRESS")
+    {
+        auto shipment = test::draft(code, service, "OESTE", 2.0);
+        shipment.deliveryPoint = "O1";
+        return shipment;
+    }
 
-logistics::domain::ShipmentDraft westShipment(const std::string& code, const std::string& service = "EXPRESS")
-{
-    auto shipment          = test::draft(code, service, "OESTE", 2.0);
-    shipment.deliveryPoint = "O1";
-    return shipment;
-}
+    std::vector<std::string> pendingCodes(test::ApplicationHarness& app)
+    {
+        std::vector<std::string> codes;
+        app.listPendingShipments.execute(app.operador())
+            .forEach([&codes](const logistics::domain::Shipment& shipment) { codes.push_back(shipment.code()); });
+        return codes;
+    }
 
-std::vector<std::string> pendingCodes(test::ApplicationHarness& app)
-{
-    std::vector<std::string> codes;
-    app.listPendingShipments.execute(app.operador())
-        .forEach(
-            [&codes](const logistics::domain::Shipment& shipment)
-            {
-                codes.push_back(shipment.code());
-            });
-    return codes;
-}
+    bool audited(const test::Storage& storage, const std::string& type)
+    {
+        return std::any_of(storage.audit.entries.begin(),
+                           storage.audit.entries.end(),
+                           [&type](const audit::application::AuditEntry& entry) { return entry.type == type; });
+    }
 
-bool audited(const test::Storage& storage, const std::string& type)
-{
-    return std::any_of(storage.audit.entries.begin(),
-                       storage.audit.entries.end(),
-                       [&type](const audit::application::AuditEntry& entry)
-                       {
-                           return entry.type == type;
-                       });
-}
-
-const routing::domain::DeliveryRoute& assignNorthRoute(test::ApplicationHarness& app, const std::uint64_t courierId)
-{
-    const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
-    app.prepareSortingBatch.execute(app.operador(), batch.id());
-    app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
-    return app.assignDeliveryRoute.execute(
-        app.operador(),
-        routing::application::AssignRouteRequest {batch.id(), courierId, routing::domain::SearchAlgorithm::AStar});
-}
+    const routing::domain::DeliveryRoute& assignNorthRoute(test::ApplicationHarness& app, const std::uint64_t courierId)
+    {
+        const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
+        app.prepareSortingBatch.execute(app.operador(), batch.id());
+        app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
+        return app.assignDeliveryRoute.execute(
+            app.operador(),
+            routing::application::AssignRouteRequest {batch.id(), courierId, routing::domain::SearchAlgorithm::AStar});
+    }
 } // namespace
 
 TEST(Extensibility, ANewZoneReceivesRoutesAndDeliversWithoutCodeChanges)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     openWestZone(app);
     const auto courierId = createCourier(app, "pum2@hubflow.local");
@@ -143,45 +136,34 @@ TEST(Extensibility, ANewZoneAndItsMapSurviveARestart)
 
 TEST(Extensibility, OnlyAdministratorsConfigureZonesAndTheMap)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
 
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.createZone.execute(app.operador(),
-                                             logistics::application::CreateZoneRequest {"OESTE", "Oeste"});
-                  }),
-              "auth.forbidden");
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.updateRoadNode.execute(app.operador(), "N1", routing::application::UpdateRoadNodeRequest {});
-                  }),
-              "auth.forbidden");
+    EXPECT_EQ(
+        codeOfFailure(
+            [&]
+            { app.createZone.execute(app.operador(), logistics::application::CreateZoneRequest {"OESTE", "Oeste"}); }),
+        "auth.forbidden");
+    EXPECT_EQ(
+        codeOfFailure(
+            [&] { app.updateRoadNode.execute(app.operador(), "N1", routing::application::UpdateRoadNodeRequest {}); }),
+        "auth.forbidden");
     EXPECT_NO_THROW(app.listZones.execute(app.pum(7)));
 }
 
 TEST(Extensibility, DuplicateZoneAndInvalidMapPointsAreRejected)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     openWestZone(app);
 
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.createZone.execute(app.admin(), logistics::application::CreateZoneRequest {"OESTE", "Otra"});
-                  }),
-              "zone.duplicate");
+    EXPECT_EQ(
+        codeOfFailure(
+            [&] { app.createZone.execute(app.admin(), logistics::application::CreateZoneRequest {"OESTE", "Otra"}); }),
+        "zone.duplicate");
     routing::application::AddRoadNodeRequest unknownZone {"E1", "Este", "ESTE", 14.0, 10.0, {}};
     unknownZone.links.pushBack({"HUB", 4.5});
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.addRoadNode.execute(app.admin(), unknownZone);
-                  }),
-              "road_node.zone_unavailable");
+    EXPECT_EQ(codeOfFailure([&] { app.addRoadNode.execute(app.admin(), unknownZone); }), "road_node.zone_unavailable");
     routing::application::AddRoadNodeRequest repeated {"O1", "Repetido", "OESTE", 6.0, 11.0, {}};
     repeated.links.pushBack({"HUB", 5.0});
     EXPECT_THROW(app.addRoadNode.execute(app.admin(), repeated), business_error);
@@ -190,41 +172,26 @@ TEST(Extensibility, DuplicateZoneAndInvalidMapPointsAreRejected)
 
 TEST(Extensibility, DeactivatingAZoneFollowsTheDomainRules)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     openWestZone(app);
-    const auto                                      courierId = createCourier(app, "pum2@hubflow.local");
+    const auto courierId = createCourier(app, "pum2@hubflow.local");
     const logistics::application::UpdateZoneRequest close {std::nullopt, false};
     app.registerShipment.execute(app.operador(), westShipment("PKG-3001"));
 
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.updateZone.execute(app.admin(), "OESTE", close);
-                  }),
-              "zone.has_shipments");
+    EXPECT_EQ(codeOfFailure([&] { app.updateZone.execute(app.admin(), "OESTE", close); }), "zone.has_shipments");
 
     const auto& batch = app.openSortingBatch.execute(app.operador(), "OESTE");
     app.prepareSortingBatch.execute(app.operador(), batch.id());
     app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
     const auto& route = app.assignDeliveryRoute.execute(
         app.operador(), routing::application::AssignRouteRequest {batch.id(), courierId, {}});
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.updateZone.execute(app.admin(), "OESTE", close);
-                  }),
-              "zone.has_routes");
+    EXPECT_EQ(codeOfFailure([&] { app.updateZone.execute(app.admin(), "OESTE", close); }), "zone.has_routes");
 
     app.resolveRouteStop.execute(
         app.pum(courierId),
         routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Delivered, "", true});
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.updateZone.execute(app.admin(), "OESTE", close);
-                  }),
-              "zone.has_map_nodes");
+    EXPECT_EQ(codeOfFailure([&] { app.updateZone.execute(app.admin(), "OESTE", close); }), "zone.has_map_nodes");
 
     app.updateRoadNode.execute(app.admin(), "O1", routing::application::UpdateRoadNodeRequest {std::nullopt, false});
     app.updateRoadNode.execute(
@@ -235,11 +202,7 @@ TEST(Extensibility, DeactivatingAZoneFollowsTheDomainRules)
     EXPECT_TRUE(audited(storage, "zone.changed"));
     EXPECT_TRUE(storage.maps.changed.at("O2").zone == "CENTRO");
 
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.registerShipment.execute(app.operador(), westShipment("PKG-3002"));
-                  }),
+    EXPECT_EQ(codeOfFailure([&] { app.registerShipment.execute(app.operador(), westShipment("PKG-3002")); }),
               "shipment.zone_unavailable");
     EXPECT_EQ(codeOfFailure(
                   [&]
@@ -281,7 +244,7 @@ TEST(Extensibility, ANewServiceWithHigherPriorityGoesFirstAndSurvivesARestart)
 
 TEST(Extensibility, TheSeedDatasetKeepsItsOriginalPendingOrder)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
 
@@ -292,26 +255,18 @@ TEST(Extensibility, TheSeedDatasetKeepsItsOriginalPendingOrder)
 
 TEST(Extensibility, AServiceInUseCannotBeDeactivatedAndAnInactiveOneIsNotOffered)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     const logistics::application::UpdateServiceLevelRequest close {std::nullopt, false};
 
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.updateServiceLevel.execute(app.admin(), "EXPRESS", close);
-                  }),
+    EXPECT_EQ(codeOfFailure([&] { app.updateServiceLevel.execute(app.admin(), "EXPRESS", close); }),
               "service_level.has_shipments");
     app.createServiceLevel.execute(app.admin(),
                                    logistics::application::CreateServiceLevelRequest {"NOCTURNO", "Nocturno", 2});
     app.updateServiceLevel.execute(app.admin(), "NOCTURNO", close);
 
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.registerShipment.execute(app.operador(), test::draft("PKG-3001", "NOCTURNO"));
-                  }),
+    EXPECT_EQ(codeOfFailure([&] { app.registerShipment.execute(app.operador(), test::draft("PKG-3001", "NOCTURNO")); }),
               "shipment.service_unavailable");
     EXPECT_FALSE(storage.catalogs.services.back().active);
 }
@@ -335,25 +290,17 @@ TEST(Extensibility, FeaturesAttachToShipmentsAndArePersisted)
             app.admin(), "FRAGIL", logistics::application::UpdateShipmentFeatureRequest {std::nullopt, false});
         auto another = test::draft("PKG-3002", "EXPRESS");
         another.features.pushBack("FRAGIL");
-        EXPECT_EQ(codeOfFailure(
-                      [&]
-                      {
-                          app.registerShipment.execute(app.operador(), another);
-                      }),
+        EXPECT_EQ(codeOfFailure([&] { app.registerShipment.execute(app.operador(), another); }),
                   "shipment.feature_unavailable");
         another.features = {};
         another.features.pushBack("INEXISTENTE");
-        EXPECT_EQ(codeOfFailure(
-                      [&]
-                      {
-                          app.registerShipment.execute(app.operador(), another);
-                      }),
+        EXPECT_EQ(codeOfFailure([&] { app.registerShipment.execute(app.operador(), another); }),
                   "shipment.feature_unavailable");
         EXPECT_TRUE(app.getShipment.execute(app.operador(), "PKG-3001").hasFeature("FRAGIL"));
         EXPECT_TRUE(audited(storage, "feature.created"));
     }
     test::ApplicationHarness restored {storage};
-    const auto&              shipment = restored.getShipment.execute(restored.operador(), "PKG-3001");
+    const auto& shipment = restored.getShipment.execute(restored.operador(), "PKG-3001");
     EXPECT_TRUE(shipment.hasFeature("FRAGIL"));
     EXPECT_TRUE(shipment.hasFeature("DOCUMENTOS"));
     EXPECT_FALSE(restored.listShipmentFeatures.execute(restored.admin()).require("FRAGIL").isActive());
@@ -374,51 +321,34 @@ TEST(Extensibility, RolePermissionsAreLoadedFromData)
     EXPECT_NO_THROW(app.createZone.execute(app.admin(), logistics::application::CreateZoneRequest {"OESTE", "Oeste"}));
     EXPECT_NO_THROW(app.createZone.execute(app.operador(), logistics::application::CreateZoneRequest {"ESTE", "Este"}));
     EXPECT_NO_THROW(app.registerShipment.execute(app.operador(), test::draft("PKG-3001", "EXPRESS")));
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.registerShipment.execute(app.admin(), test::draft("PKG-3002", "EXPRESS"));
-                  }),
+    EXPECT_EQ(codeOfFailure([&] { app.registerShipment.execute(app.admin(), test::draft("PKG-3002", "EXPRESS")); }),
               "auth.forbidden");
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.listPendingShipments.execute(app.pum(9));
-                  }),
-              "auth.forbidden");
+    EXPECT_EQ(codeOfFailure([&] { app.listPendingShipments.execute(app.pum(9)); }), "auth.forbidden");
 }
 
 TEST(Extensibility, ACourierWithARouteInProgressCannotBeDeactivatedUntilTheRouteIsReassigned)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     app.bootstrapUser(identity::application::RegisterUserRequest {
         "admin@hubflow.local", "Admin", identity::domain::Role::Admin, "clave-segura"});
-    const auto                               firstId  = createCourier(app, "pum1@hubflow.local");
-    const auto                               secondId = createCourier(app, "pum2@hubflow.local");
-    const auto                               routeId  = assignNorthRoute(app, firstId).id();
+    const auto firstId = createCourier(app, "pum1@hubflow.local");
+    const auto secondId = createCourier(app, "pum2@hubflow.local");
+    const auto routeId = assignNorthRoute(app, firstId).id();
     identity::application::UpdateUserRequest deactivate;
     deactivate.active = false;
 
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.updateUser.execute(app.admin(), firstId, deactivate);
-                  }),
+    EXPECT_EQ(codeOfFailure([&] { app.updateUser.execute(app.admin(), firstId, deactivate); }),
               "user.has_route_in_progress");
     identity::application::UpdateUserRequest demote;
     demote.role = identity::domain::Role::Operador;
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.updateUser.execute(app.admin(), firstId, demote);
-                  }),
+    EXPECT_EQ(codeOfFailure([&] { app.updateUser.execute(app.admin(), firstId, demote); }),
               "user.has_route_in_progress");
     EXPECT_TRUE(storage.users.users.at(firstId).active);
 
-    const auto  events = storage.audit.entries.size();
-    const auto& moved  = app.reassignDeliveryRoute.execute(app.operador(), routeId, secondId);
+    const auto events = storage.audit.entries.size();
+    const auto& moved = app.reassignDeliveryRoute.execute(app.operador(), routeId, secondId);
     EXPECT_EQ(moved.courier().id, secondId);
     EXPECT_EQ(storage.routes.records.at(routeId).courier.id, secondId);
     EXPECT_EQ(storage.audit.entries.size(), events + 1);
@@ -430,11 +360,7 @@ TEST(Extensibility, ACourierWithARouteInProgressCannotBeDeactivatedUntilTheRoute
     EXPECT_FALSE(app.updateUser.execute(app.admin(), firstId, deactivate).active);
     EXPECT_EQ(app.listRoutes.execute(app.pum(firstId)).size(), 0U);
     EXPECT_EQ(app.listRoutes.execute(app.pum(secondId)).size(), 1U);
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.reassignDeliveryRoute.execute(app.operador(), routeId, firstId);
-                  }),
+    EXPECT_EQ(codeOfFailure([&] { app.reassignDeliveryRoute.execute(app.operador(), routeId, firstId); }),
               "route.courier_invalid");
 
     test::ApplicationHarness restored {storage};
@@ -443,35 +369,22 @@ TEST(Extensibility, ACourierWithARouteInProgressCannotBeDeactivatedUntilTheRoute
 
 TEST(Extensibility, OnlyPlantStaffReassignsAndFinishedRoutesStay)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     app.bootstrapUser(identity::application::RegisterUserRequest {
         "admin@hubflow.local", "Admin", identity::domain::Role::Admin, "clave-segura"});
-    const auto  firstId  = createCourier(app, "pum1@hubflow.local");
-    const auto  secondId = createCourier(app, "pum2@hubflow.local");
-    const auto& route    = assignNorthRoute(app, firstId);
+    const auto firstId = createCourier(app, "pum1@hubflow.local");
+    const auto secondId = createCourier(app, "pum2@hubflow.local");
+    const auto& route = assignNorthRoute(app, firstId);
 
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.reassignDeliveryRoute.execute(app.pum(firstId), route.id(), secondId);
-                  }),
+    EXPECT_EQ(codeOfFailure([&] { app.reassignDeliveryRoute.execute(app.pum(firstId), route.id(), secondId); }),
               "auth.forbidden");
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.reassignDeliveryRoute.execute(app.admin(), 999, secondId);
-                  }),
-              "route.not_found");
+    EXPECT_EQ(codeOfFailure([&] { app.reassignDeliveryRoute.execute(app.admin(), 999, secondId); }), "route.not_found");
     app.resolveRouteStop.execute(
         app.pum(firstId),
         routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Delivered, "", true});
-    EXPECT_EQ(codeOfFailure(
-                  [&]
-                  {
-                      app.reassignDeliveryRoute.execute(app.admin(), route.id(), secondId);
-                  }),
+    EXPECT_EQ(codeOfFailure([&] { app.reassignDeliveryRoute.execute(app.admin(), route.id(), secondId); }),
               "route.completed");
     identity::application::UpdateUserRequest deactivate;
     deactivate.active = false;

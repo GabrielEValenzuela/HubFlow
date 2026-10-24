@@ -7,19 +7,19 @@
 namespace hubflow::routing::adapters
 {
 
-/// @brief Mapa de la ciudad guardado en las tablas @c road_nodes y @c road_edges.
-class MySqlRoadMapRepository final : public application::RoadMapRepository
-{
-public:
-    explicit MySqlRoadMapRepository(platform::MySqlConnection& connection);
+    /// @brief Mapa de la ciudad guardado en las tablas @c road_nodes y @c road_edges.
+    class MySqlRoadMapRepository final : public application::RoadMapRepository
+    {
+    public:
+        explicit MySqlRoadMapRepository(platform::MySqlConnection& connection);
 
-private:
-    void loadInto(domain::RoadMap& map) const override;
-    void addNode(const domain::RoadNode& node, const ds::DynamicArray<domain::RoadLink>& links) override;
-    void updateNode(const domain::RoadNode& node) override;
+    private:
+        void loadInto(domain::RoadMap& map) const override;
+        void addNode(const domain::RoadNode& node, const ds::DynamicArray<domain::RoadLink>& links) override;
+        void updateNode(const domain::RoadNode& node) override;
 
-    platform::MySqlConnection& m_connection;
-};
+        platform::MySqlConnection& m_connection;
+    };
 
 } // namespace hubflow::routing::adapters
 

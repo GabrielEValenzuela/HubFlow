@@ -10,37 +10,37 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Estructura con la que se busca un envío por código.
-enum class LookupIndex
-{
-    LinkedList,
-    Bst,
-    BPlusTree
-};
+    /// @brief Estructura con la que se busca un envío por código.
+    enum class LookupIndex
+    {
+        LinkedList,
+        Bst,
+        BPlusTree
+    };
 
-/**
- * @brief Busca un envío por código de seguimiento usando la estructura elegida, e informa cuántos nodos recorrió para
- * encontrarlo.
- *
- * @par Quién puede ejecutarlo
- * ADMIN y OPERADOR.
- *
- * @par Errores
- * - Forbidden: el rol no puede operar envíos.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class FindShipmentUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Busca un envío por código de seguimiento usando la estructura elegida, e informa cuántos nodos recorrió
+     * para encontrarlo.
+     *
+     * @par Quién puede ejecutarlo
+     * ADMIN y OPERADOR.
+     *
+     * @par Errores
+     * - Forbidden: el rol no puede operar envíos.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class FindShipmentUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~FindShipmentUseCase() = default;
+        virtual ~FindShipmentUseCase() = default;
 
-    virtual domain::LookupResult
-    execute(const shared::application::Principal& principal, const std::string& code, LookupIndex index) const = 0;
-};
+        virtual domain::LookupResult
+        execute(const shared::application::Principal& principal, const std::string& code, LookupIndex index) const = 0;
+    };
 
 } // namespace hubflow::logistics::application
 

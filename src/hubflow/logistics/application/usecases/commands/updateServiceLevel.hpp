@@ -10,25 +10,25 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de UpdateServiceLevelUseCase.
-class UpdateServiceLevel final : public UpdateServiceLevelUseCase
-{
-public:
-    UpdateServiceLevel(LogisticsModel&                   model,
-                       const domain::PlantOccupancy&     occupancy,
-                       shared::application::EventBus&    bus,
-                       const shared::application::Clock& clock);
+    /// @brief Implementación de UpdateServiceLevelUseCase.
+    class UpdateServiceLevel final : public UpdateServiceLevelUseCase
+    {
+    public:
+        UpdateServiceLevel(LogisticsModel& model,
+                           const domain::PlantOccupancy& occupancy,
+                           shared::application::EventBus& bus,
+                           const shared::application::Clock& clock);
 
-private:
-    const domain::ServiceLevel& execute(const shared::application::Principal& principal,
-                                        const std::string&                    code,
-                                        const UpdateServiceLevelRequest&      request) override;
+    private:
+        const domain::ServiceLevel& execute(const shared::application::Principal& principal,
+                                            const std::string& code,
+                                            const UpdateServiceLevelRequest& request) override;
 
-    LogisticsModel&                   m_model;
-    const domain::PlantOccupancy&     m_occupancy;
-    shared::application::EventBus&    m_bus;
-    const shared::application::Clock& m_clock;
-};
+        LogisticsModel& m_model;
+        const domain::PlantOccupancy& m_occupancy;
+        shared::application::EventBus& m_bus;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::logistics::application
 

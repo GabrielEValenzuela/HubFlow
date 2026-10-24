@@ -21,86 +21,84 @@ using hubflow::test::draft;
 
 namespace
 {
-class RecordingPublisher final : public DomainEventPublisher, private DomainEventVisitor
-{
-public:
-    std::vector<std::string> events;
-
-private:
-    void publish(const DomainEvent& event) override
+    class RecordingPublisher final
+        : public DomainEventPublisher
+        , private DomainEventVisitor
     {
-        event.accept(*this);
-    }
+    public:
+        std::vector<std::string> events;
 
-    void on(const ShipmentRegistered&) override
+    private:
+        void publish(const DomainEvent& event) override
+        {
+            event.accept(*this);
+        }
+
+        void on(const ShipmentRegistered&) override
+        {
+            events.emplace_back("registered");
+        }
+
+        void on(const ShipmentDispatched&) override
+        {
+            events.emplace_back("dispatched");
+        }
+
+        void on(const ShipmentRescheduled&) override
+        {
+            events.emplace_back("rescheduled");
+        }
+
+        void on(const ShipmentDelivered&) override
+        {
+            events.emplace_back("delivered");
+        }
+
+        void on(const ParcelDeliveryConfirmed&) override
+        {
+            events.emplace_back("parcel");
+        }
+    };
+
+    class LogisticsFixture : public ::testing::Test
     {
-        events.emplace_back("registered");
-    }
+    protected:
+        LogisticsFixture()
+            : pending {priorities.policy}
+        {
+        }
 
-    void on(const ShipmentDispatched&) override
+        Shipment& receive(const ShipmentDraft& shipmentDraft)
+        {
+            Shipment& shipment = catalog.adopt(Shipment::receive(shipmentDraft, tickets.next(), actor()));
+            pending.insert(&shipment);
+            return shipment;
+        }
+
+        std::vector<std::string> pendingCodes() const
+        {
+            std::vector<std::string> codes;
+            pending.forEach([&codes](const Shipment& shipment) { codes.push_back(shipment.code()); });
+            return codes;
+        }
+
+        hubflow::test::ReferencePriorities priorities;
+        ShipmentCatalog catalog;
+        PendingShipments pending;
+        TicketDispenser tickets;
+    };
+
+    class PendingShipmentsTest : public LogisticsFixture
     {
-        events.emplace_back("dispatched");
-    }
+    };
 
-    void on(const ShipmentRescheduled&) override
+    class ShipmentHistoryTest : public LogisticsFixture
     {
-        events.emplace_back("rescheduled");
-    }
+    };
 
-    void on(const ShipmentDelivered&) override
+    class ShipmentLookupTest : public LogisticsFixture
     {
-        events.emplace_back("delivered");
-    }
-
-    void on(const ParcelDeliveryConfirmed&) override
-    {
-        events.emplace_back("parcel");
-    }
-};
-
-class LogisticsFixture : public ::testing::Test
-{
-protected:
-    LogisticsFixture()
-        : pending {priorities.policy}
-    {
-    }
-
-    Shipment& receive(const ShipmentDraft& shipmentDraft)
-    {
-        Shipment& shipment = catalog.adopt(Shipment::receive(shipmentDraft, tickets.next(), actor()));
-        pending.insert(&shipment);
-        return shipment;
-    }
-
-    std::vector<std::string> pendingCodes() const
-    {
-        std::vector<std::string> codes;
-        pending.forEach(
-            [&codes](const Shipment& shipment)
-            {
-                codes.push_back(shipment.code());
-            });
-        return codes;
-    }
-
-    hubflow::test::ReferencePriorities priorities;
-    ShipmentCatalog                    catalog;
-    PendingShipments                   pending;
-    TicketDispenser                    tickets;
-};
-
-class PendingShipmentsTest : public LogisticsFixture
-{
-};
-
-class ShipmentHistoryTest : public LogisticsFixture
-{
-};
-
-class ShipmentLookupTest : public LogisticsFixture
-{
-};
+    };
 } // namespace
 
 TEST_F(PendingShipmentsTest, OrdersByPriority)
@@ -167,16 +165,9 @@ TEST_F(ShipmentHistoryTest, ReadsForwardAndBackward)
 
     std::vector<ShipmentStatus> forward;
     std::vector<ShipmentStatus> backward;
-    shipment.history().forEachChronological(
-        [&forward](const Movement& movement)
-        {
-            forward.push_back(movement.status);
-        });
-    shipment.history().forEachReverse(
-        [&backward](const Movement& movement)
-        {
-            backward.push_back(movement.status);
-        });
+    shipment.history().forEachChronological([&forward](const Movement& movement)
+                                            { forward.push_back(movement.status); });
+    shipment.history().forEachReverse([&backward](const Movement& movement) { backward.push_back(movement.status); });
 
     const std::vector<ShipmentStatus> expected {ShipmentStatus::Recibido,
                                                 ShipmentStatus::Clasificado,
@@ -221,7 +212,7 @@ TEST_F(PendingShipmentsTest, HandlesEmptyDuplicatedAndSingleElementCases)
 TEST(Shipment, EnforcesStateMachineAndTracksStateBits)
 {
     TicketDispenser tickets;
-    Shipment*       pShipment = Shipment::receive(draft("PKG-0001", "EXPRESS"), tickets.next(), actor());
+    Shipment* pShipment = Shipment::receive(draft("PKG-0001", "EXPRESS"), tickets.next(), actor());
     EXPECT_THROW(pShipment->deliver("x", actor()), business_error);
     pShipment->dispatch("salida", actor());
     pShipment->reschedule("ausente", tickets.next(), actor());
@@ -237,9 +228,9 @@ TEST(Shipment, EnforcesStateMachineAndTracksStateBits)
 
 TEST(Shipment, RaisesOneEventPerBehaviour)
 {
-    TicketDispenser    tickets;
+    TicketDispenser tickets;
     RecordingPublisher publisher;
-    Shipment*          pShipment = Shipment::receive(draft("PKG-0001", "EXPRESS"), tickets.next(), actor());
+    Shipment* pShipment = Shipment::receive(draft("PKG-0001", "EXPRESS"), tickets.next(), actor());
     pShipment->dispatch("salida", actor());
     pShipment->reschedule("ausente", tickets.next(), actor());
     pShipment->dispatch("salida", actor());
@@ -271,11 +262,11 @@ TEST_F(ShipmentLookupTest, StrategiesCompareVisitedNodes)
         receive(shipmentDraft);
     }
     const LinearShipmentLookup linear;
-    const BstShipmentLookup    bst;
-    const BPlusShipmentLookup  bPlus;
-    const ShipmentLookup&      linearLookup = linear;
-    const ShipmentLookup&      bstLookup    = bst;
-    const ShipmentLookup&      bPlusLookup  = bPlus;
+    const BstShipmentLookup bst;
+    const BPlusShipmentLookup bPlus;
+    const ShipmentLookup& linearLookup = linear;
+    const ShipmentLookup& bstLookup = bst;
+    const ShipmentLookup& bPlusLookup = bPlus;
 
     EXPECT_EQ(linearLookup.find(catalog, "PKG-1008").visited, 8U);
     EXPECT_EQ(bstLookup.find(catalog, "PKG-1008").visited, 8U);

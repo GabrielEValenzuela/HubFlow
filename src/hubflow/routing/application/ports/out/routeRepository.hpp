@@ -6,30 +6,30 @@
 namespace hubflow::routing::application
 {
 
-/// @brief Receptor de rutas durante la hidratación.
-class RouteRestorer
-{
-public:
-    virtual ~RouteRestorer() = default;
+    /// @brief Receptor de rutas durante la hidratación.
+    class RouteRestorer
+    {
+    public:
+        virtual ~RouteRestorer() = default;
 
-    virtual void restoreRoute(const domain::RouteRecord& record) = 0;
-};
+        virtual void restoreRoute(const domain::RouteRecord& record) = 0;
+    };
 
-/// @brief Persistencia de hojas de ruta.
-class RouteRepository
-{
-public:
-    virtual ~RouteRepository() = default;
+    /// @brief Persistencia de hojas de ruta.
+    class RouteRepository
+    {
+    public:
+        virtual ~RouteRepository() = default;
 
-    virtual void add(const domain::RouteRecord& record) = 0;
+        virtual void add(const domain::RouteRecord& record) = 0;
 
-    virtual void updateStop(std::uint64_t routeId, const domain::RouteStop& stop) = 0;
+        virtual void updateStop(std::uint64_t routeId, const domain::RouteStop& stop) = 0;
 
-    /// @brief Registra el nuevo repartidor de la ruta.
-    virtual void updateCourier(std::uint64_t routeId, const domain::Courier& courier) = 0;
+        /// @brief Registra el nuevo repartidor de la ruta.
+        virtual void updateCourier(std::uint64_t routeId, const domain::Courier& courier) = 0;
 
-    virtual void loadAll(RouteRestorer& restorer) const = 0;
-};
+        virtual void loadAll(RouteRestorer& restorer) const = 0;
+    };
 
 } // namespace hubflow::routing::application
 

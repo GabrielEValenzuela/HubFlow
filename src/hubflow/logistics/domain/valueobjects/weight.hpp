@@ -4,20 +4,20 @@
 namespace hubflow::logistics::domain
 {
 
-/// @brief Peso del paquete en kilogramos, en el intervalo (0, 50].
-class Weight final
-{
-public:
-    static constexpr double MAX_KILOGRAMS {50.0};
+    /// @brief Peso del paquete en kilogramos, en el intervalo (0, 50].
+    class Weight final
+    {
+    public:
+        static constexpr double MAX_KILOGRAMS {50.0};
 
-    /// @throws business_error (Validation) si está fuera de rango.
-    explicit Weight(double kilograms);
+        /// @throws business_error (Validation) si está fuera de rango.
+        explicit Weight(double kilograms);
 
-    double kilograms() const noexcept;
+        double kilograms() const noexcept;
 
-private:
-    double m_kilograms;
-};
+    private:
+        double m_kilograms;
+    };
 
 } // namespace hubflow::logistics::domain
 

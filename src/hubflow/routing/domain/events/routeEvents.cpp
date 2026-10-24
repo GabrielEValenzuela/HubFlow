@@ -7,90 +7,90 @@
 namespace hubflow::routing::domain
 {
 
-DeliveryRouteAssigned::DeliveryRouteAssigned(RouteRecord                  record,
-                                             const double                 totalCostKm,
-                                             shared::domain::ActorContext context)
-    : shared::domain::DomainEvent {std::move(context)}
-    , m_record {std::move(record)}
-    , m_totalCostKm {totalCostKm}
-{
-}
-
-const RouteRecord& DeliveryRouteAssigned::record() const noexcept
-{
-    return m_record;
-}
-
-double DeliveryRouteAssigned::totalCostKm() const noexcept
-{
-    return m_totalCostKm;
-}
-
-void DeliveryRouteAssigned::accept(shared::domain::DomainEventVisitor& visitor) const
-{
-    visitor.on(*this);
-}
-
-RouteStopResolved::RouteStopResolved(const std::uint64_t          routeId,
-                                     RouteStop                    stop,
-                                     const bool                   routeCompleted,
-                                     shared::domain::ActorContext context)
-    : shared::domain::DomainEvent {std::move(context)}
-    , m_routeId {routeId}
-    , m_stop {std::move(stop)}
-    , m_routeCompleted {routeCompleted}
-{
-}
-
-std::uint64_t RouteStopResolved::routeId() const noexcept
-{
-    return m_routeId;
-}
-
-const RouteStop& RouteStopResolved::stop() const noexcept
-{
-    return m_stop;
-}
-
-bool RouteStopResolved::routeCompleted() const noexcept
-{
-    return m_routeCompleted;
-}
-
-void RouteStopResolved::accept(shared::domain::DomainEventVisitor& visitor) const
-{
-    visitor.on(*this);
-}
-
-DeliveryRouteReassigned::DeliveryRouteReassigned(const std::uint64_t          routeId,
-                                                 Courier                      previousCourier,
-                                                 Courier                      newCourier,
+    DeliveryRouteAssigned::DeliveryRouteAssigned(RouteRecord record,
+                                                 const double totalCostKm,
                                                  shared::domain::ActorContext context)
-    : shared::domain::DomainEvent {std::move(context)}
-    , m_routeId {routeId}
-    , m_previousCourier {std::move(previousCourier)}
-    , m_newCourier {std::move(newCourier)}
-{
-}
+        : shared::domain::DomainEvent {std::move(context)}
+        , m_record {std::move(record)}
+        , m_totalCostKm {totalCostKm}
+    {
+    }
 
-std::uint64_t DeliveryRouteReassigned::routeId() const noexcept
-{
-    return m_routeId;
-}
+    const RouteRecord& DeliveryRouteAssigned::record() const noexcept
+    {
+        return m_record;
+    }
 
-const Courier& DeliveryRouteReassigned::previousCourier() const noexcept
-{
-    return m_previousCourier;
-}
+    double DeliveryRouteAssigned::totalCostKm() const noexcept
+    {
+        return m_totalCostKm;
+    }
 
-const Courier& DeliveryRouteReassigned::newCourier() const noexcept
-{
-    return m_newCourier;
-}
+    void DeliveryRouteAssigned::accept(shared::domain::DomainEventVisitor& visitor) const
+    {
+        visitor.on(*this);
+    }
 
-void DeliveryRouteReassigned::accept(shared::domain::DomainEventVisitor& visitor) const
-{
-    visitor.on(*this);
-}
+    RouteStopResolved::RouteStopResolved(const std::uint64_t routeId,
+                                         RouteStop stop,
+                                         const bool routeCompleted,
+                                         shared::domain::ActorContext context)
+        : shared::domain::DomainEvent {std::move(context)}
+        , m_routeId {routeId}
+        , m_stop {std::move(stop)}
+        , m_routeCompleted {routeCompleted}
+    {
+    }
+
+    std::uint64_t RouteStopResolved::routeId() const noexcept
+    {
+        return m_routeId;
+    }
+
+    const RouteStop& RouteStopResolved::stop() const noexcept
+    {
+        return m_stop;
+    }
+
+    bool RouteStopResolved::routeCompleted() const noexcept
+    {
+        return m_routeCompleted;
+    }
+
+    void RouteStopResolved::accept(shared::domain::DomainEventVisitor& visitor) const
+    {
+        visitor.on(*this);
+    }
+
+    DeliveryRouteReassigned::DeliveryRouteReassigned(const std::uint64_t routeId,
+                                                     Courier previousCourier,
+                                                     Courier newCourier,
+                                                     shared::domain::ActorContext context)
+        : shared::domain::DomainEvent {std::move(context)}
+        , m_routeId {routeId}
+        , m_previousCourier {std::move(previousCourier)}
+        , m_newCourier {std::move(newCourier)}
+    {
+    }
+
+    std::uint64_t DeliveryRouteReassigned::routeId() const noexcept
+    {
+        return m_routeId;
+    }
+
+    const Courier& DeliveryRouteReassigned::previousCourier() const noexcept
+    {
+        return m_previousCourier;
+    }
+
+    const Courier& DeliveryRouteReassigned::newCourier() const noexcept
+    {
+        return m_newCourier;
+    }
+
+    void DeliveryRouteReassigned::accept(shared::domain::DomainEventVisitor& visitor) const
+    {
+        visitor.on(*this);
+    }
 
 } // namespace hubflow::routing::domain

@@ -7,19 +7,19 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Persiste zonas, niveles de servicio y características cada vez que se dan de alta o cambian.
-class CatalogPersistenceSubscriber final : public shared::domain::DomainEventVisitor
-{
-public:
-    explicit CatalogPersistenceSubscriber(CatalogRepository& repository);
+    /// @brief Persiste zonas, niveles de servicio y características cada vez que se dan de alta o cambian.
+    class CatalogPersistenceSubscriber final : public shared::domain::DomainEventVisitor
+    {
+    public:
+        explicit CatalogPersistenceSubscriber(CatalogRepository& repository);
 
-private:
-    void on(const domain::ZoneChanged& event) override;
-    void on(const domain::ServiceLevelChanged& event) override;
-    void on(const domain::ShipmentFeatureChanged& event) override;
+    private:
+        void on(const domain::ZoneChanged& event) override;
+        void on(const domain::ServiceLevelChanged& event) override;
+        void on(const domain::ShipmentFeatureChanged& event) override;
 
-    CatalogRepository& m_repository;
-};
+        CatalogRepository& m_repository;
+    };
 
 } // namespace hubflow::logistics::application
 

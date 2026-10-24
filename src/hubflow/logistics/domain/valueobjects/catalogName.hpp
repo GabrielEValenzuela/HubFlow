@@ -6,18 +6,18 @@
 namespace hubflow::logistics::domain
 {
 
-/// @brief Nombre legible de un dato maestro, tal como lo ve el personal de la planta (2 a 60 caracteres).
-class CatalogName final
-{
-public:
-    /// @throws business_error (Validation) si el nombre es demasiado corto o largo.
-    explicit CatalogName(const std::string& value);
+    /// @brief Nombre legible de un dato maestro, tal como lo ve el personal de la planta (2 a 60 caracteres).
+    class CatalogName final
+    {
+    public:
+        /// @throws business_error (Validation) si el nombre es demasiado corto o largo.
+        explicit CatalogName(const std::string& value);
 
-    const std::string& value() const noexcept;
+        const std::string& value() const noexcept;
 
-private:
-    std::string m_value;
-};
+    private:
+        std::string m_value;
+    };
 
 } // namespace hubflow::logistics::domain
 

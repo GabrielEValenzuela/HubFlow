@@ -5,29 +5,29 @@
 namespace hubflow::tracking::adapters
 {
 
-void CompositeCustomerNotifier::add(application::CustomerNotifier& notifier)
-{
-    m_notifiers.push_back(&notifier);
-}
+    void CompositeCustomerNotifier::add(application::CustomerNotifier& notifier)
+    {
+        m_notifiers.push_back(&notifier);
+    }
 
-void CompositeCustomerNotifier::send(const application::CustomerNotice& notice)
-{
-    std::exception_ptr failure;
-    for (auto* pNotifier : m_notifiers)
+    void CompositeCustomerNotifier::send(const application::CustomerNotice& notice)
     {
-        try
+        std::exception_ptr failure;
+        for (auto* pNotifier : m_notifiers)
         {
-            pNotifier->send(notice);
+            try
+            {
+                pNotifier->send(notice);
+            }
+            catch (...)
+            {
+                failure = std::current_exception();
+            }
         }
-        catch (...)
+        if (failure)
         {
-            failure = std::current_exception();
+            std::rethrow_exception(failure);
         }
     }
-    if (failure)
-    {
-        std::rethrow_exception(failure);
-    }
-}
 
 } // namespace hubflow::tracking::adapters

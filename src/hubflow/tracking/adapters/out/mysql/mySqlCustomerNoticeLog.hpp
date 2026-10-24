@@ -7,20 +7,21 @@
 namespace hubflow::tracking::adapters
 {
 
-/// @brief Avisos a clientes guardados en la tabla @c notifications.
-class MySqlCustomerNoticeLog final : public application::CustomerNoticeLog
-{
-public:
-    explicit MySqlCustomerNoticeLog(platform::MySqlConnection& connection);
+    /// @brief Avisos a clientes guardados en la tabla @c notifications.
+    class MySqlCustomerNoticeLog final : public application::CustomerNoticeLog
+    {
+    public:
+        explicit MySqlCustomerNoticeLog(platform::MySqlConnection& connection);
 
-private:
-    void append(const application::CustomerNotice& notice) override;
-    void
-    forEachRecent(std::size_t limit, std::size_t offset, application::CustomerNoticeVisitor& visitor) const override;
-    std::size_t count() const override;
+    private:
+        void append(const application::CustomerNotice& notice) override;
+        void forEachRecent(std::size_t limit,
+                           std::size_t offset,
+                           application::CustomerNoticeVisitor& visitor) const override;
+        std::size_t count() const override;
 
-    platform::MySqlConnection& m_connection;
-};
+        platform::MySqlConnection& m_connection;
+    };
 
 } // namespace hubflow::tracking::adapters
 

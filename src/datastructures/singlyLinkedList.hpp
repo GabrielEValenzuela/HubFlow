@@ -6,219 +6,219 @@
 namespace hubflow::ds
 {
 
-/**
- * @brief Lista simplemente enlazada con punteros a cabeza y cola.
- *
- * Ownership: crea y destruye únicamente sus nodos. Si @p TElement es un puntero, el objeto apuntado
- * nunca se libera: queda a cargo de su dueño.
- *
- * | Operación     | Complejidad |
- * |---------------|-------------|
- * | pushFront     | O(1)        |
- * | pushBack      | O(1)        |
- * | popFront      | O(1)        |
- * | removeFirstIf | O(n)        |
- * | findFirst     | O(n)        |
- *
- * @tparam TElement tipo almacenado (copiable).
- */
-template <typename TElement>
-class SinglyLinkedList final
-{
-public:
-    /// @brief Nodo: valor y enlace al siguiente.
-    struct Node
+    /**
+     * @brief Lista simplemente enlazada con punteros a cabeza y cola.
+     *
+     * Ownership: crea y destruye únicamente sus nodos. Si @p TElement es un puntero, el objeto apuntado
+     * nunca se libera: queda a cargo de su dueño.
+     *
+     * | Operación     | Complejidad |
+     * |---------------|-------------|
+     * | pushFront     | O(1)        |
+     * | pushBack      | O(1)        |
+     * | popFront      | O(1)        |
+     * | removeFirstIf | O(n)        |
+     * | findFirst     | O(n)        |
+     *
+     * @tparam TElement tipo almacenado (copiable).
+     */
+    template<typename TElement>
+    class SinglyLinkedList final
     {
-        TElement value;
-        Node*    pNext;
-    };
+    public:
+        /// @brief Nodo: valor y enlace al siguiente.
+        struct Node
+        {
+            TElement value;
+            Node* pNext;
+        };
 
-    SinglyLinkedList() = default;
+        SinglyLinkedList() = default;
 
-    ~SinglyLinkedList()
-    {
-        clear();
-    }
-
-    SinglyLinkedList(const SinglyLinkedList&)            = delete;
-    SinglyLinkedList& operator=(const SinglyLinkedList&) = delete;
-
-    /// @brief Transfiere los nodos de @p other, que queda vacía.
-    SinglyLinkedList(SinglyLinkedList&& other) noexcept
-        : m_pHead {other.m_pHead}
-        , m_pTail {other.m_pTail}
-        , m_size {other.m_size}
-    {
-        other.m_pHead = nullptr;
-        other.m_pTail = nullptr;
-        other.m_size  = 0;
-    }
-
-    /// @brief Libera los nodos propios y toma los de @p other.
-    SinglyLinkedList& operator=(SinglyLinkedList&& other) noexcept
-    {
-        if (this != &other)
+        ~SinglyLinkedList()
         {
             clear();
-            m_pHead       = other.m_pHead;
-            m_pTail       = other.m_pTail;
-            m_size        = other.m_size;
+        }
+
+        SinglyLinkedList(const SinglyLinkedList&) = delete;
+        SinglyLinkedList& operator=(const SinglyLinkedList&) = delete;
+
+        /// @brief Transfiere los nodos de @p other, que queda vacía.
+        SinglyLinkedList(SinglyLinkedList&& other) noexcept
+            : m_pHead {other.m_pHead}
+            , m_pTail {other.m_pTail}
+            , m_size {other.m_size}
+        {
             other.m_pHead = nullptr;
             other.m_pTail = nullptr;
-            other.m_size  = 0;
+            other.m_size = 0;
         }
-        return *this;
-    }
 
-    /// @brief Inserta al inicio. O(1).
-    void pushFront(const TElement& value)
-    {
-        m_pHead = new Node {value, m_pHead};
-        if (m_pTail == nullptr)
+        /// @brief Libera los nodos propios y toma los de @p other.
+        SinglyLinkedList& operator=(SinglyLinkedList&& other) noexcept
         {
-            m_pTail = m_pHead;
-        }
-        ++m_size;
-    }
-
-    /// @brief Inserta al final usando el puntero a la cola. O(1).
-    void pushBack(const TElement& value)
-    {
-        Node* pNode = new Node {value, nullptr};
-        if (m_pTail == nullptr)
-        {
-            m_pHead = pNode;
-        }
-        else
-        {
-            m_pTail->pNext = pNode;
-        }
-        m_pTail = pNode;
-        ++m_size;
-    }
-
-    /**
-     * @brief Extrae el primer elemento.
-     * @param[out] removed valor extraído.
-     * @return false si la lista estaba vacía.
-     */
-    bool popFront(TElement& removed)
-    {
-        const bool hasElements {m_pHead != nullptr};
-        if (hasElements)
-        {
-            Node* pFirst = m_pHead;
-            removed      = pFirst->value;
-            m_pHead      = pFirst->pNext;
-            if (m_pHead == nullptr)
+            if (this != &other)
             {
-                m_pTail = nullptr;
+                clear();
+                m_pHead = other.m_pHead;
+                m_pTail = other.m_pTail;
+                m_size = other.m_size;
+                other.m_pHead = nullptr;
+                other.m_pTail = nullptr;
+                other.m_size = 0;
             }
-            delete pFirst;
+            return *this;
+        }
+
+        /// @brief Inserta al inicio. O(1).
+        void pushFront(const TElement& value)
+        {
+            m_pHead = new Node {value, m_pHead};
+            if (m_pTail == nullptr)
+            {
+                m_pTail = m_pHead;
+            }
+            ++m_size;
+        }
+
+        /// @brief Inserta al final usando el puntero a la cola. O(1).
+        void pushBack(const TElement& value)
+        {
+            Node* pNode = new Node {value, nullptr};
+            if (m_pTail == nullptr)
+            {
+                m_pHead = pNode;
+            }
+            else
+            {
+                m_pTail->pNext = pNode;
+            }
+            m_pTail = pNode;
+            ++m_size;
+        }
+
+        /**
+         * @brief Extrae el primer elemento.
+         * @param[out] removed valor extraído.
+         * @return false si la lista estaba vacía.
+         */
+        bool popFront(TElement& removed)
+        {
+            const bool hasElements {m_pHead != nullptr};
+            if (hasElements)
+            {
+                Node* pFirst = m_pHead;
+                removed = pFirst->value;
+                m_pHead = pFirst->pNext;
+                if (m_pHead == nullptr)
+                {
+                    m_pTail = nullptr;
+                }
+                delete pFirst;
+                --m_size;
+            }
+            return hasElements;
+        }
+
+        /**
+         * @brief Elimina el primer nodo cuyo valor cumple @p matches.
+         * @return true si eliminó un nodo.
+         */
+        template<typename TPredicate>
+        bool removeFirstIf(TPredicate matches)
+        {
+            Node* pPrevious = nullptr;
+            Node* pCurrent = m_pHead;
+            while (pCurrent != nullptr && !matches(pCurrent->value))
+            {
+                pPrevious = pCurrent;
+                pCurrent = pCurrent->pNext;
+            }
+            const bool found {pCurrent != nullptr};
+            if (found)
+            {
+                unlink(pPrevious, pCurrent);
+            }
+            return found;
+        }
+
+        /// @brief Primer valor que cumple @p matches, o nullptr. O(n).
+        template<typename TPredicate>
+        const TElement* findFirst(TPredicate matches) const
+        {
+            const TElement* pFound = nullptr;
+            for (Node* pCurrent = m_pHead; pCurrent != nullptr && pFound == nullptr; pCurrent = pCurrent->pNext)
+            {
+                if (matches(pCurrent->value))
+                {
+                    pFound = &pCurrent->value;
+                }
+            }
+            return pFound;
+        }
+
+        /// @brief Visita los valores de la cabeza a la cola.
+        template<typename TVisitor>
+        void forEach(TVisitor visit) const
+        {
+            for (Node* pCurrent = m_pHead; pCurrent != nullptr; pCurrent = pCurrent->pNext)
+            {
+                visit(pCurrent->value);
+            }
+        }
+
+        /// @brief Libera todos los nodos.
+        void clear() noexcept
+        {
+            while (m_pHead != nullptr)
+            {
+                Node* pNext = m_pHead->pNext;
+                delete m_pHead;
+                m_pHead = pNext;
+            }
+            m_pTail = nullptr;
+            m_size = 0;
+        }
+
+        /// @brief Primer nodo (para recorridos externos y recursivos).
+        const Node* head() const noexcept
+        {
+            return m_pHead;
+        }
+
+        std::size_t size() const noexcept
+        {
+            return m_size;
+        }
+
+        bool isEmpty() const noexcept
+        {
+            return m_pHead == nullptr;
+        }
+
+    private:
+        void unlink(Node* pPrevious, Node* pDoomed) noexcept
+        {
+            if (pPrevious == nullptr)
+            {
+                m_pHead = pDoomed->pNext;
+            }
+            else
+            {
+                pPrevious->pNext = pDoomed->pNext;
+            }
+            if (pDoomed == m_pTail)
+            {
+                m_pTail = pPrevious;
+            }
+            delete pDoomed;
             --m_size;
         }
-        return hasElements;
-    }
 
-    /**
-     * @brief Elimina el primer nodo cuyo valor cumple @p matches.
-     * @return true si eliminó un nodo.
-     */
-    template <typename TPredicate>
-    bool removeFirstIf(TPredicate matches)
-    {
-        Node* pPrevious = nullptr;
-        Node* pCurrent  = m_pHead;
-        while (pCurrent != nullptr && !matches(pCurrent->value))
-        {
-            pPrevious = pCurrent;
-            pCurrent  = pCurrent->pNext;
-        }
-        const bool found {pCurrent != nullptr};
-        if (found)
-        {
-            unlink(pPrevious, pCurrent);
-        }
-        return found;
-    }
-
-    /// @brief Primer valor que cumple @p matches, o nullptr. O(n).
-    template <typename TPredicate>
-    const TElement* findFirst(TPredicate matches) const
-    {
-        const TElement* pFound = nullptr;
-        for (Node* pCurrent = m_pHead; pCurrent != nullptr && pFound == nullptr; pCurrent = pCurrent->pNext)
-        {
-            if (matches(pCurrent->value))
-            {
-                pFound = &pCurrent->value;
-            }
-        }
-        return pFound;
-    }
-
-    /// @brief Visita los valores de la cabeza a la cola.
-    template <typename TVisitor>
-    void forEach(TVisitor visit) const
-    {
-        for (Node* pCurrent = m_pHead; pCurrent != nullptr; pCurrent = pCurrent->pNext)
-        {
-            visit(pCurrent->value);
-        }
-    }
-
-    /// @brief Libera todos los nodos.
-    void clear() noexcept
-    {
-        while (m_pHead != nullptr)
-        {
-            Node* pNext = m_pHead->pNext;
-            delete m_pHead;
-            m_pHead = pNext;
-        }
-        m_pTail = nullptr;
-        m_size  = 0;
-    }
-
-    /// @brief Primer nodo (para recorridos externos y recursivos).
-    const Node* head() const noexcept
-    {
-        return m_pHead;
-    }
-
-    std::size_t size() const noexcept
-    {
-        return m_size;
-    }
-
-    bool isEmpty() const noexcept
-    {
-        return m_pHead == nullptr;
-    }
-
-private:
-    void unlink(Node* pPrevious, Node* pDoomed) noexcept
-    {
-        if (pPrevious == nullptr)
-        {
-            m_pHead = pDoomed->pNext;
-        }
-        else
-        {
-            pPrevious->pNext = pDoomed->pNext;
-        }
-        if (pDoomed == m_pTail)
-        {
-            m_pTail = pPrevious;
-        }
-        delete pDoomed;
-        --m_size;
-    }
-
-    Node*       m_pHead {nullptr};
-    Node*       m_pTail {nullptr};
-    std::size_t m_size {0};
-};
+        Node* m_pHead {nullptr};
+        Node* m_pTail {nullptr};
+        std::size_t m_size {0};
+    };
 
 } // namespace hubflow::ds
 

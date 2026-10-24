@@ -6,18 +6,18 @@
 namespace hubflow::identity::domain
 {
 
-/// @brief Email normalizado a minúsculas con formato local@dominio.tld (máx. 120 caracteres).
-class Email final
-{
-public:
-    /// @throws business_error (Validation) si el formato es inválido.
-    explicit Email(const std::string& value);
+    /// @brief Email normalizado a minúsculas con formato local@dominio.tld (máx. 120 caracteres).
+    class Email final
+    {
+    public:
+        /// @throws business_error (Validation) si el formato es inválido.
+        explicit Email(const std::string& value);
 
-    const std::string& value() const noexcept;
+        const std::string& value() const noexcept;
 
-private:
-    std::string m_value;
-};
+    private:
+        std::string m_value;
+    };
 
 } // namespace hubflow::identity::domain
 

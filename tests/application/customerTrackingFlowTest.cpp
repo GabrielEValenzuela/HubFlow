@@ -15,101 +15,98 @@ using tracking::application::VerificationRequest;
 
 namespace
 {
-constexpr const char* HOME {"203.0.113.7"};
+    constexpr const char* HOME {"203.0.113.7"};
 
-VerificationRequest withPhone(const std::string& code, const std::string& last4, const std::string& address = HOME)
-{
-    return VerificationRequest {address, code, last4, ""};
-}
-
-VerificationRequest
-withPostalCode(const std::string& code, const std::string& postal, const std::string& address = HOME)
-{
-    return VerificationRequest {address, code, "", postal};
-}
-
-std::int64_t nowOf(const test::ApplicationHarness& app)
-{
-    const shared::application::Clock& clock = app.clock;
-    return clock.now();
-}
-
-template <typename TAction>
-business_error failureOf(TAction action)
-{
-    try
+    VerificationRequest withPhone(const std::string& code, const std::string& last4, const std::string& address = HOME)
     {
-        action();
+        return VerificationRequest {address, code, last4, ""};
     }
-    catch (const business_error& error)
+
+    VerificationRequest
+    withPostalCode(const std::string& code, const std::string& postal, const std::string& address = HOME)
     {
-        return error;
+        return VerificationRequest {address, code, "", postal};
     }
-    return business_error {ErrorKind::Validation, "none", "no falló"};
-}
 
-std::uint64_t createCourier(test::ApplicationHarness& app)
-{
-    return app.registerUser
-        .execute(app.admin(),
-                 identity::application::RegisterUserRequest {
-                     "pum1@hubflow.local", "Repartidor", identity::domain::Role::Pum, "clave-segura"})
-        .id;
-}
-
-const routing::domain::DeliveryRoute& assignNorthRoute(test::ApplicationHarness& app, const std::uint64_t courierId)
-{
-    const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
-    app.sortSortingBatch.execute(app.operador(), batch.id(), sorting::domain::SortCriteria::CodeAscending);
-    app.prepareSortingBatch.execute(app.operador(), batch.id());
-    for (int i = 0; i < 3; ++i)
+    std::int64_t nowOf(const test::ApplicationHarness& app)
     {
-        app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
+        const shared::application::Clock& clock = app.clock;
+        return clock.now();
     }
-    return app.assignDeliveryRoute.execute(
-        app.operador(),
-        routing::application::AssignRouteRequest {batch.id(), courierId, routing::domain::SearchAlgorithm::AStar});
-}
 
-class Notices final : public tracking::application::CustomerNoticeVisitor
-{
-public:
-    std::vector<tracking::application::CustomerNotice> items;
-
-private:
-    void visit(const tracking::application::StoredCustomerNotice& stored) override
+    template<typename TAction>
+    business_error failureOf(TAction action)
     {
-        items.push_back(stored.notice);
-    }
-};
-
-std::vector<std::string> messagesFor(test::Storage& storage, const std::string& code)
-{
-    std::vector<std::string> messages;
-    for (const auto& notice : storage.notices.notices)
-    {
-        if (notice.shipmentCode == code)
+        try
         {
-            messages.push_back(notice.message);
+            action();
         }
+        catch (const business_error& error)
+        {
+            return error;
+        }
+        return business_error {ErrorKind::Validation, "none", "no falló"};
     }
-    return messages;
-}
 
-bool anyContains(const std::vector<std::string>& messages, const std::string& text)
-{
-    return std::any_of(messages.begin(),
-                       messages.end(),
-                       [&text](const std::string& message)
-                       {
-                           return message.find(text) != std::string::npos;
-                       });
-}
+    std::uint64_t createCourier(test::ApplicationHarness& app)
+    {
+        return app.registerUser
+            .execute(app.admin(),
+                     identity::application::RegisterUserRequest {
+                         "pum1@hubflow.local", "Repartidor", identity::domain::Role::Pum, "clave-segura"})
+            .id;
+    }
+
+    const routing::domain::DeliveryRoute& assignNorthRoute(test::ApplicationHarness& app, const std::uint64_t courierId)
+    {
+        const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
+        app.sortSortingBatch.execute(app.operador(), batch.id(), sorting::domain::SortCriteria::CodeAscending);
+        app.prepareSortingBatch.execute(app.operador(), batch.id());
+        for (int i = 0; i < 3; ++i)
+        {
+            app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
+        }
+        return app.assignDeliveryRoute.execute(
+            app.operador(),
+            routing::application::AssignRouteRequest {batch.id(), courierId, routing::domain::SearchAlgorithm::AStar});
+    }
+
+    class Notices final : public tracking::application::CustomerNoticeVisitor
+    {
+    public:
+        std::vector<tracking::application::CustomerNotice> items;
+
+    private:
+        void visit(const tracking::application::StoredCustomerNotice& stored) override
+        {
+            items.push_back(stored.notice);
+        }
+    };
+
+    std::vector<std::string> messagesFor(test::Storage& storage, const std::string& code)
+    {
+        std::vector<std::string> messages;
+        for (const auto& notice : storage.notices.notices)
+        {
+            if (notice.shipmentCode == code)
+            {
+                messages.push_back(notice.message);
+            }
+        }
+        return messages;
+    }
+
+    bool anyContains(const std::vector<std::string>& messages, const std::string& text)
+    {
+        return std::any_of(messages.begin(),
+                           messages.end(),
+                           [&text](const std::string& message) { return message.find(text) != std::string::npos; });
+    }
 } // namespace
 
 TEST(CustomerTracking, PublicViewTellsTheJourneyInCustomerLanguage)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     app.classifyShipment.execute(app.operador(), "PKG-1002", "Nota interna: el cliente es conflictivo");
@@ -127,7 +124,7 @@ TEST(CustomerTracking, PublicViewTellsTheJourneyInCustomerLanguage)
 
 TEST(CustomerTracking, CodesAreAcceptedInAnyCaseAndWithSpaces)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
 
@@ -136,30 +133,14 @@ TEST(CustomerTracking, CodesAreAcceptedInAnyCaseAndWithSpaces)
 
 TEST(CustomerTracking, UnknownMalformedAndFailedVerificationAreIndistinguishable)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
 
-    const auto unknown = failureOf(
-        [&]
-        {
-            app.getPublicTracking.execute("PKG-9999");
-        });
-    const auto malformed = failureOf(
-        [&]
-        {
-            app.getPublicTracking.execute("hola");
-        });
-    const auto unknownVerification = failureOf(
-        [&]
-        {
-            app.verifyTracking.execute(withPhone("PKG-9999", "4410"));
-        });
-    const auto wrongProof = failureOf(
-        [&]
-        {
-            app.verifyTracking.execute(withPhone("PKG-1002", "0000"));
-        });
+    const auto unknown = failureOf([&] { app.getPublicTracking.execute("PKG-9999"); });
+    const auto malformed = failureOf([&] { app.getPublicTracking.execute("hola"); });
+    const auto unknownVerification = failureOf([&] { app.verifyTracking.execute(withPhone("PKG-9999", "4410")); });
+    const auto wrongProof = failureOf([&] { app.verifyTracking.execute(withPhone("PKG-1002", "0000")); });
 
     for (const auto* pError : {&malformed, &unknownVerification, &wrongProof})
     {
@@ -172,12 +153,12 @@ TEST(CustomerTracking, UnknownMalformedAndFailedVerificationAreIndistinguishable
 
 TEST(CustomerTracking, VerifyingWithThePhoneEndingGrantsTheExtendedView)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
 
     const auto access = app.verifyTracking.execute(withPhone("PKG-1002", "4410"));
-    const auto view   = app.getVerifiedTracking.execute("PKG-1002", access.token);
+    const auto view = app.getVerifiedTracking.execute("PKG-1002", access.token);
 
     EXPECT_EQ(access.expiresAt, nowOf(app) + 15 * 60);
     EXPECT_EQ(view.recipientFirstName, "Bruno");
@@ -190,7 +171,7 @@ TEST(CustomerTracking, VerifyingWithThePhoneEndingGrantsTheExtendedView)
 
 TEST(CustomerTracking, VerifyingWithThePostalCodeIgnoresCaseAndSpaces)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
 
@@ -201,15 +182,12 @@ TEST(CustomerTracking, VerifyingWithThePostalCodeIgnoresCaseAndSpaces)
 
 TEST(CustomerTracking, EverythingInformedMustMatch)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
 
-    const auto error = failureOf(
-        [&]
-        {
-            app.verifyTracking.execute(VerificationRequest {HOME, "PKG-1002", "4410", "9999"});
-        });
+    const auto error =
+        failureOf([&] { app.verifyTracking.execute(VerificationRequest {HOME, "PKG-1002", "4410", "9999"}); });
     const auto both = app.verifyTracking.execute(VerificationRequest {HOME, "PKG-1002", "4410", "1640"});
 
     EXPECT_EQ(error.code(), "tracking.not_found");
@@ -218,41 +196,24 @@ TEST(CustomerTracking, EverythingInformedMustMatch)
 
 TEST(CustomerTracking, VerifyingWithoutAnyProofIsAValidationError)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
 
-    EXPECT_EQ(failureOf(
-                  [&]
-                  {
-                      app.verifyTracking.execute(withPhone("PKG-1002", ""));
-                  })
-                  .errorKind(),
+    EXPECT_EQ(failureOf([&] { app.verifyTracking.execute(withPhone("PKG-1002", "")); }).errorKind(),
               ErrorKind::Validation);
 }
 
 TEST(CustomerTracking, TheTokenOnlyOpensThePackageItWasIssuedFor)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     const auto access = app.verifyTracking.execute(withPhone("PKG-1002", "4410"));
 
-    const auto otherPackage = failureOf(
-        [&]
-        {
-            app.getVerifiedTracking.execute("PKG-1003", access.token);
-        });
-    const auto garbage = failureOf(
-        [&]
-        {
-            app.getVerifiedTracking.execute("PKG-1002", "basura");
-        });
-    const auto unknownCode = failureOf(
-        [&]
-        {
-            app.getVerifiedTracking.execute("PKG-9999", access.token);
-        });
+    const auto otherPackage = failureOf([&] { app.getVerifiedTracking.execute("PKG-1003", access.token); });
+    const auto garbage = failureOf([&] { app.getVerifiedTracking.execute("PKG-1002", "basura"); });
+    const auto unknownCode = failureOf([&] { app.getVerifiedTracking.execute("PKG-9999", access.token); });
 
     EXPECT_EQ(otherPackage.errorKind(), ErrorKind::Unauthorized);
     for (const auto* pError : {&garbage, &unknownCode})
@@ -264,7 +225,7 @@ TEST(CustomerTracking, TheTokenOnlyOpensThePackageItWasIssuedFor)
 
 TEST(CustomerTracking, TheTokenExpiresAfterFifteenMinutes)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     const auto access = app.verifyTracking.execute(withPhone("PKG-1002", "4410"));
@@ -272,36 +233,22 @@ TEST(CustomerTracking, TheTokenExpiresAfterFifteenMinutes)
     app.clock.advance(15 * 60 - 1);
     EXPECT_NO_THROW(app.getVerifiedTracking.execute("PKG-1002", access.token));
     app.clock.advance(1);
-    EXPECT_EQ(failureOf(
-                  [&]
-                  {
-                      app.getVerifiedTracking.execute("PKG-1002", access.token);
-                  })
-                  .errorKind(),
+    EXPECT_EQ(failureOf([&] { app.getVerifiedTracking.execute("PKG-1002", access.token); }).errorKind(),
               ErrorKind::Unauthorized);
 }
 
 TEST(CustomerTracking, AttemptsAreLimitedPerAddressAndCode)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     for (int i = 0; i < 5; ++i)
     {
-        EXPECT_EQ(failureOf(
-                      [&]
-                      {
-                          app.verifyTracking.execute(withPhone("PKG-1002", "0000"));
-                      })
-                      .errorKind(),
+        EXPECT_EQ(failureOf([&] { app.verifyTracking.execute(withPhone("PKG-1002", "0000")); }).errorKind(),
                   ErrorKind::NotFound);
     }
 
-    const auto blocked = failureOf(
-        [&]
-        {
-            app.verifyTracking.execute(withPhone("PKG-1002", "4410"));
-        });
+    const auto blocked = failureOf([&] { app.verifyTracking.execute(withPhone("PKG-1002", "4410")); });
 
     EXPECT_EQ(blocked.errorKind(), ErrorKind::RateLimited);
     EXPECT_EQ(blocked.retryAfterSeconds(), 15U * 60U);
@@ -314,49 +261,31 @@ TEST(CustomerTracking, AttemptsAreLimitedPerAddressAndCode)
 
 TEST(CustomerTracking, UnknownCodesAreLimitedTooSoTheLimitIsNoOracle)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     for (int i = 0; i < 5; ++i)
     {
-        EXPECT_EQ(failureOf(
-                      [&]
-                      {
-                          app.verifyTracking.execute(withPhone("PKG-9999", "0000"));
-                      })
-                      .errorKind(),
+        EXPECT_EQ(failureOf([&] { app.verifyTracking.execute(withPhone("PKG-9999", "0000")); }).errorKind(),
                   ErrorKind::NotFound);
     }
 
-    EXPECT_EQ(failureOf(
-                  [&]
-                  {
-                      app.verifyTracking.execute(withPhone("PKG-9999", "0000"));
-                  })
-                  .errorKind(),
+    EXPECT_EQ(failureOf([&] { app.verifyTracking.execute(withPhone("PKG-9999", "0000")); }).errorKind(),
               ErrorKind::RateLimited);
 }
 
 TEST(CustomerTracking, RetryAfterShrinksAsTheWindowMoves)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     for (int i = 0; i < 5; ++i)
     {
-        failureOf(
-            [&]
-            {
-                app.verifyTracking.execute(withPhone("PKG-9999", "0000"));
-            });
+        failureOf([&] { app.verifyTracking.execute(withPhone("PKG-9999", "0000")); });
     }
     app.clock.advance(60);
 
-    const auto blocked = failureOf(
-        [&]
-        {
-            app.verifyTracking.execute(withPhone("PKG-9999", "0000"));
-        });
+    const auto blocked = failureOf([&] { app.verifyTracking.execute(withPhone("PKG-9999", "0000")); });
 
     EXPECT_EQ(blocked.errorKind(), ErrorKind::RateLimited);
     EXPECT_EQ(blocked.retryAfterSeconds(), 14U * 60U);
@@ -364,22 +293,19 @@ TEST(CustomerTracking, RetryAfterShrinksAsTheWindowMoves)
 
 TEST(CustomerTracking, ExtendedViewShowsTheEstimatedWindowWhileOnTheWay)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     const auto& route = assignNorthRoute(app, createCourier(app));
     ASSERT_EQ(route.stops()[2].shipmentCode, "PKG-1002");
-    double      km {0.0};
+    double km {0.0};
     std::size_t index {0};
-    route.forEachSegment(
-        [&](const routing::domain::SearchTrace& trace)
-        {
-            km += index++ < 3 ? trace.metrics.costTotal : 0.0;
-        });
+    route.forEachSegment([&](const routing::domain::SearchTrace& trace)
+                         { km += index++ < 3 ? trace.metrics.costTotal : 0.0; });
     const auto expectedMinutes = routing::domain::TravelTimePolicy::estimateMinutes(km, 3);
 
     const auto access = app.verifyTracking.execute(withPhone("PKG-1002", "4410"));
-    const auto view   = app.getVerifiedTracking.execute("PKG-1002", access.token);
+    const auto view = app.getVerifiedTracking.execute("PKG-1002", access.token);
 
     EXPECT_EQ(view.summary.current.text, "Está en camino");
     ASSERT_TRUE(view.arrival.has_value());
@@ -392,13 +318,13 @@ TEST(CustomerTracking, ExtendedViewShowsTheEstimatedWindowWhileOnTheWay)
 
 TEST(CustomerTracking, TheWindowShrinksAsStopsAreResolvedAndDisappearsOnDelivery)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
-    const auto  courierId = createCourier(app);
-    const auto& route     = assignNorthRoute(app, courierId);
-    const auto  access    = app.verifyTracking.execute(withPhone("PKG-1002", "4410"));
-    const auto  before    = app.getVerifiedTracking.execute("PKG-1002", access.token);
+    const auto courierId = createCourier(app);
+    const auto& route = assignNorthRoute(app, courierId);
+    const auto access = app.verifyTracking.execute(withPhone("PKG-1002", "4410"));
+    const auto before = app.getVerifiedTracking.execute("PKG-1002", access.token);
 
     app.resolveRouteStop.execute(
         app.pum(courierId),
@@ -424,11 +350,11 @@ TEST(CustomerTracking, TheWindowShrinksAsStopsAreResolvedAndDisappearsOnDelivery
 
 TEST(CustomerNotices, EveryStepOfTheJourneyProducesACustomerNotice)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
-    const auto  courierId = createCourier(app);
-    const auto& route     = assignNorthRoute(app, courierId);
+    const auto courierId = createCourier(app);
+    const auto& route = assignNorthRoute(app, courierId);
     app.resolveRouteStop.execute(app.pum(courierId),
                                  routing::application::ResolveStopRequest {
                                      route.id(), 1, routing::domain::StopOutcome::Rescheduled, "ausente", false});
@@ -436,7 +362,7 @@ TEST(CustomerNotices, EveryStepOfTheJourneyProducesACustomerNotice)
         app.pum(courierId),
         routing::application::ResolveStopRequest {route.id(), 3, routing::domain::StopOutcome::Delivered, "", true});
 
-    const auto retried   = messagesFor(storage, "PKG-1008");
+    const auto retried = messagesFor(storage, "PKG-1008");
     const auto delivered = messagesFor(storage, "PKG-1002");
 
     ASSERT_EQ(retried.size(), 3U);
@@ -449,7 +375,7 @@ TEST(CustomerNotices, EveryStepOfTheJourneyProducesACustomerNotice)
 
 TEST(CustomerNotices, TheContactIsAlwaysMasked)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
 
@@ -465,20 +391,20 @@ TEST(CustomerNotices, TheContactIsAlwaysMasked)
 
 TEST(CustomerNotices, PartialDeliveryExplainsHowManyParcelsArrived)
 {
-    test::Storage                    storage;
-    test::ApplicationHarness         app {storage};
+    test::Storage storage;
+    test::ApplicationHarness app {storage};
     logistics::domain::ShipmentDraft draft;
-    draft.recipient           = "Marta Lopez";
-    draft.recipientPhone      = "11 5555-8899";
+    draft.recipient = "Marta Lopez";
+    draft.recipientPhone = "11 5555-8899";
     draft.recipientPostalCode = "1640";
-    draft.zone                = "NORTE";
-    draft.service             = "ESTANDAR";
-    draft.deliveryPoint       = "N1";
+    draft.zone = "NORTE";
+    draft.service = "ESTANDAR";
+    draft.deliveryPoint = "N1";
     draft.parcels.pushBack(logistics::domain::ParcelData {1.0, 20.0, 20.0, 10.0});
     draft.parcels.pushBack(logistics::domain::ParcelData {2.0, 20.0, 20.0, 10.0});
-    const auto  code      = app.registerShipment.execute(app.operador(), draft).code();
-    const auto  courierId = createCourier(app);
-    const auto& batch     = app.openSortingBatch.execute(app.operador(), "NORTE");
+    const auto code = app.registerShipment.execute(app.operador(), draft).code();
+    const auto courierId = createCourier(app);
+    const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
     app.prepareSortingBatch.execute(app.operador(), batch.id());
     app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
     const auto& route = app.assignDeliveryRoute.execute(
@@ -498,17 +424,13 @@ TEST(CustomerNotices, PartialDeliveryExplainsHowManyParcelsArrived)
 
 TEST(CustomerNotices, OnlyAdministratorsListThem)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     Notices notices;
 
-    const auto total  = app.listCustomerNotices.execute(app.admin(), 3, 0, notices);
-    const auto forbid = failureOf(
-        [&]
-        {
-            app.listCustomerNotices.execute(app.operador(), 3, 0, notices);
-        });
+    const auto total = app.listCustomerNotices.execute(app.admin(), 3, 0, notices);
+    const auto forbid = failureOf([&] { app.listCustomerNotices.execute(app.operador(), 3, 0, notices); });
 
     EXPECT_EQ(total, 8U);
     ASSERT_EQ(notices.items.size(), 3U);

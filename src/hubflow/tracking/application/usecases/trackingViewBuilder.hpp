@@ -9,18 +9,18 @@
 namespace hubflow::tracking::application
 {
 
-/// @brief Arma la vista pública del seguimiento y normaliza el código que escribe el cliente.
-class TrackingViewBuilder final
-{
-public:
-    /// @brief Mayúsculas y sin espacios en los extremos: el cliente puede escribir el código como quiera.
-    static std::string normalize(const std::string& code);
+    /// @brief Arma la vista pública del seguimiento y normaliza el código que escribe el cliente.
+    class TrackingViewBuilder final
+    {
+    public:
+        /// @brief Mayúsculas y sin espacios en los extremos: el cliente puede escribir el código como quiera.
+        static std::string normalize(const std::string& code);
 
-    /// @brief true si el texto tiene el formato de un código de seguimiento (público o secuencial).
-    static bool looksLikeCode(const std::string& code);
+        /// @brief true si el texto tiene el formato de un código de seguimiento (público o secuencial).
+        static bool looksLikeCode(const std::string& code);
 
-    static PublicTracking publicView(const TrackedShipment& shipment);
-};
+        static PublicTracking publicView(const TrackedShipment& shipment);
+    };
 
 } // namespace hubflow::tracking::application
 

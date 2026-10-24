@@ -8,17 +8,17 @@
 namespace hubflow::tracking::adapters
 {
 
-/// @brief Escribe cada aviso en la salida estándar, como lo haría el servicio de mensajería real.
-class LogCustomerNotifier final : public application::CustomerNotifier
-{
-public:
-    explicit LogCustomerNotifier(std::ostream& out);
+    /// @brief Escribe cada aviso en la salida estándar, como lo haría el servicio de mensajería real.
+    class LogCustomerNotifier final : public application::CustomerNotifier
+    {
+    public:
+        explicit LogCustomerNotifier(std::ostream& out);
 
-private:
-    void send(const application::CustomerNotice& notice) override;
+    private:
+        void send(const application::CustomerNotice& notice) override;
 
-    std::ostream& m_out;
-};
+        std::ostream& m_out;
+    };
 
 } // namespace hubflow::tracking::adapters
 

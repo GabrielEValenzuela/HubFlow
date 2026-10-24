@@ -5,15 +5,15 @@
 namespace hubflow::logistics::application
 {
 
-ListShipments::ListShipments(const LogisticsModel& model)
-    : m_model {model}
-{
-}
+    ListShipments::ListShipments(const LogisticsModel& model)
+        : m_model {model}
+    {
+    }
 
-const domain::ShipmentCatalog& ListShipments::execute(const shared::application::Principal& principal) const
-{
-    principal.require(identity::domain::Permission::OperateShipments);
-    return m_model.catalog;
-}
+    const domain::ShipmentCatalog& ListShipments::execute(const shared::application::Principal& principal) const
+    {
+        principal.require(identity::domain::Permission::OperateShipments);
+        return m_model.catalog;
+    }
 
 } // namespace hubflow::logistics::application

@@ -7,19 +7,19 @@
 namespace hubflow::sorting::application
 {
 
-/// @brief Implementación de LinearSearchInSortingBatchUseCase.
-class LinearSearchInSortingBatch final : public LinearSearchInSortingBatchUseCase
-{
-public:
-    explicit LinearSearchInSortingBatch(const domain::SortingDesk& desk);
+    /// @brief Implementación de LinearSearchInSortingBatchUseCase.
+    class LinearSearchInSortingBatch final : public LinearSearchInSortingBatchUseCase
+    {
+    public:
+        explicit LinearSearchInSortingBatch(const domain::SortingDesk& desk);
 
-private:
-    domain::BatchSearchOutcome execute(const shared::application::Principal& principal,
-                                       std::uint64_t                         batchId,
-                                       const std::string&                    code) const override;
+    private:
+        domain::BatchSearchOutcome execute(const shared::application::Principal& principal,
+                                           std::uint64_t batchId,
+                                           const std::string& code) const override;
 
-    const domain::SortingDesk& m_desk;
-};
+        const domain::SortingDesk& m_desk;
+    };
 
 } // namespace hubflow::sorting::application
 

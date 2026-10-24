@@ -7,17 +7,17 @@
 namespace hubflow::tracking::application
 {
 
-/// @brief Implementación de GetPublicTrackingUseCase.
-class GetPublicTracking final : public GetPublicTrackingUseCase
-{
-public:
-    explicit GetPublicTracking(const TrackedShipmentDirectory& directory);
+    /// @brief Implementación de GetPublicTrackingUseCase.
+    class GetPublicTracking final : public GetPublicTrackingUseCase
+    {
+    public:
+        explicit GetPublicTracking(const TrackedShipmentDirectory& directory);
 
-private:
-    PublicTracking execute(const std::string& code) const override;
+    private:
+        PublicTracking execute(const std::string& code) const override;
 
-    const TrackedShipmentDirectory& m_directory;
-};
+        const TrackedShipmentDirectory& m_directory;
+    };
 
 } // namespace hubflow::tracking::application
 

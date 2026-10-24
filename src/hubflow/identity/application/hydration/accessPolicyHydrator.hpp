@@ -7,19 +7,19 @@
 namespace hubflow::identity::application
 {
 
-/// @brief Carga en la política de acceso los permisos de cada rol guardados en el almacenamiento, al iniciar.
-class AccessPolicyHydrator final : private GrantRestorer
-{
-public:
-    explicit AccessPolicyHydrator(domain::AccessPolicy& policy);
+    /// @brief Carga en la política de acceso los permisos de cada rol guardados en el almacenamiento, al iniciar.
+    class AccessPolicyHydrator final : private GrantRestorer
+    {
+    public:
+        explicit AccessPolicyHydrator(domain::AccessPolicy& policy);
 
-    void hydrate(const RolePermissionRepository& repository);
+        void hydrate(const RolePermissionRepository& repository);
 
-private:
-    void restoreGrant(domain::Role role, domain::Permission permission) override;
+    private:
+        void restoreGrant(domain::Role role, domain::Permission permission) override;
 
-    domain::AccessPolicy& m_policy;
-};
+        domain::AccessPolicy& m_policy;
+    };
 
 } // namespace hubflow::identity::application
 

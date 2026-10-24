@@ -7,18 +7,18 @@
 namespace hubflow::logistics::adapters
 {
 
-/// @brief Traduce el mapa del contexto de ruteo al puerto DeliveryPointCatalog de logística: sólo los puntos activos
-/// que no son el centro de distribución y pertenecen a la zona se pueden usar como destino.
-class RoadMapDeliveryPoints final : public logistics::domain::DeliveryPointCatalog
-{
-public:
-    explicit RoadMapDeliveryPoints(const routing::domain::RoadMap& map);
+    /// @brief Traduce el mapa del contexto de ruteo al puerto DeliveryPointCatalog de logística: sólo los puntos
+    /// activos que no son el centro de distribución y pertenecen a la zona se pueden usar como destino.
+    class RoadMapDeliveryPoints final : public logistics::domain::DeliveryPointCatalog
+    {
+    public:
+        explicit RoadMapDeliveryPoints(const routing::domain::RoadMap& map);
 
-private:
-    bool isServiceable(const std::string& nodeId, const std::string& zone) const override;
+    private:
+        bool isServiceable(const std::string& nodeId, const std::string& zone) const override;
 
-    const routing::domain::RoadMap& m_map;
-};
+        const routing::domain::RoadMap& m_map;
+    };
 
 } // namespace hubflow::logistics::adapters
 

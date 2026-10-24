@@ -9,30 +9,30 @@
 namespace hubflow::logistics::application
 {
 
-/**
- * @brief Deshace un grupo: sus paquetes dejan de viajar juntos y vuelven a tratarse por separado.
- *
- * @par Quién puede ejecutarlo
- * ADMIN y OPERADOR.
- *
- * @par Errores
- * - Forbidden: el rol no puede operar envíos.
- * - NotFound: el grupo no existe (o ya fue deshecho).
- * - Conflict: algún paquete del grupo está en reparto.
- *
- * @par Idempotencia
- * Sí. El efecto buscado, que el grupo no exista, queda igual al repetirla: el segundo intento responde NotFound sin
- * modificar nada.
- */
-class DissolveShipmentGroupUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Deshace un grupo: sus paquetes dejan de viajar juntos y vuelven a tratarse por separado.
+     *
+     * @par Quién puede ejecutarlo
+     * ADMIN y OPERADOR.
+     *
+     * @par Errores
+     * - Forbidden: el rol no puede operar envíos.
+     * - NotFound: el grupo no existe (o ya fue deshecho).
+     * - Conflict: algún paquete del grupo está en reparto.
+     *
+     * @par Idempotencia
+     * Sí. El efecto buscado, que el grupo no exista, queda igual al repetirla: el segundo intento responde NotFound sin
+     * modificar nada.
+     */
+    class DissolveShipmentGroupUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~DissolveShipmentGroupUseCase() = default;
+        virtual ~DissolveShipmentGroupUseCase() = default;
 
-    virtual void execute(const shared::application::Principal& principal, const std::string& groupId) = 0;
-};
+        virtual void execute(const shared::application::Principal& principal, const std::string& groupId) = 0;
+    };
 
 } // namespace hubflow::logistics::application
 

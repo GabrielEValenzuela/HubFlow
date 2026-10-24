@@ -133,8 +133,8 @@ TEST(CustomerTimelineMapping, IsFinishedOnlyWhenTheLastStepIsTheDelivery)
 TEST(DeliveryWindowEstimate, StartsAtTheQuarterHourBeforeTheArrivalAndLastsAnHour)
 {
     constexpr std::int64_t now {1700000000};
-    const auto             window = DeliveryWindowPolicy::around(now, 50);
-    const std::int64_t     arrival {now + 50 * 60};
+    const auto window = DeliveryWindowPolicy::around(now, 50);
+    const std::int64_t arrival {now + 50 * 60};
 
     EXPECT_EQ(window.from % DeliveryWindowPolicy::ROUNDING_SECONDS, 0);
     EXPECT_LE(window.from, arrival);

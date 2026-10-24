@@ -9,27 +9,27 @@
 namespace hubflow::identity::application
 {
 
-/**
- * @brief Lista todos los usuarios del sistema.
- *
- * @par Quién puede ejecutarlo
- * Sólo ADMIN.
- *
- * @par Errores
- * - Forbidden: el solicitante no es ADMIN.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class ListUsersUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Lista todos los usuarios del sistema.
+     *
+     * @par Quién puede ejecutarlo
+     * Sólo ADMIN.
+     *
+     * @par Errores
+     * - Forbidden: el solicitante no es ADMIN.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class ListUsersUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~ListUsersUseCase() = default;
+        virtual ~ListUsersUseCase() = default;
 
-    virtual ds::DynamicArray<domain::UserState> execute(const shared::application::Principal& principal) const = 0;
-};
+        virtual ds::DynamicArray<domain::UserState> execute(const shared::application::Principal& principal) const = 0;
+    };
 
 } // namespace hubflow::identity::application
 

@@ -8,24 +8,24 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Persiste el estado y los movimientos de cada envío a partir de sus eventos.
-class ShipmentPersistenceSubscriber final : public shared::domain::DomainEventVisitor
-{
-public:
-    explicit ShipmentPersistenceSubscriber(ShipmentRepository& repository);
+    /// @brief Persiste el estado y los movimientos de cada envío a partir de sus eventos.
+    class ShipmentPersistenceSubscriber final : public shared::domain::DomainEventVisitor
+    {
+    public:
+        explicit ShipmentPersistenceSubscriber(ShipmentRepository& repository);
 
-private:
-    void on(const domain::ShipmentRegistered& event) override;
-    void on(const domain::ShipmentClassified& event) override;
-    void on(const domain::ShipmentDispatched& event) override;
-    void on(const domain::ShipmentRescheduled& event) override;
-    void on(const domain::ShipmentDelivered& event) override;
-    void on(const domain::ParcelDeliveryConfirmed& event) override;
+    private:
+        void on(const domain::ShipmentRegistered& event) override;
+        void on(const domain::ShipmentClassified& event) override;
+        void on(const domain::ShipmentDispatched& event) override;
+        void on(const domain::ShipmentRescheduled& event) override;
+        void on(const domain::ShipmentDelivered& event) override;
+        void on(const domain::ParcelDeliveryConfirmed& event) override;
 
-    void persistChange(const domain::ShipmentEvent& event);
+        void persistChange(const domain::ShipmentEvent& event);
 
-    ShipmentRepository& m_repository;
-};
+        ShipmentRepository& m_repository;
+    };
 
 } // namespace hubflow::logistics::application
 

@@ -5,15 +5,15 @@
 namespace hubflow::sorting::application
 {
 
-GetActiveSortingBatch::GetActiveSortingBatch(const domain::SortingDesk& desk)
-    : m_desk {desk}
-{
-}
+    GetActiveSortingBatch::GetActiveSortingBatch(const domain::SortingDesk& desk)
+        : m_desk {desk}
+    {
+    }
 
-const domain::SortingBatch* GetActiveSortingBatch::execute(const shared::application::Principal& principal) const
-{
-    principal.require(identity::domain::Permission::OperateSortingDesk);
-    return m_desk.activeBatch();
-}
+    const domain::SortingBatch* GetActiveSortingBatch::execute(const shared::application::Principal& principal) const
+    {
+        principal.require(identity::domain::Permission::OperateSortingDesk);
+        return m_desk.activeBatch();
+    }
 
 } // namespace hubflow::sorting::application

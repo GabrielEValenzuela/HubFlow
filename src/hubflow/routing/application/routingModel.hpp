@@ -7,12 +7,12 @@
 namespace hubflow::routing::application
 {
 
-/// @brief Modelo en memoria del contexto de ruteo: mapa de la ciudad y hojas de ruta.
-struct RoutingModel
-{
-    domain::RoadMap   map;
-    domain::RouteBook routes;
-};
+    /// @brief Modelo en memoria del contexto de ruteo: mapa de la ciudad y hojas de ruta.
+    struct RoutingModel
+    {
+        domain::RoadMap map;
+        domain::RouteBook routes;
+    };
 
 } // namespace hubflow::routing::application
 

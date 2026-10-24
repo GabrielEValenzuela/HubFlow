@@ -10,23 +10,23 @@ using shared::domain::ErrorKind;
 
 namespace
 {
-std::uint64_t openPreparedNorthBatch(test::ApplicationHarness& app)
-{
-    const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
-    app.sortSortingBatch.execute(app.operador(), batch.id(), sorting::domain::SortCriteria::CodeAscending);
-    app.prepareSortingBatch.execute(app.operador(), batch.id());
-    return batch.id();
-}
+    std::uint64_t openPreparedNorthBatch(test::ApplicationHarness& app)
+    {
+        const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
+        app.sortSortingBatch.execute(app.operador(), batch.id(), sorting::domain::SortCriteria::CodeAscending);
+        app.prepareSortingBatch.execute(app.operador(), batch.id());
+        return batch.id();
+    }
 } // namespace
 
 TEST(SortingFlow, ReturnProcessedItemGivesBackOnlyTheLastProcessedShipment)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     const auto batchId = openPreparedNorthBatch(app);
     app.processSortingBatchItem.execute(app.operador(), batchId, {});
-    const auto        second = app.processSortingBatchItem.execute(app.operador(), batchId, {});
+    const auto second = app.processSortingBatchItem.execute(app.operador(), batchId, {});
     const std::string lastCode {second[0]->code()};
 
     const auto returned = app.returnProcessedItem.execute(app.operador(), batchId, lastCode);
@@ -37,10 +37,10 @@ TEST(SortingFlow, ReturnProcessedItemGivesBackOnlyTheLastProcessedShipment)
 
 TEST(SortingFlow, RepeatingReturnProcessedItemIsNotFoundAndChangesNothing)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
-    const auto        batchId = openPreparedNorthBatch(app);
+    const auto batchId = openPreparedNorthBatch(app);
     const std::string code {app.processSortingBatchItem.execute(app.operador(), batchId, {})[0]->code()};
     app.returnProcessedItem.execute(app.operador(), batchId, code);
 
@@ -60,7 +60,7 @@ TEST(SortingFlow, RepeatingReturnProcessedItemIsNotFoundAndChangesNothing)
 
 TEST(SortingFlow, SortingTwiceWithTheSameCriteriaKeepsTheSameOrder)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");

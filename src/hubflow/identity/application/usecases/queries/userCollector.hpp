@@ -7,32 +7,32 @@
 namespace hubflow::identity::application
 {
 
-/// @brief Junta los usuarios que entrega el repositorio, opcionalmente sólo los PUM activos.
-class UserCollector final : public UserVisitor
-{
-public:
-    explicit UserCollector(const bool onlyActiveCouriers)
-        : m_onlyActiveCouriers {onlyActiveCouriers}
+    /// @brief Junta los usuarios que entrega el repositorio, opcionalmente sólo los PUM activos.
+    class UserCollector final : public UserVisitor
     {
-    }
-
-    ds::DynamicArray<domain::UserState>& users() noexcept
-    {
-        return m_users;
-    }
-
-private:
-    void visit(const domain::UserState& state) override
-    {
-        if (!m_onlyActiveCouriers || (state.active && state.role == domain::Role::Pum))
+    public:
+        explicit UserCollector(const bool onlyActiveCouriers)
+            : m_onlyActiveCouriers {onlyActiveCouriers}
         {
-            m_users.pushBack(state);
         }
-    }
 
-    bool                                m_onlyActiveCouriers;
-    ds::DynamicArray<domain::UserState> m_users;
-};
+        ds::DynamicArray<domain::UserState>& users() noexcept
+        {
+            return m_users;
+        }
+
+    private:
+        void visit(const domain::UserState& state) override
+        {
+            if (!m_onlyActiveCouriers || (state.active && state.role == domain::Role::Pum))
+            {
+                m_users.pushBack(state);
+            }
+        }
+
+        bool m_onlyActiveCouriers;
+        ds::DynamicArray<domain::UserState> m_users;
+    };
 
 } // namespace hubflow::identity::application
 

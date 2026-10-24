@@ -6,45 +6,45 @@
 namespace hubflow::tracking::application
 {
 
-std::string TrackingViewBuilder::normalize(const std::string& code)
-{
-    std::string value;
-    for (const char character : code)
+    std::string TrackingViewBuilder::normalize(const std::string& code)
     {
-        if (character != ' ')
+        std::string value;
+        for (const char character : code)
         {
-            value.push_back(character >= 'a' && character <= 'z' ? static_cast<char>(character - 'a' + 'A')
-                                                                 : character);
+            if (character != ' ')
+            {
+                value.push_back(character >= 'a' && character <= 'z' ? static_cast<char>(character - 'a' + 'A')
+                                                                     : character);
+            }
         }
+        return value;
     }
-    return value;
-}
 
-bool TrackingViewBuilder::looksLikeCode(const std::string& code)
-{
-    return logistics::domain::TrackingCode::isValid(code);
-}
+    bool TrackingViewBuilder::looksLikeCode(const std::string& code)
+    {
+        return logistics::domain::TrackingCode::isValid(code);
+    }
 
-PublicTracking TrackingViewBuilder::publicView(const TrackedShipment& shipment)
-{
-    ds::DynamicArray<domain::MilestoneEvent> events;
-    for (const auto& milestone : shipment.milestones)
+    PublicTracking TrackingViewBuilder::publicView(const TrackedShipment& shipment)
     {
-        events.pushBack(milestone);
+        ds::DynamicArray<domain::MilestoneEvent> events;
+        for (const auto& milestone : shipment.milestones)
+        {
+            events.pushBack(milestone);
+        }
+        const auto timeline = domain::CustomerTimeline::fromEvents(events);
+        PublicTracking view;
+        view.code = shipment.code;
+        if (!timeline.isEmpty())
+        {
+            view.current = timeline.currentEntry();
+            view.finished = timeline.isFinished();
+        }
+        for (std::size_t i = 0; i < timeline.size(); ++i)
+        {
+            view.timeline.push_back(timeline.entryAt(i));
+        }
+        return view;
     }
-    const auto     timeline = domain::CustomerTimeline::fromEvents(events);
-    PublicTracking view;
-    view.code = shipment.code;
-    if (!timeline.isEmpty())
-    {
-        view.current  = timeline.currentEntry();
-        view.finished = timeline.isFinished();
-    }
-    for (std::size_t i = 0; i < timeline.size(); ++i)
-    {
-        view.timeline.push_back(timeline.entryAt(i));
-    }
-    return view;
-}
 
 } // namespace hubflow::tracking::application

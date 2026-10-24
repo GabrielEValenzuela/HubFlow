@@ -7,18 +7,18 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de FindShipmentGroupOfShipmentUseCase.
-class FindShipmentGroupOfShipment final : public FindShipmentGroupOfShipmentUseCase
-{
-public:
-    explicit FindShipmentGroupOfShipment(const LogisticsModel& model);
+    /// @brief Implementación de FindShipmentGroupOfShipmentUseCase.
+    class FindShipmentGroupOfShipment final : public FindShipmentGroupOfShipmentUseCase
+    {
+    public:
+        explicit FindShipmentGroupOfShipment(const LogisticsModel& model);
 
-private:
-    const domain::ShipmentGroup* execute(const shared::application::Principal& principal,
-                                         const std::string&                    shipmentCode) const override;
+    private:
+        const domain::ShipmentGroup* execute(const shared::application::Principal& principal,
+                                             const std::string& shipmentCode) const override;
 
-    const LogisticsModel& m_model;
-};
+        const LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::logistics::application
 

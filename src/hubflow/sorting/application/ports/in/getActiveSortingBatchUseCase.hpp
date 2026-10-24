@@ -8,27 +8,27 @@
 namespace hubflow::sorting::application
 {
 
-/**
- * @brief Devuelve el lote que está abierto en la mesa, o ninguno (nullptr) si no hay.
- *
- * @par Quién puede ejecutarlo
- * ADMIN y OPERADOR.
- *
- * @par Errores
- * - Forbidden: el rol no puede operar la mesa de clasificación.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class GetActiveSortingBatchUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Devuelve el lote que está abierto en la mesa, o ninguno (nullptr) si no hay.
+     *
+     * @par Quién puede ejecutarlo
+     * ADMIN y OPERADOR.
+     *
+     * @par Errores
+     * - Forbidden: el rol no puede operar la mesa de clasificación.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class GetActiveSortingBatchUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~GetActiveSortingBatchUseCase() = default;
+        virtual ~GetActiveSortingBatchUseCase() = default;
 
-    virtual const domain::SortingBatch* execute(const shared::application::Principal& principal) const = 0;
-};
+        virtual const domain::SortingBatch* execute(const shared::application::Principal& principal) const = 0;
+    };
 
 } // namespace hubflow::sorting::application
 

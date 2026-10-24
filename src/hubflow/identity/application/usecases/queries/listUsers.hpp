@@ -7,17 +7,17 @@
 namespace hubflow::identity::application
 {
 
-/// @brief Implementación de ListUsersUseCase.
-class ListUsers final : public ListUsersUseCase
-{
-public:
-    explicit ListUsers(const UserRepository& users);
+    /// @brief Implementación de ListUsersUseCase.
+    class ListUsers final : public ListUsersUseCase
+    {
+    public:
+        explicit ListUsers(const UserRepository& users);
 
-private:
-    ds::DynamicArray<domain::UserState> execute(const shared::application::Principal& principal) const override;
+    private:
+        ds::DynamicArray<domain::UserState> execute(const shared::application::Principal& principal) const override;
 
-    const UserRepository& m_users;
-};
+        const UserRepository& m_users;
+    };
 
 } // namespace hubflow::identity::application
 

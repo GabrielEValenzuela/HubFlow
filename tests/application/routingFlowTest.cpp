@@ -11,33 +11,33 @@ using shared::domain::business_error;
 
 namespace
 {
-std::uint64_t createCourier(test::ApplicationHarness& app, const std::string& email)
-{
-    return app.registerUser
-        .execute(app.admin(),
-                 identity::application::RegisterUserRequest {
-                     email, "Repartidor", identity::domain::Role::Pum, "clave-segura"})
-        .id;
-}
-
-const routing::domain::DeliveryRoute& assignNorthRoute(test::ApplicationHarness& app, const std::uint64_t courierId)
-{
-    const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
-    app.sortSortingBatch.execute(app.operador(), batch.id(), sorting::domain::SortCriteria::CodeAscending);
-    app.prepareSortingBatch.execute(app.operador(), batch.id());
-    for (int i = 0; i < 3; ++i)
+    std::uint64_t createCourier(test::ApplicationHarness& app, const std::string& email)
     {
-        app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
+        return app.registerUser
+            .execute(app.admin(),
+                     identity::application::RegisterUserRequest {
+                         email, "Repartidor", identity::domain::Role::Pum, "clave-segura"})
+            .id;
     }
-    return app.assignDeliveryRoute.execute(
-        app.operador(),
-        routing::application::AssignRouteRequest {batch.id(), courierId, routing::domain::SearchAlgorithm::AStar});
-}
+
+    const routing::domain::DeliveryRoute& assignNorthRoute(test::ApplicationHarness& app, const std::uint64_t courierId)
+    {
+        const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
+        app.sortSortingBatch.execute(app.operador(), batch.id(), sorting::domain::SortCriteria::CodeAscending);
+        app.prepareSortingBatch.execute(app.operador(), batch.id());
+        for (int i = 0; i < 3; ++i)
+        {
+            app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
+        }
+        return app.assignDeliveryRoute.execute(
+            app.operador(),
+            routing::application::AssignRouteRequest {batch.id(), courierId, routing::domain::SearchAlgorithm::AStar});
+    }
 } // namespace
 
 TEST(RoutingFlow, AssigningRouteDispatchesLoadInLifoOrder)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     const auto courierId = createCourier(app, "pum1@hubflow.local");
@@ -56,12 +56,12 @@ TEST(RoutingFlow, AssigningRouteDispatchesLoadInLifoOrder)
 
 TEST(RoutingFlow, CourierResolvesOnlyOwnStops)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
-    const auto  courierId = createCourier(app, "pum1@hubflow.local");
-    const auto  otherId   = createCourier(app, "pum2@hubflow.local");
-    const auto& route     = assignNorthRoute(app, courierId);
+    const auto courierId = createCourier(app, "pum1@hubflow.local");
+    const auto otherId = createCourier(app, "pum2@hubflow.local");
+    const auto& route = assignNorthRoute(app, courierId);
 
     EXPECT_THROW(app.resolveRouteStop.execute(app.pum(otherId),
                                               routing::application::ResolveStopRequest {
@@ -89,7 +89,7 @@ TEST(RoutingFlow, HydrationRebuildsModelFromStorage)
         test::ApplicationHarness app {storage};
         app.seedDataset();
         const auto courierId = createCourier(app, "pum1@hubflow.local");
-        routeId              = assignNorthRoute(app, courierId).id();
+        routeId = assignNorthRoute(app, courierId).id();
         app.resolveRouteStop.execute(
             app.pum(courierId),
             routing::application::ResolveStopRequest {routeId, 2, routing::domain::StopOutcome::Rescheduled, ""});
@@ -97,11 +97,7 @@ TEST(RoutingFlow, HydrationRebuildsModelFromStorage)
     test::ApplicationHarness restored {storage};
     std::vector<std::string> pending;
     restored.listPendingShipments.execute(restored.operador())
-        .forEach(
-            [&pending](const auto& shipment)
-            {
-                pending.push_back(shipment.code());
-            });
+        .forEach([&pending](const auto& shipment) { pending.push_back(shipment.code()); });
 
     EXPECT_EQ(pending,
               (std::vector<std::string> {"PKG-1006", "PKG-1003", "PKG-1005", "PKG-1001", "PKG-1004", "PKG-1007"}));
@@ -113,11 +109,11 @@ TEST(RoutingFlow, HydrationRebuildsModelFromStorage)
 
 TEST(RoutingFlow, AssignmentRequiresProcessedLoadAndActiveCourier)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
-    const auto  courierId = createCourier(app, "pum1@hubflow.local");
-    const auto& batch     = app.openSortingBatch.execute(app.operador(), "SUR");
+    const auto courierId = createCourier(app, "pum1@hubflow.local");
+    const auto& batch = app.openSortingBatch.execute(app.operador(), "SUR");
     EXPECT_THROW(app.assignDeliveryRoute.execute(app.operador(),
                                                  routing::application::AssignRouteRequest {batch.id(), courierId, {}}),
                  business_error);
@@ -130,17 +126,17 @@ TEST(RoutingFlow, AssignmentRequiresProcessedLoadAndActiveCourier)
 
 TEST(RoutingFlow, ResolvingAStopWithTheSameOutcomeChangesNothing)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
-    const auto                                     courierId = createCourier(app, "pum1@hubflow.local");
-    const auto&                                    route     = assignNorthRoute(app, courierId);
+    const auto courierId = createCourier(app, "pum1@hubflow.local");
+    const auto& route = assignNorthRoute(app, courierId);
     const routing::application::ResolveStopRequest delivered {
         route.id(), 1, routing::domain::StopOutcome::Delivered, "", true};
 
     app.resolveRouteStop.execute(app.pum(courierId), delivered);
     const auto auditedEvents = storage.audit.entries.size();
-    const auto historySize   = app.getShipment.execute(app.operador(), "PKG-1008").history().size();
+    const auto historySize = app.getShipment.execute(app.operador(), "PKG-1008").history().size();
     app.resolveRouteStop.execute(app.pum(courierId), delivered);
 
     EXPECT_EQ(storage.audit.entries.size(), auditedEvents);
@@ -151,11 +147,11 @@ TEST(RoutingFlow, ResolvingAStopWithTheSameOutcomeChangesNothing)
 
 TEST(RoutingFlow, ResolvingAStopWithADifferentOutcomeIsAConflict)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
-    const auto  courierId = createCourier(app, "pum1@hubflow.local");
-    const auto& route     = assignNorthRoute(app, courierId);
+    const auto courierId = createCourier(app, "pum1@hubflow.local");
+    const auto& route = assignNorthRoute(app, courierId);
     app.resolveRouteStop.execute(
         app.pum(courierId),
         routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Delivered, "", true});

@@ -7,18 +7,18 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de GetShipmentUseCase.
-class GetShipment final : public GetShipmentUseCase
-{
-public:
-    explicit GetShipment(const LogisticsModel& model);
+    /// @brief Implementación de GetShipmentUseCase.
+    class GetShipment final : public GetShipmentUseCase
+    {
+    public:
+        explicit GetShipment(const LogisticsModel& model);
 
-private:
-    const domain::Shipment& execute(const shared::application::Principal& principal,
-                                    const std::string&                    code) const override;
+    private:
+        const domain::Shipment& execute(const shared::application::Principal& principal,
+                                        const std::string& code) const override;
 
-    const LogisticsModel& m_model;
-};
+        const LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::logistics::application
 

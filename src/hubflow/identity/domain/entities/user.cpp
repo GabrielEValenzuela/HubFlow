@@ -7,147 +7,148 @@
 
 namespace hubflow::identity::domain
 {
-namespace
-{
-constexpr std::size_t MIN_NAME_LENGTH {2};
-constexpr std::size_t MAX_NAME_LENGTH {80};
-constexpr std::size_t MIN_PASSWORD_LENGTH {8};
-constexpr std::size_t MAX_PASSWORD_LENGTH {72};
-} // namespace
-
-User::User(UserState state)
-    : m_state {std::move(state)}
-{
-}
-
-User* User::registerNew(const std::uint64_t                 id,
-                        const std::string&                  email,
-                        const std::string&                  name,
-                        const Role                          role,
-                        const std::string&                  plainPassword,
-                        const PasswordHasher&               hasher,
-                        const shared::domain::ActorContext& context)
-{
-    User* pUser = new User {
-        UserState {id, Email {email}.value(), validName(name), role, hasher.hash(validPassword(plainPassword)), true}};
-    pUser->raise(new UserRegistered {pUser->m_state, context});
-    return pUser;
-}
-
-User* User::restore(const UserState& state)
-{
-    return new User {state};
-}
-
-bool User::authenticates(const std::string& plainPassword, const PasswordHasher& hasher) const
-{
-    return m_state.active && hasher.verify(plainPassword, m_state.passwordHash);
-}
-
-void User::rename(const std::string& name, const shared::domain::ActorContext& context)
-{
-    m_state.name = validName(name);
-    announceChange(context);
-}
-
-void User::assignRole(const Role role, const CourierWorkload& workload, const shared::domain::ActorContext& context)
-{
-    if (role != Role::Pum)
+    namespace
     {
-        ensureNoRouteInProgress(workload);
-    }
-    m_state.role = role;
-    announceChange(context);
-}
+        constexpr std::size_t MIN_NAME_LENGTH {2};
+        constexpr std::size_t MAX_NAME_LENGTH {80};
+        constexpr std::size_t MIN_PASSWORD_LENGTH {8};
+        constexpr std::size_t MAX_PASSWORD_LENGTH {72};
+    } // namespace
 
-void User::activate(const bool active, const CourierWorkload& workload, const shared::domain::ActorContext& context)
-{
-    if (!active && context.userId == m_state.id)
+    User::User(UserState state)
+        : m_state {std::move(state)}
     {
-        throw shared::domain::business_error {
-            shared::domain::ErrorKind::Conflict, "user.self_deactivation", "No podés desactivar tu propio usuario"};
     }
-    if (!active)
+
+    User* User::registerNew(const std::uint64_t id,
+                            const std::string& email,
+                            const std::string& name,
+                            const Role role,
+                            const std::string& plainPassword,
+                            const PasswordHasher& hasher,
+                            const shared::domain::ActorContext& context)
     {
-        ensureNoRouteInProgress(workload);
+        User* pUser = new User {UserState {
+            id, Email {email}.value(), validName(name), role, hasher.hash(validPassword(plainPassword)), true}};
+        pUser->raise(new UserRegistered {pUser->m_state, context});
+        return pUser;
     }
-    m_state.active = active;
-    announceChange(context);
-}
 
-void User::changePassword(const std::string&                  plainPassword,
-                          const PasswordHasher&               hasher,
-                          const shared::domain::ActorContext& context)
-{
-    m_state.passwordHash = hasher.hash(validPassword(plainPassword));
-    announceChange(context);
-}
-
-void User::ensureNoRouteInProgress(const CourierWorkload& workload) const
-{
-    if (m_state.role == Role::Pum && workload.hasRouteInProgress(m_state.id))
+    User* User::restore(const UserState& state)
     {
-        throw shared::domain::business_error {
-            shared::domain::ErrorKind::Conflict,
-            "user.has_route_in_progress",
-            "Tiene un reparto en curso: pasá su ruta a otro chofer antes de desactivarlo o cambiarle el puesto"};
+        return new User {state};
     }
-}
 
-std::string User::validName(const std::string& name)
-{
-    if (name.size() < MIN_NAME_LENGTH || name.size() > MAX_NAME_LENGTH)
+    bool User::authenticates(const std::string& plainPassword, const PasswordHasher& hasher) const
     {
-        throw shared::domain::business_error {
-            shared::domain::ErrorKind::Validation, "user.name_invalid", "El nombre debe tener entre 2 y 80 caracteres"};
+        return m_state.active && hasher.verify(plainPassword, m_state.passwordHash);
     }
-    return name;
-}
 
-std::string User::validPassword(const std::string& plainPassword)
-{
-    if (plainPassword.size() < MIN_PASSWORD_LENGTH || plainPassword.size() > MAX_PASSWORD_LENGTH)
+    void User::rename(const std::string& name, const shared::domain::ActorContext& context)
     {
-        throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                              "user.password_invalid",
-                                              "La contraseña debe tener entre 8 y 72 caracteres"};
+        m_state.name = validName(name);
+        announceChange(context);
     }
-    return plainPassword;
-}
 
-void User::announceChange(const shared::domain::ActorContext& context)
-{
-    raise(new UserProfileChanged {m_state, context});
-}
+    void User::assignRole(const Role role, const CourierWorkload& workload, const shared::domain::ActorContext& context)
+    {
+        if (role != Role::Pum)
+        {
+            ensureNoRouteInProgress(workload);
+        }
+        m_state.role = role;
+        announceChange(context);
+    }
 
-std::uint64_t User::id() const noexcept
-{
-    return m_state.id;
-}
+    void User::activate(const bool active, const CourierWorkload& workload, const shared::domain::ActorContext& context)
+    {
+        if (!active && context.userId == m_state.id)
+        {
+            throw shared::domain::business_error {
+                shared::domain::ErrorKind::Conflict, "user.self_deactivation", "No podés desactivar tu propio usuario"};
+        }
+        if (!active)
+        {
+            ensureNoRouteInProgress(workload);
+        }
+        m_state.active = active;
+        announceChange(context);
+    }
 
-const std::string& User::email() const noexcept
-{
-    return m_state.email;
-}
+    void User::changePassword(const std::string& plainPassword,
+                              const PasswordHasher& hasher,
+                              const shared::domain::ActorContext& context)
+    {
+        m_state.passwordHash = hasher.hash(validPassword(plainPassword));
+        announceChange(context);
+    }
 
-const std::string& User::name() const noexcept
-{
-    return m_state.name;
-}
+    void User::ensureNoRouteInProgress(const CourierWorkload& workload) const
+    {
+        if (m_state.role == Role::Pum && workload.hasRouteInProgress(m_state.id))
+        {
+            throw shared::domain::business_error {
+                shared::domain::ErrorKind::Conflict,
+                "user.has_route_in_progress",
+                "Tiene un reparto en curso: pasá su ruta a otro chofer antes de desactivarlo o cambiarle el puesto"};
+        }
+    }
 
-Role User::role() const noexcept
-{
-    return m_state.role;
-}
+    std::string User::validName(const std::string& name)
+    {
+        if (name.size() < MIN_NAME_LENGTH || name.size() > MAX_NAME_LENGTH)
+        {
+            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
+                                                  "user.name_invalid",
+                                                  "El nombre debe tener entre 2 y 80 caracteres"};
+        }
+        return name;
+    }
 
-bool User::isActive() const noexcept
-{
-    return m_state.active;
-}
+    std::string User::validPassword(const std::string& plainPassword)
+    {
+        if (plainPassword.size() < MIN_PASSWORD_LENGTH || plainPassword.size() > MAX_PASSWORD_LENGTH)
+        {
+            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
+                                                  "user.password_invalid",
+                                                  "La contraseña debe tener entre 8 y 72 caracteres"};
+        }
+        return plainPassword;
+    }
 
-const UserState& User::state() const noexcept
-{
-    return m_state;
-}
+    void User::announceChange(const shared::domain::ActorContext& context)
+    {
+        raise(new UserProfileChanged {m_state, context});
+    }
+
+    std::uint64_t User::id() const noexcept
+    {
+        return m_state.id;
+    }
+
+    const std::string& User::email() const noexcept
+    {
+        return m_state.email;
+    }
+
+    const std::string& User::name() const noexcept
+    {
+        return m_state.name;
+    }
+
+    Role User::role() const noexcept
+    {
+        return m_state.role;
+    }
+
+    bool User::isActive() const noexcept
+    {
+        return m_state.active;
+    }
+
+    const UserState& User::state() const noexcept
+    {
+        return m_state;
+    }
 
 } // namespace hubflow::identity::domain

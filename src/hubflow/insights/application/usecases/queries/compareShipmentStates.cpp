@@ -6,17 +6,17 @@
 namespace hubflow::insights::application
 {
 
-CompareShipmentStates::CompareShipmentStates(const logistics::application::LogisticsModel& model)
-    : m_model {model}
-{
-}
+    CompareShipmentStates::CompareShipmentStates(const logistics::application::LogisticsModel& model)
+        : m_model {model}
+    {
+    }
 
-domain::StateComparison CompareShipmentStates::execute(const shared::application::Principal& principal,
-                                                       const std::string&                    firstCode,
-                                                       const std::string&                    secondCode) const
-{
-    principal.require(identity::domain::Permission::ViewIndexes);
-    return domain::compareStates(m_model.catalog.require(firstCode), m_model.catalog.require(secondCode));
-}
+    domain::StateComparison CompareShipmentStates::execute(const shared::application::Principal& principal,
+                                                           const std::string& firstCode,
+                                                           const std::string& secondCode) const
+    {
+        principal.require(identity::domain::Permission::ViewIndexes);
+        return domain::compareStates(m_model.catalog.require(firstCode), m_model.catalog.require(secondCode));
+    }
 
 } // namespace hubflow::insights::application

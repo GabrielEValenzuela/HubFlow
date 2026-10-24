@@ -5,41 +5,41 @@
 namespace hubflow::tracking::domain
 {
 
-CustomerTimeline CustomerTimeline::fromEvents(const ds::DynamicArray<MilestoneEvent>& events)
-{
-    CustomerTimeline timeline;
-    for (std::size_t eventIndex = 0; eventIndex < events.size(); ++eventIndex)
+    CustomerTimeline CustomerTimeline::fromEvents(const ds::DynamicArray<MilestoneEvent>& events)
     {
-        timeline.m_entries.pushBack(TimelineEntry {events[eventIndex].milestone,
-                                                   CustomerWording::sentence(events[eventIndex].milestone),
-                                                   events[eventIndex].occurredAt});
+        CustomerTimeline timeline;
+        for (std::size_t eventIndex = 0; eventIndex < events.size(); ++eventIndex)
+        {
+            timeline.m_entries.pushBack(TimelineEntry {events[eventIndex].milestone,
+                                                       CustomerWording::sentence(events[eventIndex].milestone),
+                                                       events[eventIndex].occurredAt});
+        }
+        return timeline;
     }
-    return timeline;
-}
 
-std::size_t CustomerTimeline::size() const noexcept
-{
-    return m_entries.size();
-}
+    std::size_t CustomerTimeline::size() const noexcept
+    {
+        return m_entries.size();
+    }
 
-bool CustomerTimeline::isEmpty() const noexcept
-{
-    return m_entries.isEmpty();
-}
+    bool CustomerTimeline::isEmpty() const noexcept
+    {
+        return m_entries.isEmpty();
+    }
 
-const TimelineEntry& CustomerTimeline::entryAt(const std::size_t index) const
-{
-    return m_entries[index];
-}
+    const TimelineEntry& CustomerTimeline::entryAt(const std::size_t index) const
+    {
+        return m_entries[index];
+    }
 
-const TimelineEntry& CustomerTimeline::currentEntry() const
-{
-    return m_entries[m_entries.size() - 1];
-}
+    const TimelineEntry& CustomerTimeline::currentEntry() const
+    {
+        return m_entries[m_entries.size() - 1];
+    }
 
-bool CustomerTimeline::isFinished() const noexcept
-{
-    return !m_entries.isEmpty() && m_entries[m_entries.size() - 1].milestone == Milestone::Delivered;
-}
+    bool CustomerTimeline::isFinished() const noexcept
+    {
+        return !m_entries.isEmpty() && m_entries[m_entries.size() - 1].milestone == Milestone::Delivered;
+    }
 
 } // namespace hubflow::tracking::domain

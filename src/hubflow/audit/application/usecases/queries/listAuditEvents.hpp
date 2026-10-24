@@ -7,20 +7,20 @@
 namespace hubflow::audit::application
 {
 
-/// @brief Implementación de ListAuditEventsUseCase.
-class ListAuditEvents final : public ListAuditEventsUseCase
-{
-public:
-    explicit ListAuditEvents(const AuditLog& log);
+    /// @brief Implementación de ListAuditEventsUseCase.
+    class ListAuditEvents final : public ListAuditEventsUseCase
+    {
+    public:
+        explicit ListAuditEvents(const AuditLog& log);
 
-private:
-    void execute(const shared::application::Principal& principal,
-                 std::size_t                           limit,
-                 std::size_t                           offset,
-                 AuditEntryVisitor&                    visitor) const override;
+    private:
+        void execute(const shared::application::Principal& principal,
+                     std::size_t limit,
+                     std::size_t offset,
+                     AuditEntryVisitor& visitor) const override;
 
-    const AuditLog& m_log;
-};
+        const AuditLog& m_log;
+    };
 
 } // namespace hubflow::audit::application
 

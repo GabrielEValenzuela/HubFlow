@@ -10,25 +10,25 @@
 namespace hubflow::routing::application
 {
 
-/// @brief Implementación de UpdateRoadNodeUseCase.
-class UpdateRoadNode final : public UpdateRoadNodeUseCase
-{
-public:
-    UpdateRoadNode(RoutingModel&                     routing,
-                   const ZoneDirectory&              zones,
-                   shared::application::EventBus&    bus,
-                   const shared::application::Clock& clock);
+    /// @brief Implementación de UpdateRoadNodeUseCase.
+    class UpdateRoadNode final : public UpdateRoadNodeUseCase
+    {
+    public:
+        UpdateRoadNode(RoutingModel& routing,
+                       const ZoneDirectory& zones,
+                       shared::application::EventBus& bus,
+                       const shared::application::Clock& clock);
 
-private:
-    const domain::RoadNode& execute(const shared::application::Principal& principal,
-                                    const std::string&                    nodeId,
-                                    const UpdateRoadNodeRequest&          request) override;
+    private:
+        const domain::RoadNode& execute(const shared::application::Principal& principal,
+                                        const std::string& nodeId,
+                                        const UpdateRoadNodeRequest& request) override;
 
-    RoutingModel&                     m_routing;
-    const ZoneDirectory&              m_zones;
-    shared::application::EventBus&    m_bus;
-    const shared::application::Clock& m_clock;
-};
+        RoutingModel& m_routing;
+        const ZoneDirectory& m_zones;
+        shared::application::EventBus& m_bus;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::routing::application
 

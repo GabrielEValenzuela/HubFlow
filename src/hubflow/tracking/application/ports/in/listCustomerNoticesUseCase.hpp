@@ -10,33 +10,33 @@
 namespace hubflow::tracking::application
 {
 
-/**
- * @brief Lista los avisos que se mandaron (o se habrían mandado) a los clientes, del más reciente al más antiguo.
- *
- * Cada aviso muestra el paquete, el canal, el contacto enmascarado, el mensaje y cuándo salió.
- *
- * @par Quién puede ejecutarlo
- * Sólo ADMIN.
- *
- * @par Errores
- * - Forbidden: el solicitante no es ADMIN.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class ListCustomerNoticesUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Lista los avisos que se mandaron (o se habrían mandado) a los clientes, del más reciente al más antiguo.
+     *
+     * Cada aviso muestra el paquete, el canal, el contacto enmascarado, el mensaje y cuándo salió.
+     *
+     * @par Quién puede ejecutarlo
+     * Sólo ADMIN.
+     *
+     * @par Errores
+     * - Forbidden: el solicitante no es ADMIN.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class ListCustomerNoticesUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~ListCustomerNoticesUseCase() = default;
+        virtual ~ListCustomerNoticesUseCase() = default;
 
-    /// @return la cantidad total de avisos registrados.
-    virtual std::size_t execute(const shared::application::Principal& principal,
-                                std::size_t                           limit,
-                                std::size_t                           offset,
-                                CustomerNoticeVisitor&                visitor) const = 0;
-};
+        /// @return la cantidad total de avisos registrados.
+        virtual std::size_t execute(const shared::application::Principal& principal,
+                                    std::size_t limit,
+                                    std::size_t offset,
+                                    CustomerNoticeVisitor& visitor) const = 0;
+    };
 
 } // namespace hubflow::tracking::application
 

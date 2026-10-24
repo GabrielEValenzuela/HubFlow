@@ -9,23 +9,23 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de RescheduleShipmentUseCase.
-class RescheduleShipment final : public RescheduleShipmentUseCase
-{
-public:
-    RescheduleShipment(LogisticsModel&                   model,
-                       shared::application::EventBus&    bus,
-                       const shared::application::Clock& clock);
+    /// @brief Implementación de RescheduleShipmentUseCase.
+    class RescheduleShipment final : public RescheduleShipmentUseCase
+    {
+    public:
+        RescheduleShipment(LogisticsModel& model,
+                           shared::application::EventBus& bus,
+                           const shared::application::Clock& clock);
 
-private:
-    const domain::Shipment& execute(const shared::application::Principal& principal,
-                                    const std::string&                    code,
-                                    const std::string&                    reason) override;
+    private:
+        const domain::Shipment& execute(const shared::application::Principal& principal,
+                                        const std::string& code,
+                                        const std::string& reason) override;
 
-    LogisticsModel&                   m_model;
-    shared::application::EventBus&    m_bus;
-    const shared::application::Clock& m_clock;
-};
+        LogisticsModel& m_model;
+        shared::application::EventBus& m_bus;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::logistics::application
 

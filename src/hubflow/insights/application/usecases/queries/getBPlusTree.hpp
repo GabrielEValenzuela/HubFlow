@@ -7,17 +7,18 @@
 namespace hubflow::insights::application
 {
 
-/// @brief Implementación de GetBPlusTreeUseCase.
-class GetBPlusTree final : public GetBPlusTreeUseCase
-{
-public:
-    explicit GetBPlusTree(const logistics::application::LogisticsModel& model);
+    /// @brief Implementación de GetBPlusTreeUseCase.
+    class GetBPlusTree final : public GetBPlusTreeUseCase
+    {
+    public:
+        explicit GetBPlusTree(const logistics::application::LogisticsModel& model);
 
-private:
-    const logistics::domain::ShipmentBPlusTree& execute(const shared::application::Principal& principal) const override;
+    private:
+        const logistics::domain::ShipmentBPlusTree&
+        execute(const shared::application::Principal& principal) const override;
 
-    const logistics::application::LogisticsModel& m_model;
-};
+        const logistics::application::LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::insights::application
 

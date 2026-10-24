@@ -5,16 +5,16 @@
 namespace hubflow::logistics::application
 {
 
-GetShipment::GetShipment(const LogisticsModel& model)
-    : m_model {model}
-{
-}
+    GetShipment::GetShipment(const LogisticsModel& model)
+        : m_model {model}
+    {
+    }
 
-const domain::Shipment& GetShipment::execute(const shared::application::Principal& principal,
-                                             const std::string&                    code) const
-{
-    principal.require(identity::domain::Permission::OperateShipments);
-    return m_model.catalog.require(code);
-}
+    const domain::Shipment& GetShipment::execute(const shared::application::Principal& principal,
+                                                 const std::string& code) const
+    {
+        principal.require(identity::domain::Permission::OperateShipments);
+        return m_model.catalog.require(code);
+    }
 
 } // namespace hubflow::logistics::application

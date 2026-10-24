@@ -7,17 +7,17 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de ListPendingShipmentsUseCase.
-class ListPendingShipments final : public ListPendingShipmentsUseCase
-{
-public:
-    explicit ListPendingShipments(const LogisticsModel& model);
+    /// @brief Implementación de ListPendingShipmentsUseCase.
+    class ListPendingShipments final : public ListPendingShipmentsUseCase
+    {
+    public:
+        explicit ListPendingShipments(const LogisticsModel& model);
 
-private:
-    const domain::PendingShipments& execute(const shared::application::Principal& principal) const override;
+    private:
+        const domain::PendingShipments& execute(const shared::application::Principal& principal) const override;
 
-    const LogisticsModel& m_model;
-};
+        const LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::logistics::application
 

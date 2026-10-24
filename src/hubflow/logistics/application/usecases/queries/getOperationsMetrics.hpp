@@ -7,17 +7,17 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de GetOperationsMetricsUseCase.
-class GetOperationsMetrics final : public GetOperationsMetricsUseCase
-{
-public:
-    explicit GetOperationsMetrics(const LogisticsModel& model);
+    /// @brief Implementación de GetOperationsMetricsUseCase.
+    class GetOperationsMetrics final : public GetOperationsMetricsUseCase
+    {
+    public:
+        explicit GetOperationsMetrics(const LogisticsModel& model);
 
-private:
-    OperationsMetrics execute(const shared::application::Principal& principal) const override;
+    private:
+        OperationsMetrics execute(const shared::application::Principal& principal) const override;
 
-    const LogisticsModel& m_model;
-};
+        const LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::logistics::application
 

@@ -7,20 +7,20 @@
 namespace hubflow::routing::adapters
 {
 
-/// @brief Hojas de ruta guardadas en las tablas @c routes y @c route_stops.
-class MySqlRouteRepository final : public application::RouteRepository
-{
-public:
-    explicit MySqlRouteRepository(platform::MySqlConnection& connection);
+    /// @brief Hojas de ruta guardadas en las tablas @c routes y @c route_stops.
+    class MySqlRouteRepository final : public application::RouteRepository
+    {
+    public:
+        explicit MySqlRouteRepository(platform::MySqlConnection& connection);
 
-private:
-    void add(const domain::RouteRecord& record) override;
-    void updateStop(std::uint64_t routeId, const domain::RouteStop& stop) override;
-    void updateCourier(std::uint64_t routeId, const domain::Courier& courier) override;
-    void loadAll(application::RouteRestorer& restorer) const override;
+    private:
+        void add(const domain::RouteRecord& record) override;
+        void updateStop(std::uint64_t routeId, const domain::RouteStop& stop) override;
+        void updateCourier(std::uint64_t routeId, const domain::Courier& courier) override;
+        void loadAll(application::RouteRestorer& restorer) const override;
 
-    platform::MySqlConnection& m_connection;
-};
+        platform::MySqlConnection& m_connection;
+    };
 
 } // namespace hubflow::routing::adapters
 

@@ -10,17 +10,13 @@
 
 namespace
 {
-template <typename TContainer>
-std::vector<int> collect(const TContainer& container)
-{
-    std::vector<int> values;
-    container.forEach(
-        [&values](const int value)
-        {
-            values.push_back(value);
-        });
-    return values;
-}
+    template<typename TContainer>
+    std::vector<int> collect(const TContainer& container)
+    {
+        std::vector<int> values;
+        container.forEach([&values](const int value) { values.push_back(value); });
+        return values;
+    }
 } // namespace
 
 TEST(SinglyLinkedList, PushesAtBothEndsAndPopsFromFront)
@@ -44,34 +40,18 @@ TEST(SinglyLinkedList, RemovesHeadMiddleAndTailKeepingTailValid)
     {
         list.pushBack(value);
     }
-    EXPECT_TRUE(list.removeFirstIf(
-        [](int value)
-        {
-            return value == 4;
-        }));
+    EXPECT_TRUE(list.removeFirstIf([](int value) { return value == 4; }));
     list.pushBack(5);
-    EXPECT_TRUE(list.removeFirstIf(
-        [](int value)
-        {
-            return value == 1;
-        }));
-    EXPECT_TRUE(list.removeFirstIf(
-        [](int value)
-        {
-            return value == 3;
-        }));
-    EXPECT_FALSE(list.removeFirstIf(
-        [](int value)
-        {
-            return value == 42;
-        }));
+    EXPECT_TRUE(list.removeFirstIf([](int value) { return value == 1; }));
+    EXPECT_TRUE(list.removeFirstIf([](int value) { return value == 3; }));
+    EXPECT_FALSE(list.removeFirstIf([](int value) { return value == 42; }));
     EXPECT_EQ(collect(list), (std::vector<int> {2, 5}));
 }
 
 TEST(SinglyLinkedList, PopOnEmptyListReturnsFalse)
 {
     hubflow::ds::SinglyLinkedList<int> list;
-    int                                value {7};
+    int value {7};
     EXPECT_FALSE(list.popFront(value));
     EXPECT_EQ(value, 7);
     EXPECT_TRUE(list.isEmpty());
@@ -85,11 +65,7 @@ TEST(DoublyLinkedList, TraversesForwardAndBackwardWithPrevLinks)
         list.pushBack(value);
     }
     std::vector<int> reversed;
-    list.forEachReverse(
-        [&reversed](const int value)
-        {
-            reversed.push_back(value);
-        });
+    list.forEachReverse([&reversed](const int value) { reversed.push_back(value); });
 
     EXPECT_EQ(collect(list), (std::vector<int> {1, 2, 3}));
     EXPECT_EQ(reversed, (std::vector<int> {3, 2, 1}));

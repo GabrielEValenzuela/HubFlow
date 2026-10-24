@@ -6,22 +6,22 @@
 namespace hubflow::logistics::domain
 {
 
-/// @brief Identidad interna e inmutable de el envío: un UUID versión 7 que nunca se muestra al cliente.
-class ShipmentId final
-{
-public:
-    /// @throws business_error (Validation) si @p value no es un UUID versión 7.
-    explicit ShipmentId(const std::string& value);
+    /// @brief Identidad interna e inmutable de el envío: un UUID versión 7 que nunca se muestra al cliente.
+    class ShipmentId final
+    {
+    public:
+        /// @throws business_error (Validation) si @p value no es un UUID versión 7.
+        explicit ShipmentId(const std::string& value);
 
-    static bool isValid(const std::string& value);
+        static bool isValid(const std::string& value);
 
-    const std::string& value() const noexcept;
+        const std::string& value() const noexcept;
 
-    bool operator==(const ShipmentId& other) const noexcept;
+        bool operator==(const ShipmentId& other) const noexcept;
 
-private:
-    std::string m_value;
-};
+    private:
+        std::string m_value;
+    };
 
 } // namespace hubflow::logistics::domain
 

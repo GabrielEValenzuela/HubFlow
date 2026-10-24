@@ -5,15 +5,15 @@
 namespace hubflow::insights::application
 {
 
-GetBst::GetBst(const logistics::application::LogisticsModel& model)
-    : m_model {model}
-{
-}
+    GetBst::GetBst(const logistics::application::LogisticsModel& model)
+        : m_model {model}
+    {
+    }
 
-const logistics::domain::ShipmentBst& GetBst::execute(const shared::application::Principal& principal) const
-{
-    principal.require(identity::domain::Permission::ViewIndexes);
-    return m_model.catalog.bst();
-}
+    const logistics::domain::ShipmentBst& GetBst::execute(const shared::application::Principal& principal) const
+    {
+        principal.require(identity::domain::Permission::ViewIndexes);
+        return m_model.catalog.bst();
+    }
 
 } // namespace hubflow::insights::application

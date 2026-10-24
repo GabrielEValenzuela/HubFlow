@@ -12,28 +12,28 @@
 namespace hubflow::routing::application
 {
 
-/// @brief Implementación de AssignDeliveryRouteUseCase.
-class AssignDeliveryRoute final : public AssignDeliveryRouteUseCase
-{
-public:
-    AssignDeliveryRoute(RoutingModel&                                routing,
-                        sorting::domain::SortingDesk&                desk,
-                        const logistics::domain::ShipmentGroupBook&  groups,
-                        const identity::application::UserRepository& users,
-                        shared::application::EventBus&               bus,
-                        const shared::application::Clock&            clock);
+    /// @brief Implementación de AssignDeliveryRouteUseCase.
+    class AssignDeliveryRoute final : public AssignDeliveryRouteUseCase
+    {
+    public:
+        AssignDeliveryRoute(RoutingModel& routing,
+                            sorting::domain::SortingDesk& desk,
+                            const logistics::domain::ShipmentGroupBook& groups,
+                            const identity::application::UserRepository& users,
+                            shared::application::EventBus& bus,
+                            const shared::application::Clock& clock);
 
-private:
-    const domain::DeliveryRoute& execute(const shared::application::Principal& principal,
-                                         const AssignRouteRequest&             request) override;
+    private:
+        const domain::DeliveryRoute& execute(const shared::application::Principal& principal,
+                                             const AssignRouteRequest& request) override;
 
-    RoutingModel&                                m_routing;
-    sorting::domain::SortingDesk&                m_desk;
-    const logistics::domain::ShipmentGroupBook&  m_groups;
-    const identity::application::UserRepository& m_users;
-    shared::application::EventBus&               m_bus;
-    const shared::application::Clock&            m_clock;
-};
+        RoutingModel& m_routing;
+        sorting::domain::SortingDesk& m_desk;
+        const logistics::domain::ShipmentGroupBook& m_groups;
+        const identity::application::UserRepository& m_users;
+        shared::application::EventBus& m_bus;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::routing::application
 

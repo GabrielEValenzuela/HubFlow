@@ -12,12 +12,12 @@ using shared::domain::business_error;
 
 TEST(IdentityFlow, SignInAuthenticateAndPermissions)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
-    const auto               admin = app.bootstrapUser(identity::application::RegisterUserRequest {
+    const auto admin = app.bootstrapUser(identity::application::RegisterUserRequest {
         "admin@hubflow.local", "Admin", identity::domain::Role::Admin, "admin-secreto"});
 
-    const auto session   = app.signIn.execute("ADMIN@hubflow.local", "admin-secreto");
+    const auto session = app.signIn.execute("ADMIN@hubflow.local", "admin-secreto");
     const auto principal = app.authenticate.execute(session.token);
     EXPECT_EQ(principal.userId, admin.id);
     EXPECT_EQ(principal.role, identity::domain::Role::Admin);
@@ -46,14 +46,14 @@ TEST(IdentityFlow, SignInAuthenticateAndPermissions)
 
 TEST(InsightsFlow, CombinesSetsAndResolvesShipmentsThroughBPlus)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
     insights::application::SetSelector north;
     north.kind = insights::application::SetSelector::Kind::Zone;
     north.zone = "NORTE";
     insights::application::SetSelector express;
-    express.kind    = insights::application::SetSelector::Kind::Service;
+    express.kind = insights::application::SetSelector::Kind::Service;
     express.service = "EXPRESS";
 
     const auto intersection = app.combineCodeSets.execute(
@@ -78,16 +78,16 @@ TEST(InsightsFlow, CombinesSetsAndResolvesShipmentsThroughBPlus)
 
 TEST(InsightsFlow, NewShipmentIsReachableThroughEveryStructure)
 {
-    test::Storage            storage;
+    test::Storage storage;
     test::ApplicationHarness app {storage};
     app.seedDataset();
-    auto extra          = test::draft("PKG-1009", "EXPRESS", "NORTE", 2.0);
-    extra.recipient     = "Inés Ríos";
+    auto extra = test::draft("PKG-1009", "EXPRESS", "NORTE", 2.0);
+    extra.recipient = "Inés Ríos";
     extra.deliveryPoint = "N4";
     app.registerShipment.execute(app.operador(), extra);
     EXPECT_NE(app.lookupInBPlusTree.execute(app.operador(), "PKG-1009").pShipment, nullptr);
     insights::application::SetSelector express;
-    express.kind    = insights::application::SetSelector::Kind::Service;
+    express.kind = insights::application::SetSelector::Kind::Service;
     express.service = "EXPRESS";
     EXPECT_TRUE(app.getCodeSet.execute(app.operador(), express).contains("PKG-1009"));
     const auto& shipment = app.getShipment.execute(app.operador(), "PKG-1009");

@@ -7,20 +7,20 @@
 namespace hubflow::routing::application
 {
 
-/**
- * @brief Entrega el plan de una hoja de ruta a quien lo necesite fuera del sistema.
- *
- * El plan describe el problema que resolvió el agente (mapa, origen y paradas) y la secuencia de
- * búsqueda de cada tramo, de modo que un simulador externo pueda reproducir el recorrido.
- */
-class RoutePlanExporter
-{
-public:
-    virtual ~RoutePlanExporter() = default;
+    /**
+     * @brief Entrega el plan de una hoja de ruta a quien lo necesite fuera del sistema.
+     *
+     * El plan describe el problema que resolvió el agente (mapa, origen y paradas) y la secuencia de
+     * búsqueda de cada tramo, de modo que un simulador externo pueda reproducir el recorrido.
+     */
+    class RoutePlanExporter
+    {
+    public:
+        virtual ~RoutePlanExporter() = default;
 
-    /// @brief Publica el plan de @p route calculado sobre @p map.
-    virtual void exportPlan(const domain::RoadMap& map, const domain::DeliveryRoute& route) = 0;
-};
+        /// @brief Publica el plan de @p route calculado sobre @p map.
+        virtual void exportPlan(const domain::RoadMap& map, const domain::DeliveryRoute& route) = 0;
+    };
 
 } // namespace hubflow::routing::application
 

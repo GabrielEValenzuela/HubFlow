@@ -6,12 +6,12 @@
 namespace hubflow::shared::adapters
 {
 
-/// @brief Reloj del sistema operativo: entrega la hora real al resto de la aplicación.
-class SystemClock final : public application::Clock
-{
-private:
-    std::int64_t now() const override;
-};
+    /// @brief Reloj del sistema operativo: entrega la hora real al resto de la aplicación.
+    class SystemClock final : public application::Clock
+    {
+    private:
+        std::int64_t now() const override;
+    };
 
 } // namespace hubflow::shared::adapters
 

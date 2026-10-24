@@ -8,27 +8,27 @@
 namespace hubflow::logistics::application
 {
 
-/**
- * @brief Devuelve todos los envíos conocidos.
- *
- * @par Quién puede ejecutarlo
- * ADMIN y OPERADOR.
- *
- * @par Errores
- * - Forbidden: el rol no puede operar envíos.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class ListShipmentsUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Devuelve todos los envíos conocidos.
+     *
+     * @par Quién puede ejecutarlo
+     * ADMIN y OPERADOR.
+     *
+     * @par Errores
+     * - Forbidden: el rol no puede operar envíos.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class ListShipmentsUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~ListShipmentsUseCase() = default;
+        virtual ~ListShipmentsUseCase() = default;
 
-    virtual const domain::ShipmentCatalog& execute(const shared::application::Principal& principal) const = 0;
-};
+        virtual const domain::ShipmentCatalog& execute(const shared::application::Principal& principal) const = 0;
+    };
 
 } // namespace hubflow::logistics::application
 

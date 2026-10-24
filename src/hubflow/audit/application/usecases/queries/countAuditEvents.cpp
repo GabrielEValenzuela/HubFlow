@@ -5,15 +5,15 @@
 namespace hubflow::audit::application
 {
 
-CountAuditEvents::CountAuditEvents(const AuditLog& log)
-    : m_log {log}
-{
-}
+    CountAuditEvents::CountAuditEvents(const AuditLog& log)
+        : m_log {log}
+    {
+    }
 
-std::size_t CountAuditEvents::execute(const shared::application::Principal& principal) const
-{
-    principal.require(identity::domain::Permission::ViewAudit);
-    return m_log.count();
-}
+    std::size_t CountAuditEvents::execute(const shared::application::Principal& principal) const
+    {
+        principal.require(identity::domain::Permission::ViewAudit);
+        return m_log.count();
+    }
 
 } // namespace hubflow::audit::application

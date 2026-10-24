@@ -7,37 +7,37 @@
 namespace hubflow::identity::domain
 {
 
-/// @brief Base de los eventos de usuario: estado resultante.
-class UserEvent : public shared::domain::DomainEvent
-{
-public:
-    UserEvent(UserState state, shared::domain::ActorContext context);
+    /// @brief Base de los eventos de usuario: estado resultante.
+    class UserEvent : public shared::domain::DomainEvent
+    {
+    public:
+        UserEvent(UserState state, shared::domain::ActorContext context);
 
-    const UserState& state() const noexcept;
+        const UserState& state() const noexcept;
 
-private:
-    UserState m_state;
-};
+    private:
+        UserState m_state;
+    };
 
-/// @brief Se dio de alta un usuario.
-class UserRegistered final : public UserEvent
-{
-public:
-    using UserEvent::UserEvent;
+    /// @brief Se dio de alta un usuario.
+    class UserRegistered final : public UserEvent
+    {
+    public:
+        using UserEvent::UserEvent;
 
-private:
-    void accept(shared::domain::DomainEventVisitor& visitor) const override;
-};
+    private:
+        void accept(shared::domain::DomainEventVisitor& visitor) const override;
+    };
 
-/// @brief Cambió el nombre, rol, contraseña o estado de un usuario.
-class UserProfileChanged final : public UserEvent
-{
-public:
-    using UserEvent::UserEvent;
+    /// @brief Cambió el nombre, rol, contraseña o estado de un usuario.
+    class UserProfileChanged final : public UserEvent
+    {
+    public:
+        using UserEvent::UserEvent;
 
-private:
-    void accept(shared::domain::DomainEventVisitor& visitor) const override;
-};
+    private:
+        void accept(shared::domain::DomainEventVisitor& visitor) const override;
+    };
 
 } // namespace hubflow::identity::domain
 

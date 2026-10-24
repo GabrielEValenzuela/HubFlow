@@ -10,29 +10,29 @@
 namespace hubflow::logistics::application
 {
 
-/**
- * @brief Indica con qué otros paquetes viaja un paquete: devuelve su grupo o nada si viaja solo.
- *
- * @par Quién puede ejecutarlo
- * ADMIN y OPERADOR.
- *
- * @par Errores
- * - Forbidden: el rol no puede operar envíos.
- * - NotFound: el paquete no existe.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class FindShipmentGroupOfShipmentUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Indica con qué otros paquetes viaja un paquete: devuelve su grupo o nada si viaja solo.
+     *
+     * @par Quién puede ejecutarlo
+     * ADMIN y OPERADOR.
+     *
+     * @par Errores
+     * - Forbidden: el rol no puede operar envíos.
+     * - NotFound: el paquete no existe.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class FindShipmentGroupOfShipmentUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~FindShipmentGroupOfShipmentUseCase() = default;
+        virtual ~FindShipmentGroupOfShipmentUseCase() = default;
 
-    virtual const domain::ShipmentGroup* execute(const shared::application::Principal& principal,
-                                                 const std::string&                    shipmentCode) const = 0;
-};
+        virtual const domain::ShipmentGroup* execute(const shared::application::Principal& principal,
+                                                     const std::string& shipmentCode) const = 0;
+    };
 
 } // namespace hubflow::logistics::application
 

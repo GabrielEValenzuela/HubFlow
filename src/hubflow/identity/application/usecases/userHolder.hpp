@@ -6,31 +6,31 @@
 namespace hubflow::identity::application
 {
 
-/// @brief Dueño temporal de un usuario reconstituido: lo libera al terminar el caso de uso.
-class UserHolder final
-{
-public:
-    explicit UserHolder(domain::User* pUser)
-        : m_pUser {pUser}
+    /// @brief Dueño temporal de un usuario reconstituido: lo libera al terminar el caso de uso.
+    class UserHolder final
     {
-    }
+    public:
+        explicit UserHolder(domain::User* pUser)
+            : m_pUser {pUser}
+        {
+        }
 
-    ~UserHolder()
-    {
-        delete m_pUser;
-    }
+        ~UserHolder()
+        {
+            delete m_pUser;
+        }
 
-    UserHolder(const UserHolder&)            = delete;
-    UserHolder& operator=(const UserHolder&) = delete;
+        UserHolder(const UserHolder&) = delete;
+        UserHolder& operator=(const UserHolder&) = delete;
 
-    domain::User& user() const noexcept
-    {
-        return *m_pUser;
-    }
+        domain::User& user() const noexcept
+        {
+            return *m_pUser;
+        }
 
-private:
-    domain::User* m_pUser;
-};
+    private:
+        domain::User* m_pUser;
+    };
 
 } // namespace hubflow::identity::application
 

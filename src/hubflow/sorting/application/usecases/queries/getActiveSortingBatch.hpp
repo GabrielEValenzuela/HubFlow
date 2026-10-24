@@ -7,17 +7,17 @@
 namespace hubflow::sorting::application
 {
 
-/// @brief Implementación de GetActiveSortingBatchUseCase.
-class GetActiveSortingBatch final : public GetActiveSortingBatchUseCase
-{
-public:
-    explicit GetActiveSortingBatch(const domain::SortingDesk& desk);
+    /// @brief Implementación de GetActiveSortingBatchUseCase.
+    class GetActiveSortingBatch final : public GetActiveSortingBatchUseCase
+    {
+    public:
+        explicit GetActiveSortingBatch(const domain::SortingDesk& desk);
 
-private:
-    const domain::SortingBatch* execute(const shared::application::Principal& principal) const override;
+    private:
+        const domain::SortingBatch* execute(const shared::application::Principal& principal) const override;
 
-    const domain::SortingDesk& m_desk;
-};
+        const domain::SortingDesk& m_desk;
+    };
 
 } // namespace hubflow::sorting::application
 

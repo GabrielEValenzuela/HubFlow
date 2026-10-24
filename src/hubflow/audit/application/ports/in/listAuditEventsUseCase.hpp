@@ -10,30 +10,30 @@
 namespace hubflow::audit::application
 {
 
-/**
- * @brief Lista los registros de auditoría (quién hizo qué, sobre qué y cuándo), del más reciente al más antiguo.
- *
- * @par Quién puede ejecutarlo
- * Sólo ADMIN.
- *
- * @par Errores
- * - Forbidden: el solicitante no es ADMIN.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class ListAuditEventsUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Lista los registros de auditoría (quién hizo qué, sobre qué y cuándo), del más reciente al más antiguo.
+     *
+     * @par Quién puede ejecutarlo
+     * Sólo ADMIN.
+     *
+     * @par Errores
+     * - Forbidden: el solicitante no es ADMIN.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class ListAuditEventsUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~ListAuditEventsUseCase() = default;
+        virtual ~ListAuditEventsUseCase() = default;
 
-    virtual void execute(const shared::application::Principal& principal,
-                         std::size_t                           limit,
-                         std::size_t                           offset,
-                         AuditEntryVisitor&                    visitor) const = 0;
-};
+        virtual void execute(const shared::application::Principal& principal,
+                             std::size_t limit,
+                             std::size_t offset,
+                             AuditEntryVisitor& visitor) const = 0;
+    };
 
 } // namespace hubflow::audit::application
 

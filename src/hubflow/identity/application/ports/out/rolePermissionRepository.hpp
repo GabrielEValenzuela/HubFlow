@@ -6,24 +6,24 @@
 namespace hubflow::identity::application
 {
 
-/// @brief Receptor de las concesiones de permisos durante la hidratación.
-class GrantRestorer
-{
-public:
-    virtual ~GrantRestorer() = default;
+    /// @brief Receptor de las concesiones de permisos durante la hidratación.
+    class GrantRestorer
+    {
+    public:
+        virtual ~GrantRestorer() = default;
 
-    virtual void restoreGrant(domain::Role role, domain::Permission permission) = 0;
-};
+        virtual void restoreGrant(domain::Role role, domain::Permission permission) = 0;
+    };
 
-/// @brief Fuente de la tabla que dice qué puede hacer cada rol.
-class RolePermissionRepository
-{
-public:
-    virtual ~RolePermissionRepository() = default;
+    /// @brief Fuente de la tabla que dice qué puede hacer cada rol.
+    class RolePermissionRepository
+    {
+    public:
+        virtual ~RolePermissionRepository() = default;
 
-    /// @brief Entrega todas las concesiones al @p restorer.
-    virtual void loadAll(GrantRestorer& restorer) const = 0;
-};
+        /// @brief Entrega todas las concesiones al @p restorer.
+        virtual void loadAll(GrantRestorer& restorer) const = 0;
+    };
 
 } // namespace hubflow::identity::application
 

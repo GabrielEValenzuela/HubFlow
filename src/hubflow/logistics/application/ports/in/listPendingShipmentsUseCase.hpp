@@ -8,27 +8,27 @@
 namespace hubflow::logistics::application
 {
 
-/**
- * @brief Devuelve los envíos que esperan despacho, en el orden en que se despacharán.
- *
- * @par Quién puede ejecutarlo
- * ADMIN y OPERADOR.
- *
- * @par Errores
- * - Forbidden: el rol no puede operar envíos.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class ListPendingShipmentsUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Devuelve los envíos que esperan despacho, en el orden en que se despacharán.
+     *
+     * @par Quién puede ejecutarlo
+     * ADMIN y OPERADOR.
+     *
+     * @par Errores
+     * - Forbidden: el rol no puede operar envíos.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class ListPendingShipmentsUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~ListPendingShipmentsUseCase() = default;
+        virtual ~ListPendingShipmentsUseCase() = default;
 
-    virtual const domain::PendingShipments& execute(const shared::application::Principal& principal) const = 0;
-};
+        virtual const domain::PendingShipments& execute(const shared::application::Principal& principal) const = 0;
+    };
 
 } // namespace hubflow::logistics::application
 

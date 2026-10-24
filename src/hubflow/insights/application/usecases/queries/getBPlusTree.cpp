@@ -5,15 +5,16 @@
 namespace hubflow::insights::application
 {
 
-GetBPlusTree::GetBPlusTree(const logistics::application::LogisticsModel& model)
-    : m_model {model}
-{
-}
+    GetBPlusTree::GetBPlusTree(const logistics::application::LogisticsModel& model)
+        : m_model {model}
+    {
+    }
 
-const logistics::domain::ShipmentBPlusTree& GetBPlusTree::execute(const shared::application::Principal& principal) const
-{
-    principal.require(identity::domain::Permission::ViewIndexes);
-    return m_model.catalog.bPlusTree();
-}
+    const logistics::domain::ShipmentBPlusTree&
+    GetBPlusTree::execute(const shared::application::Principal& principal) const
+    {
+        principal.require(identity::domain::Permission::ViewIndexes);
+        return m_model.catalog.bPlusTree();
+    }
 
 } // namespace hubflow::insights::application

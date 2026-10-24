@@ -7,74 +7,74 @@
 namespace hubflow::logistics::domain
 {
 
-ZoneChanged::ZoneChanged(ZoneState state, const bool created, shared::domain::ActorContext context)
-    : shared::domain::DomainEvent {std::move(context)}
-    , m_state {std::move(state)}
-    , m_created {created}
-{
-}
+    ZoneChanged::ZoneChanged(ZoneState state, const bool created, shared::domain::ActorContext context)
+        : shared::domain::DomainEvent {std::move(context)}
+        , m_state {std::move(state)}
+        , m_created {created}
+    {
+    }
 
-const ZoneState& ZoneChanged::state() const noexcept
-{
-    return m_state;
-}
+    const ZoneState& ZoneChanged::state() const noexcept
+    {
+        return m_state;
+    }
 
-bool ZoneChanged::wasCreated() const noexcept
-{
-    return m_created;
-}
+    bool ZoneChanged::wasCreated() const noexcept
+    {
+        return m_created;
+    }
 
-void ZoneChanged::accept(shared::domain::DomainEventVisitor& visitor) const
-{
-    visitor.on(*this);
-}
+    void ZoneChanged::accept(shared::domain::DomainEventVisitor& visitor) const
+    {
+        visitor.on(*this);
+    }
 
-ServiceLevelChanged::ServiceLevelChanged(ServiceLevelState            state,
-                                         const bool                   created,
-                                         shared::domain::ActorContext context)
-    : shared::domain::DomainEvent {std::move(context)}
-    , m_state {std::move(state)}
-    , m_created {created}
-{
-}
+    ServiceLevelChanged::ServiceLevelChanged(ServiceLevelState state,
+                                             const bool created,
+                                             shared::domain::ActorContext context)
+        : shared::domain::DomainEvent {std::move(context)}
+        , m_state {std::move(state)}
+        , m_created {created}
+    {
+    }
 
-const ServiceLevelState& ServiceLevelChanged::state() const noexcept
-{
-    return m_state;
-}
+    const ServiceLevelState& ServiceLevelChanged::state() const noexcept
+    {
+        return m_state;
+    }
 
-bool ServiceLevelChanged::wasCreated() const noexcept
-{
-    return m_created;
-}
+    bool ServiceLevelChanged::wasCreated() const noexcept
+    {
+        return m_created;
+    }
 
-void ServiceLevelChanged::accept(shared::domain::DomainEventVisitor& visitor) const
-{
-    visitor.on(*this);
-}
+    void ServiceLevelChanged::accept(shared::domain::DomainEventVisitor& visitor) const
+    {
+        visitor.on(*this);
+    }
 
-ShipmentFeatureChanged::ShipmentFeatureChanged(ShipmentFeatureState         state,
-                                               const bool                   created,
-                                               shared::domain::ActorContext context)
-    : shared::domain::DomainEvent {std::move(context)}
-    , m_state {std::move(state)}
-    , m_created {created}
-{
-}
+    ShipmentFeatureChanged::ShipmentFeatureChanged(ShipmentFeatureState state,
+                                                   const bool created,
+                                                   shared::domain::ActorContext context)
+        : shared::domain::DomainEvent {std::move(context)}
+        , m_state {std::move(state)}
+        , m_created {created}
+    {
+    }
 
-const ShipmentFeatureState& ShipmentFeatureChanged::state() const noexcept
-{
-    return m_state;
-}
+    const ShipmentFeatureState& ShipmentFeatureChanged::state() const noexcept
+    {
+        return m_state;
+    }
 
-bool ShipmentFeatureChanged::wasCreated() const noexcept
-{
-    return m_created;
-}
+    bool ShipmentFeatureChanged::wasCreated() const noexcept
+    {
+        return m_created;
+    }
 
-void ShipmentFeatureChanged::accept(shared::domain::DomainEventVisitor& visitor) const
-{
-    visitor.on(*this);
-}
+    void ShipmentFeatureChanged::accept(shared::domain::DomainEventVisitor& visitor) const
+    {
+        visitor.on(*this);
+    }
 
 } // namespace hubflow::logistics::domain

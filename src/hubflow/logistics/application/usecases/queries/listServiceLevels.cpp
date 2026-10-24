@@ -3,14 +3,14 @@
 namespace hubflow::logistics::application
 {
 
-ListServiceLevels::ListServiceLevels(const LogisticsModel& model)
-    : m_model {model}
-{
-}
+    ListServiceLevels::ListServiceLevels(const LogisticsModel& model)
+        : m_model {model}
+    {
+    }
 
-const domain::ServiceLevelCatalog& ListServiceLevels::execute(const shared::application::Principal&) const
-{
-    return m_model.services;
-}
+    const domain::ServiceLevelCatalog& ListServiceLevels::execute(const shared::application::Principal&) const
+    {
+        return m_model.services;
+    }
 
 } // namespace hubflow::logistics::application

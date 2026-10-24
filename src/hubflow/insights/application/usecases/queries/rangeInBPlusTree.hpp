@@ -7,19 +7,19 @@
 namespace hubflow::insights::application
 {
 
-/// @brief Implementación de RangeInBPlusTreeUseCase.
-class RangeInBPlusTree final : public RangeInBPlusTreeUseCase
-{
-public:
-    explicit RangeInBPlusTree(const logistics::application::LogisticsModel& model);
+    /// @brief Implementación de RangeInBPlusTreeUseCase.
+    class RangeInBPlusTree final : public RangeInBPlusTreeUseCase
+    {
+    public:
+        explicit RangeInBPlusTree(const logistics::application::LogisticsModel& model);
 
-private:
-    RangeResult execute(const shared::application::Principal& principal,
-                        const std::string&                    from,
-                        const std::string&                    to) const override;
+    private:
+        RangeResult execute(const shared::application::Principal& principal,
+                            const std::string& from,
+                            const std::string& to) const override;
 
-    const logistics::application::LogisticsModel& m_model;
-};
+        const logistics::application::LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::insights::application
 

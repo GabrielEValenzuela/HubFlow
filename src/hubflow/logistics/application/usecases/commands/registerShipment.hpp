@@ -12,28 +12,28 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de RegisterShipmentUseCase.
-class RegisterShipment final : public RegisterShipmentUseCase
-{
-public:
-    RegisterShipment(LogisticsModel&                         model,
-                     const domain::DeliveryPointCatalog&     deliveryPoints,
-                     shared::application::IdentityGenerator& identities,
-                     TrackingCodeGenerator&                  codes,
-                     shared::application::EventBus&          bus,
-                     const shared::application::Clock&       clock);
+    /// @brief Implementación de RegisterShipmentUseCase.
+    class RegisterShipment final : public RegisterShipmentUseCase
+    {
+    public:
+        RegisterShipment(LogisticsModel& model,
+                         const domain::DeliveryPointCatalog& deliveryPoints,
+                         shared::application::IdentityGenerator& identities,
+                         TrackingCodeGenerator& codes,
+                         shared::application::EventBus& bus,
+                         const shared::application::Clock& clock);
 
-private:
-    const domain::Shipment& execute(const shared::application::Principal& principal,
-                                    const domain::ShipmentDraft&          draft) override;
+    private:
+        const domain::Shipment& execute(const shared::application::Principal& principal,
+                                        const domain::ShipmentDraft& draft) override;
 
-    LogisticsModel&                         m_model;
-    const domain::DeliveryPointCatalog&     m_deliveryPoints;
-    shared::application::IdentityGenerator& m_identities;
-    TrackingCodeGenerator&                  m_codes;
-    shared::application::EventBus&          m_bus;
-    const shared::application::Clock&       m_clock;
-};
+        LogisticsModel& m_model;
+        const domain::DeliveryPointCatalog& m_deliveryPoints;
+        shared::application::IdentityGenerator& m_identities;
+        TrackingCodeGenerator& m_codes;
+        shared::application::EventBus& m_bus;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::logistics::application
 

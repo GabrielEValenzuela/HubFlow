@@ -8,19 +8,19 @@
 namespace hubflow::sorting::application
 {
 
-/// @brief Implementación de OpenSortingBatchUseCase.
-class OpenSortingBatch final : public OpenSortingBatchUseCase
-{
-public:
-    OpenSortingBatch(const logistics::application::LogisticsModel& model, domain::SortingDesk& desk);
+    /// @brief Implementación de OpenSortingBatchUseCase.
+    class OpenSortingBatch final : public OpenSortingBatchUseCase
+    {
+    public:
+        OpenSortingBatch(const logistics::application::LogisticsModel& model, domain::SortingDesk& desk);
 
-private:
-    const domain::SortingBatch& execute(const shared::application::Principal& principal,
-                                        const std::string&                    zone) override;
+    private:
+        const domain::SortingBatch& execute(const shared::application::Principal& principal,
+                                            const std::string& zone) override;
 
-    const logistics::application::LogisticsModel& m_model;
-    domain::SortingDesk&                          m_desk;
-};
+        const logistics::application::LogisticsModel& m_model;
+        domain::SortingDesk& m_desk;
+    };
 
 } // namespace hubflow::sorting::application
 

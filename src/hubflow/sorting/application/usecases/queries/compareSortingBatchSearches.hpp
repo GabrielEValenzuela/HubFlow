@@ -7,19 +7,19 @@
 namespace hubflow::sorting::application
 {
 
-/// @brief Implementación de CompareSortingBatchSearchesUseCase.
-class CompareSortingBatchSearches final : public CompareSortingBatchSearchesUseCase
-{
-public:
-    explicit CompareSortingBatchSearches(const domain::SortingDesk& desk);
+    /// @brief Implementación de CompareSortingBatchSearchesUseCase.
+    class CompareSortingBatchSearches final : public CompareSortingBatchSearchesUseCase
+    {
+    public:
+        explicit CompareSortingBatchSearches(const domain::SortingDesk& desk);
 
-private:
-    SearchComparison execute(const shared::application::Principal& principal,
-                             std::uint64_t                         batchId,
-                             const std::string&                    code) const override;
+    private:
+        SearchComparison execute(const shared::application::Principal& principal,
+                                 std::uint64_t batchId,
+                                 const std::string& code) const override;
 
-    const domain::SortingDesk& m_desk;
-};
+        const domain::SortingDesk& m_desk;
+    };
 
 } // namespace hubflow::sorting::application
 

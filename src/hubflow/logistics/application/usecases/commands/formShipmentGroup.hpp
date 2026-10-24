@@ -10,24 +10,24 @@
 namespace hubflow::logistics::application
 {
 
-/// @brief Implementación de FormShipmentGroupUseCase.
-class FormShipmentGroup final : public FormShipmentGroupUseCase
-{
-public:
-    FormShipmentGroup(LogisticsModel&                         model,
-                      shared::application::IdentityGenerator& identities,
-                      shared::application::EventBus&          bus,
-                      const shared::application::Clock&       clock);
+    /// @brief Implementación de FormShipmentGroupUseCase.
+    class FormShipmentGroup final : public FormShipmentGroupUseCase
+    {
+    public:
+        FormShipmentGroup(LogisticsModel& model,
+                          shared::application::IdentityGenerator& identities,
+                          shared::application::EventBus& bus,
+                          const shared::application::Clock& clock);
 
-private:
-    const domain::ShipmentGroup& execute(const shared::application::Principal& principal,
-                                         const ds::DynamicArray<std::string>&  codes) override;
+    private:
+        const domain::ShipmentGroup& execute(const shared::application::Principal& principal,
+                                             const ds::DynamicArray<std::string>& codes) override;
 
-    LogisticsModel&                         m_model;
-    shared::application::IdentityGenerator& m_identities;
-    shared::application::EventBus&          m_bus;
-    const shared::application::Clock&       m_clock;
-};
+        LogisticsModel& m_model;
+        shared::application::IdentityGenerator& m_identities;
+        shared::application::EventBus& m_bus;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::logistics::application
 

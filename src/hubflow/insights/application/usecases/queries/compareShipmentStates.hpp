@@ -7,19 +7,19 @@
 namespace hubflow::insights::application
 {
 
-/// @brief Implementación de CompareShipmentStatesUseCase.
-class CompareShipmentStates final : public CompareShipmentStatesUseCase
-{
-public:
-    explicit CompareShipmentStates(const logistics::application::LogisticsModel& model);
+    /// @brief Implementación de CompareShipmentStatesUseCase.
+    class CompareShipmentStates final : public CompareShipmentStatesUseCase
+    {
+    public:
+        explicit CompareShipmentStates(const logistics::application::LogisticsModel& model);
 
-private:
-    domain::StateComparison execute(const shared::application::Principal& principal,
-                                    const std::string&                    firstCode,
-                                    const std::string&                    secondCode) const override;
+    private:
+        domain::StateComparison execute(const shared::application::Principal& principal,
+                                        const std::string& firstCode,
+                                        const std::string& secondCode) const override;
 
-    const logistics::application::LogisticsModel& m_model;
-};
+        const logistics::application::LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::insights::application
 

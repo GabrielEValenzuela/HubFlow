@@ -10,23 +10,23 @@
 namespace hubflow::identity::application
 {
 
-/// @brief Implementación de AuthenticateUseCase.
-class Authenticate final : public AuthenticateUseCase
-{
-public:
-    Authenticate(const UserRepository&             users,
-                 const TokenIssuer&                tokens,
-                 const domain::AccessPolicy&       policy,
-                 const shared::application::Clock& clock);
+    /// @brief Implementación de AuthenticateUseCase.
+    class Authenticate final : public AuthenticateUseCase
+    {
+    public:
+        Authenticate(const UserRepository& users,
+                     const TokenIssuer& tokens,
+                     const domain::AccessPolicy& policy,
+                     const shared::application::Clock& clock);
 
-private:
-    shared::application::Principal execute(const std::string& token) const override;
+    private:
+        shared::application::Principal execute(const std::string& token) const override;
 
-    const UserRepository&             m_users;
-    const TokenIssuer&                m_tokens;
-    const domain::AccessPolicy&       m_policy;
-    const shared::application::Clock& m_clock;
-};
+        const UserRepository& m_users;
+        const TokenIssuer& m_tokens;
+        const domain::AccessPolicy& m_policy;
+        const shared::application::Clock& m_clock;
+    };
 
 } // namespace hubflow::identity::application
 

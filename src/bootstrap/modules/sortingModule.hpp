@@ -7,40 +7,40 @@
 
 namespace hubflow::logistics::application
 {
-struct LogisticsModel;
+    struct LogisticsModel;
 }
 
 namespace hubflow::sorting::domain
 {
-class SortingDesk;
+    class SortingDesk;
 }
 
 namespace hubflow::bootstrap
 {
 
-/**
- * @brief Arma el contexto de la mesa de clasificación: lotes, ordenamiento, cola de preparación y búsquedas.
- *
- * Trabaja sobre la mesa en memoria y consulta los envíos de logística; no guarda nada en la base de datos ni
- * reacciona a eventos.
- */
-class SortingModule final : public BoundedContextModule
-{
-public:
-    SortingModule(sorting::domain::SortingDesk& desk, const logistics::application::LogisticsModel& logistics);
+    /**
+     * @brief Arma el contexto de la mesa de clasificación: lotes, ordenamiento, cola de preparación y búsquedas.
+     *
+     * Trabaja sobre la mesa en memoria y consulta los envíos de logística; no guarda nada en la base de datos ni
+     * reacciona a eventos.
+     */
+    class SortingModule final : public BoundedContextModule
+    {
+    public:
+        SortingModule(sorting::domain::SortingDesk& desk, const logistics::application::LogisticsModel& logistics);
 
-    ~SortingModule() override;
+        ~SortingModule() override;
 
-    SortingModule(const SortingModule&)            = delete;
-    SortingModule& operator=(const SortingModule&) = delete;
+        SortingModule(const SortingModule&) = delete;
+        SortingModule& operator=(const SortingModule&) = delete;
 
-private:
-    void registerRoutes(platform::ApiRouter& router) override;
+    private:
+        void registerRoutes(platform::ApiRouter& router) override;
 
-    struct Parts;
+        struct Parts;
 
-    std::unique_ptr<Parts> m_spParts;
-};
+        std::unique_ptr<Parts> m_spParts;
+    };
 
 } // namespace hubflow::bootstrap
 

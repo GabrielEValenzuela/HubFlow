@@ -8,19 +8,19 @@
 namespace hubflow::identity::adapters
 {
 
-/// @brief Representación externa de usuarios y sesiones. Nunca expone el hash de la contraseña.
-class IdentityJsonPresenter final
-{
-public:
-    /// @brief Ficha pública de un usuario.
-    static platform::Json user(const domain::UserState& user);
+    /// @brief Representación externa de usuarios y sesiones. Nunca expone el hash de la contraseña.
+    class IdentityJsonPresenter final
+    {
+    public:
+        /// @brief Ficha pública de un usuario.
+        static platform::Json user(const domain::UserState& user);
 
-    /// @brief Token de sesión, vencimiento y usuario autenticado.
-    static platform::Json session(const application::Session& session);
+        /// @brief Token de sesión, vencimiento y usuario autenticado.
+        static platform::Json session(const application::Session& session);
 
-    /// @brief Lista de fichas de usuario.
-    static platform::Json users(const ds::DynamicArray<domain::UserState>& users);
-};
+        /// @brief Lista de fichas de usuario.
+        static platform::Json users(const ds::DynamicArray<domain::UserState>& users);
+    };
 
 } // namespace hubflow::identity::adapters
 

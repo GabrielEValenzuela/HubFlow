@@ -7,18 +7,18 @@
 namespace hubflow::insights::application
 {
 
-/// @brief Implementación de GetCodeSetUseCase.
-class GetCodeSet final : public GetCodeSetUseCase
-{
-public:
-    explicit GetCodeSet(const logistics::application::LogisticsModel& model);
+    /// @brief Implementación de GetCodeSetUseCase.
+    class GetCodeSet final : public GetCodeSetUseCase
+    {
+    public:
+        explicit GetCodeSet(const logistics::application::LogisticsModel& model);
 
-private:
-    domain::CodeSet execute(const shared::application::Principal& principal,
-                            const SetSelector&                    selector) const override;
+    private:
+        domain::CodeSet execute(const shared::application::Principal& principal,
+                                const SetSelector& selector) const override;
 
-    const logistics::application::LogisticsModel& m_model;
-};
+        const logistics::application::LogisticsModel& m_model;
+    };
 
 } // namespace hubflow::insights::application
 

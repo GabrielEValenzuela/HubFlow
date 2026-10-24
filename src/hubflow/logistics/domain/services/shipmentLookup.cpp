@@ -3,31 +3,31 @@
 namespace hubflow::logistics::domain
 {
 
-LookupResult LinearShipmentLookup::find(const ShipmentCatalog& catalog, const std::string& code) const
-{
-    LookupResult result;
-    for (const auto* pNode = catalog.allShipments().head(); pNode != nullptr && result.pShipment == nullptr;
-         pNode             = pNode->pNext)
+    LookupResult LinearShipmentLookup::find(const ShipmentCatalog& catalog, const std::string& code) const
     {
-        ++result.visited;
-        if (pNode->value->code() == code)
+        LookupResult result;
+        for (const auto* pNode = catalog.allShipments().head(); pNode != nullptr && result.pShipment == nullptr;
+             pNode = pNode->pNext)
         {
-            result.pShipment = pNode->value;
+            ++result.visited;
+            if (pNode->value->code() == code)
+            {
+                result.pShipment = pNode->value;
+            }
         }
+        return result;
     }
-    return result;
-}
 
-LookupResult BstShipmentLookup::find(const ShipmentCatalog& catalog, const std::string& code) const
-{
-    const auto lookup = catalog.bst().find(code);
-    return LookupResult {lookup.pValue, lookup.visited};
-}
+    LookupResult BstShipmentLookup::find(const ShipmentCatalog& catalog, const std::string& code) const
+    {
+        const auto lookup = catalog.bst().find(code);
+        return LookupResult {lookup.pValue, lookup.visited};
+    }
 
-LookupResult BPlusShipmentLookup::find(const ShipmentCatalog& catalog, const std::string& code) const
-{
-    const auto lookup = catalog.bPlusTree().find(code);
-    return LookupResult {lookup.pValue, lookup.visited};
-}
+    LookupResult BPlusShipmentLookup::find(const ShipmentCatalog& catalog, const std::string& code) const
+    {
+        const auto lookup = catalog.bPlusTree().find(code);
+        return LookupResult {lookup.pValue, lookup.visited};
+    }
 
 } // namespace hubflow::logistics::domain

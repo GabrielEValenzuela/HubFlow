@@ -10,35 +10,36 @@
 namespace hubflow::identity::application
 {
 
-/// @brief Sesión abierta: token, vencimiento y usuario autenticado.
-struct Session
-{
-    std::string       token;
-    std::int64_t      expiresAt {0};
-    domain::UserState user;
-};
+    /// @brief Sesión abierta: token, vencimiento y usuario autenticado.
+    struct Session
+    {
+        std::string token;
+        std::int64_t expiresAt {0};
+        domain::UserState user;
+    };
 
-/**
- * @brief Abre una sesión con email y contraseña y entrega el token con el que el usuario opera después.
- *
- * @par Quién puede ejecutarlo
- * Cualquier persona que conozca sus credenciales. Es la única operación que no requiere un usuario autenticado.
- *
- * @par Errores
- * - Unauthorized: credenciales inválidas o usuario inactivo (el mensaje no revela cuál de los dos).
- *
- * @par Idempotencia
- * No. Cada ejecución emite un token nuevo con su propio vencimiento, así que repetirla no devuelve la misma respuesta.
- */
-class SignInUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::NonIdempotent};
+    /**
+     * @brief Abre una sesión con email y contraseña y entrega el token con el que el usuario opera después.
+     *
+     * @par Quién puede ejecutarlo
+     * Cualquier persona que conozca sus credenciales. Es la única operación que no requiere un usuario autenticado.
+     *
+     * @par Errores
+     * - Unauthorized: credenciales inválidas o usuario inactivo (el mensaje no revela cuál de los dos).
+     *
+     * @par Idempotencia
+     * No. Cada ejecución emite un token nuevo con su propio vencimiento, así que repetirla no devuelve la misma
+     * respuesta.
+     */
+    class SignInUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::NonIdempotent};
 
-    virtual ~SignInUseCase() = default;
+        virtual ~SignInUseCase() = default;
 
-    virtual Session execute(const std::string& email, const std::string& password) const = 0;
-};
+        virtual Session execute(const std::string& email, const std::string& password) const = 0;
+    };
 
 } // namespace hubflow::identity::application
 

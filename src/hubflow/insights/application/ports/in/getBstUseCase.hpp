@@ -8,27 +8,28 @@
 namespace hubflow::insights::application
 {
 
-/**
- * @brief Devuelve el árbol binario de búsqueda por código para inspeccionar su estructura.
- *
- * @par Quién puede ejecutarlo
- * ADMIN y OPERADOR.
- *
- * @par Errores
- * - Forbidden: el rol no puede consultar los índices.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class GetBstUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Devuelve el árbol binario de búsqueda por código para inspeccionar su estructura.
+     *
+     * @par Quién puede ejecutarlo
+     * ADMIN y OPERADOR.
+     *
+     * @par Errores
+     * - Forbidden: el rol no puede consultar los índices.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class GetBstUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~GetBstUseCase() = default;
+        virtual ~GetBstUseCase() = default;
 
-    virtual const logistics::domain::ShipmentBst& execute(const shared::application::Principal& principal) const = 0;
-};
+        virtual const logistics::domain::ShipmentBst&
+        execute(const shared::application::Principal& principal) const = 0;
+    };
 
 } // namespace hubflow::insights::application
 

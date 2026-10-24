@@ -8,27 +8,27 @@
 namespace hubflow::logistics::application
 {
 
-/**
- * @brief Devuelve todas las características, activas y desactivadas, en orden de alta.
- *
- * @par Quién puede ejecutarlo
- * Cualquier usuario autenticado: son los datos con los que se completan las pantallas de la planta.
- *
- * @par Errores
- * - Ninguno propio de la operación.
- *
- * @par Idempotencia
- * Sí. Es una lectura sin efectos.
- */
-class ListShipmentFeaturesUseCase
-{
-public:
-    static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
+    /**
+     * @brief Devuelve todas las características, activas y desactivadas, en orden de alta.
+     *
+     * @par Quién puede ejecutarlo
+     * Cualquier usuario autenticado: son los datos con los que se completan las pantallas de la planta.
+     *
+     * @par Errores
+     * - Ninguno propio de la operación.
+     *
+     * @par Idempotencia
+     * Sí. Es una lectura sin efectos.
+     */
+    class ListShipmentFeaturesUseCase
+    {
+    public:
+        static constexpr shared::application::Idempotency IDEMPOTENCY {shared::application::Idempotency::Idempotent};
 
-    virtual ~ListShipmentFeaturesUseCase() = default;
+        virtual ~ListShipmentFeaturesUseCase() = default;
 
-    virtual const domain::FeatureCatalog& execute(const shared::application::Principal& principal) const = 0;
-};
+        virtual const domain::FeatureCatalog& execute(const shared::application::Principal& principal) const = 0;
+    };
 
 } // namespace hubflow::logistics::application
 

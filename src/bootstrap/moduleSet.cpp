@@ -5,61 +5,61 @@
 namespace hubflow::bootstrap
 {
 
-void PhasedSubscribers::add(const SubscriptionPhase phase, shared::domain::DomainEventVisitor& subscriber)
-{
-    m_entries.emplace_back(phase, &subscriber);
-}
-
-void PhasedSubscribers::subscribe(const SubscriptionPhase phase, shared::application::EventBus& bus) const
-{
-    for (const auto& entry : m_entries)
+    void PhasedSubscribers::add(const SubscriptionPhase phase, shared::domain::DomainEventVisitor& subscriber)
     {
-        if (entry.first == phase)
+        m_entries.emplace_back(phase, &subscriber);
+    }
+
+    void PhasedSubscribers::subscribe(const SubscriptionPhase phase, shared::application::EventBus& bus) const
+    {
+        for (const auto& entry : m_entries)
         {
-            bus.subscribe(*entry.second);
+            if (entry.first == phase)
+            {
+                bus.subscribe(*entry.second);
+            }
         }
     }
-}
 
-void BoundedContextModule::subscribe(SubscriptionPhase, shared::application::EventBus&) {}
+    void BoundedContextModule::subscribe(SubscriptionPhase, shared::application::EventBus&) {}
 
-void BoundedContextModule::hydrate() {}
+    void BoundedContextModule::hydrate() {}
 
-void BoundedContextModule::seed() {}
+    void BoundedContextModule::seed() {}
 
-void ModuleSet::subscribeAll(shared::application::EventBus& bus)
-{
-    for (const SubscriptionPhase phase : SUBSCRIPTION_ORDER)
+    void ModuleSet::subscribeAll(shared::application::EventBus& bus)
+    {
+        for (const SubscriptionPhase phase : SUBSCRIPTION_ORDER)
+        {
+            for (auto& spModule : m_modules)
+            {
+                spModule->subscribe(phase, bus);
+            }
+        }
+    }
+
+    void ModuleSet::hydrateAll()
     {
         for (auto& spModule : m_modules)
         {
-            spModule->subscribe(phase, bus);
+            spModule->hydrate();
         }
     }
-}
 
-void ModuleSet::hydrateAll()
-{
-    for (auto& spModule : m_modules)
+    void ModuleSet::seedAll()
     {
-        spModule->hydrate();
+        for (auto& spModule : m_modules)
+        {
+            spModule->seed();
+        }
     }
-}
 
-void ModuleSet::seedAll()
-{
-    for (auto& spModule : m_modules)
+    void ModuleSet::registerAllRoutes(platform::ApiRouter& router)
     {
-        spModule->seed();
+        for (auto& spModule : m_modules)
+        {
+            spModule->registerRoutes(router);
+        }
     }
-}
-
-void ModuleSet::registerAllRoutes(platform::ApiRouter& router)
-{
-    for (auto& spModule : m_modules)
-    {
-        spModule->registerRoutes(router);
-    }
-}
 
 } // namespace hubflow::bootstrap
