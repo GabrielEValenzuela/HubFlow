@@ -5,6 +5,7 @@
 #include "hubflow/platform/http/httpTypes.hpp"
 #include "hubflow/shared/application/ports/out/idempotencyStore.hpp"
 #include "hubflow/shared/application/useCase.hpp"
+#include <cstdint>
 
 #include <mutex>
 
@@ -12,7 +13,7 @@ namespace hubflow::platform
 {
 
     /// @brief Si un endpoint exige sesión iniciada.
-    enum class Access
+    enum class Access : std::uint8_t
     {
         Public,
         Authenticated
