@@ -2,12 +2,13 @@
 #define HUBFLOW_DATASTRUCTURES_BINARY_SEARCH_TREE_HPP
 
 #include <cstddef>
+#include <cstdint>
 
 namespace hubflow::ds
 {
 
     /// @brief Decisión tomada en un nodo durante una búsqueda en el BST.
-    enum class BstStep
+    enum class BstStep : std::uint8_t
     {
         Left,
         Right,
@@ -42,9 +43,9 @@ namespace hubflow::ds
         struct Node
         {
             TKey key;
-            TValue* pValue;
-            Node* pLeft;
-            Node* pRight;
+            TValue* pValue {nullptr};
+            Node* pLeft {nullptr};
+            Node* pRight {nullptr};
         };
 
         /// @brief Resultado de una búsqueda: valor (o nullptr) y nodos visitados.
@@ -169,7 +170,7 @@ namespace hubflow::ds
 
     private:
         template<typename TVisitor>
-        static void inOrder(const Node* pNode, TVisitor& visit)
+        static void inOrder(const Node* pNode, TVisitor& visit) // NOLINT(misc-no-recursion)
         {
             if (pNode != nullptr)
             {
@@ -179,7 +180,7 @@ namespace hubflow::ds
             }
         }
 
-        static int height(const Node* pNode)
+        static int height(const Node* pNode) // NOLINT(misc-no-recursion)
         {
             int result {-1};
             if (pNode != nullptr)
@@ -191,7 +192,7 @@ namespace hubflow::ds
             return result;
         }
 
-        static void destroy(Node* pNode) noexcept
+        static void destroy(Node* pNode) noexcept // NOLINT(misc-no-recursion)
         {
             if (pNode != nullptr)
             {
