@@ -36,6 +36,7 @@ namespace
         static std::vector<std::string> codesOf(const SortingBatch& batch)
         {
             std::vector<std::string> codes;
+            codes.reserve(batch.size());
             for (std::size_t i = 0; i < batch.size(); ++i)
             {
                 codes.push_back(batch.shipmentAt(i).code());
@@ -100,7 +101,7 @@ TEST_F(SortingBatchTest, InsertionSortBestCaseIsLinear)
 
 TEST_F(SortingBatchTest, EmptyZoneIsReported)
 {
-    EXPECT_THROW((SortingBatch {1, "SUR", pending}), business_error);
+    EXPECT_THROW((SortingBatch {1, "SUR", pending}), BusinessError);
 }
 
 TEST(SortingBatchEdgeCases, SingleElementBatchSortsTrivially)
@@ -154,17 +155,17 @@ TEST_F(SortingBatchTest, PreparationQueueIsFifoAndProcessedStackIsLifo)
     {
         batch.processNext(groups);
     }
-    EXPECT_THROW(batch.processNext(groups), business_error);
+    EXPECT_THROW(batch.processNext(groups), BusinessError);
     const auto unloaded = batch.unloadProcessed();
     EXPECT_EQ(unloaded[0]->code(), "PKG-1009");
     EXPECT_TRUE(batch.processed().isEmpty());
-    EXPECT_THROW(batch.returnProcessed("PKG-1009", groups), business_error);
+    EXPECT_THROW(batch.returnProcessed("PKG-1009", groups), BusinessError);
 }
 
 TEST_F(BatchSearchTest, LinearAndBinaryReportComparisons)
 {
     SortingBatch batch {1, "NORTE", pending};
-    EXPECT_THROW(binary().search(batch, "PKG-1005"), business_error);
+    EXPECT_THROW(binary().search(batch, "PKG-1005"), BusinessError);
     batch.sort(ShipmentOrdering::of(SortCriteria::CodeAscending));
 
     EXPECT_EQ(linear().search(batch, "PKG-1001").comparisons, 1U);
@@ -181,7 +182,7 @@ TEST_F(BatchSearchTest, LinearAndBinaryReportComparisons)
 
     batch.sort(ShipmentOrdering::of(SortCriteria::WeightDescending));
     EXPECT_TRUE(linear().search(batch, "PKG-1005").position.has_value());
-    EXPECT_THROW(binary().search(batch, "PKG-1005"), business_error);
+    EXPECT_THROW(binary().search(batch, "PKG-1005"), BusinessError);
 }
 
 TEST_F(SortingBatchTest, DeskReplacesActiveBatch)
@@ -191,7 +192,7 @@ TEST_F(SortingBatchTest, DeskReplacesActiveBatch)
     EXPECT_EQ(first.id(), 1U);
     const auto& second = desk.open("NORTE", pending);
     EXPECT_EQ(second.id(), 2U);
-    EXPECT_THROW(desk.require(1), business_error);
+    EXPECT_THROW(desk.require(1), BusinessError);
     desk.close();
     EXPECT_EQ(desk.activeBatch(), nullptr);
 }
@@ -204,7 +205,7 @@ TEST_F(SortingBatchTest, ReturnProcessedItemOnlyAcceptsTheLastProcessedCode)
     batch.processNext(groups);
     batch.processNext(groups);
 
-    EXPECT_THROW(batch.returnProcessed("PKG-1001", groups), business_error);
+    EXPECT_THROW(batch.returnProcessed("PKG-1001", groups), BusinessError);
     EXPECT_EQ(batch.processed().size(), 2U);
     EXPECT_EQ(batch.returnProcessed("PKG-1002", groups)[0]->code(), "PKG-1002");
     EXPECT_EQ(batch.processed().top()->code(), "PKG-1001");
@@ -223,7 +224,7 @@ TEST_F(SortingBatchTest, ReturningTheSameItemTwiceFailsWithoutSideEffects)
     {
         batch.returnProcessed(code, groups);
     }
-    catch (const business_error& error)
+    catch (const BusinessError& error)
     {
         kind = error.errorKind();
     }

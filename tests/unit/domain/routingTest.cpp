@@ -31,6 +31,7 @@ namespace
         std::vector<std::string> pathOf(const SearchTrace& trace) const
         {
             std::vector<std::string> ids;
+            ids.reserve(trace.path.size());
             for (std::size_t pathPosition = 0; pathPosition < trace.path.size(); ++pathPosition)
             {
                 ids.push_back(map.node(trace.path[pathPosition]).id);
@@ -61,8 +62,8 @@ namespace
 
 TEST_F(RoutingFixture, MapRejectsEdgesCheaperThanStraightLine)
 {
-    EXPECT_THROW(map.connect("HUB", "N5", 1.0), business_error);
-    EXPECT_THROW(map.connect("HUB", "ZZZ", 50.0), business_error);
+    EXPECT_THROW(map.connect("HUB", "N5", 1.0), BusinessError);
+    EXPECT_THROW(map.connect("HUB", "ZZZ", 50.0), BusinessError);
     EXPECT_EQ(map.node(map.hub()).id, "HUB");
 }
 
@@ -140,8 +141,8 @@ TEST_F(RoutingFixture, DeliveryRoutePlansRoundTripAndResolvesStops)
     EXPECT_EQ(pRoute->pendingEvents(), 1U);
     EXPECT_EQ(pRoute->status(), RouteStatus::InProgress);
     pRoute->resolveStop(1, StopOutcome::Delivered, hubflow::test::actor());
-    EXPECT_THROW(pRoute->resolveStop(1, StopOutcome::Rescheduled, hubflow::test::actor()), business_error);
-    EXPECT_THROW(pRoute->resolveStop(2, StopOutcome::Pending, hubflow::test::actor()), business_error);
+    EXPECT_THROW(pRoute->resolveStop(1, StopOutcome::Rescheduled, hubflow::test::actor()), BusinessError);
+    EXPECT_THROW(pRoute->resolveStop(2, StopOutcome::Pending, hubflow::test::actor()), BusinessError);
     pRoute->resolveStop(2, StopOutcome::Rescheduled, hubflow::test::actor());
     EXPECT_EQ(pRoute->status(), RouteStatus::Completed);
     EXPECT_GT(pRoute->totalCostKm(), 0.0);
@@ -152,7 +153,7 @@ TEST_F(RoutingFixture, DeliveryRouteRequiresStops)
 {
     const PumAgent agent {map, SearchStrategy::of(SearchAlgorithm::BreadthFirst)};
     EXPECT_THROW(DeliveryRoute::assign(1, Courier {}, ds::DynamicArray<RouteStop> {}, agent, hubflow::test::actor()),
-                 business_error);
+                 BusinessError);
 }
 
 TEST_F(RoutingFixture, ResolvingAStopWithTheSameOutcomeIsANoOp)
@@ -168,6 +169,6 @@ TEST_F(RoutingFixture, ResolvingAStopWithTheSameOutcomeIsANoOp)
 
     EXPECT_EQ(repeated.outcome, StopOutcome::Delivered);
     EXPECT_EQ(pRoute->pendingEvents(), eventsAfterFirst);
-    EXPECT_THROW(pRoute->resolveStop(1, StopOutcome::Rescheduled, hubflow::test::actor()), business_error);
+    EXPECT_THROW(pRoute->resolveStop(1, StopOutcome::Rescheduled, hubflow::test::actor()), BusinessError);
     delete pRoute;
 }
