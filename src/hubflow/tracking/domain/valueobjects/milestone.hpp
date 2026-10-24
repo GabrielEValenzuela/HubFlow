@@ -12,7 +12,7 @@ namespace hubflow::tracking::domain
      * La planta distingue más estados y matices que los que le importan a quien espera el paquete; cada movimiento
      * interno se traduce a uno de estos hitos.
      */
-    enum class Milestone
+    enum class Milestone : std::uint8_t
     {
         Received,
         Prepared,
