@@ -59,6 +59,7 @@ TEST(UuidV7IdentityGenerator, IdentitiesInTheSameMillisecondKeepIncreasingInText
     UuidV7IdentityGenerator generator {[] { return std::uint64_t {1767225600123}; }};
     shared::application::IdentityGenerator& port = generator;
     std::vector<std::string> ids;
+    ids.reserve(5000);
     for (int i = 0; i < 5000; ++i)
     {
         ids.push_back(port.next());
@@ -150,5 +151,5 @@ TEST(SequentialPkgCodeGenerator, FailsWhenTheNumbersRunOut)
     logistics::application::TrackingCodeGenerator& port = generator;
 
     EXPECT_EQ(port.next(catalog), "PKG-9999");
-    EXPECT_THROW(port.next(catalog), shared::domain::business_error);
+    EXPECT_THROW(port.next(catalog), shared::domain::BusinessError);
 }
