@@ -1,11 +1,13 @@
 #ifndef HUBFLOW_IDENTITY_DOMAIN_VALUEOBJECTS_ROLE_HPP
 #define HUBFLOW_IDENTITY_DOMAIN_VALUEOBJECTS_ROLE_HPP
 
+#include <cstdint>
+
 namespace hubflow::identity::domain
 {
 
     /// @brief Rol del usuario en la operación.
-    enum class Role
+    enum class Role : std::uint8_t
     {
         Admin,
         Operador,
@@ -13,7 +15,7 @@ namespace hubflow::identity::domain
     };
 
     /// @brief Acciones del negocio sujetas a autorización. Qué rol puede cada una es un dato (ver AccessPolicy).
-    enum class Permission
+    enum class Permission : std::uint8_t
     {
         ManageUsers,
         OperateShipments,
