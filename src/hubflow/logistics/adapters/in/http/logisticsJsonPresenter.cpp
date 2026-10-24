@@ -52,33 +52,33 @@ namespace hubflow::logistics::adapters
         }
     } // namespace
 
-    Json LogisticsJsonPresenter::shipmentSummary(const domain::Shipment& shipment)
+    Json LogisticsJsonPresenter::shipmentSummary(const domain::Shipment& subject)
     {
-        return Json {{"id", shipment.id()},
-                     {"code", shipment.code()},
-                     {"recipient", shipment.recipient()},
-                     {"recipientPhone", shipment.contact().phone().digits()},
-                     {"recipientPostalCode", shipment.contact().postalCode().value()},
-                     {"zone", shipment.zone()},
-                     {"weightKg", rounded(shipment.weightKg())},
-                     {"realWeightKg", rounded(shipment.realWeightKg())},
-                     {"billableWeightKg", rounded(shipment.billableWeightKg())},
-                     {"parcelCount", shipment.parcelCount()},
-                     {"pendingParcels", shipment.pendingParcelCount()},
-                     {"parcels", parcels(shipment)},
-                     {"service", shipment.service()},
-                     {"features", featureCodes(shipment)},
-                     {"status", Vocabulary::name(shipment.status())},
-                     {"attempts", shipment.attempts()},
-                     {"deliveryPoint", shipment.deliveryPoint()}};
+        return Json {{"id", subject.id()},
+                     {"code", subject.code()},
+                     {"recipient", subject.recipient()},
+                     {"recipientPhone", subject.contact().phone().digits()},
+                     {"recipientPostalCode", subject.contact().postalCode().value()},
+                     {"zone", subject.zone()},
+                     {"weightKg", rounded(subject.weightKg())},
+                     {"realWeightKg", rounded(subject.realWeightKg())},
+                     {"billableWeightKg", rounded(subject.billableWeightKg())},
+                     {"parcelCount", subject.parcelCount()},
+                     {"pendingParcels", subject.pendingParcelCount()},
+                     {"parcels", parcels(subject)},
+                     {"service", subject.service()},
+                     {"features", featureCodes(subject)},
+                     {"status", Vocabulary::name(subject.status())},
+                     {"attempts", subject.attempts()},
+                     {"deliveryPoint", subject.deliveryPoint()}};
     }
 
-    Json LogisticsJsonPresenter::parcels(const domain::Shipment& shipment)
+    Json LogisticsJsonPresenter::parcels(const domain::Shipment& subject)
     {
         Json items = Json::array();
-        for (std::size_t parcelIndex = 0; parcelIndex < shipment.parcelCount(); ++parcelIndex)
+        for (std::size_t parcelIndex = 0; parcelIndex < subject.parcelCount(); ++parcelIndex)
         {
-            const auto& parcel = shipment.parcel(parcelIndex);
+            const auto& parcel = subject.parcel(parcelIndex);
             items.push_back(Json {{"ordinal", parcel.ordinal()},
                                   {"label", parcel.label()},
                                   {"weightKg", rounded(parcel.weightKg())},
@@ -92,17 +92,17 @@ namespace hubflow::logistics::adapters
         return items;
     }
 
-    Json LogisticsJsonPresenter::group(const domain::ShipmentGroup& group)
+    Json LogisticsJsonPresenter::group(const domain::ShipmentGroup& shipmentGroup)
     {
         Json codes = Json::array();
-        for (std::size_t codeIndex = 0; codeIndex < group.codes().size(); ++codeIndex)
+        for (std::size_t codeIndex = 0; codeIndex < shipmentGroup.codes().size(); ++codeIndex)
         {
-            codes.push_back(group.codes()[codeIndex]);
+            codes.push_back(shipmentGroup.codes()[codeIndex]);
         }
-        return Json {{"id", group.id()}, {"deliveryPoint", group.deliveryPoint()}, {"codes", codes}};
+        return Json {{"id", shipmentGroup.id()}, {"deliveryPoint", shipmentGroup.deliveryPoint()}, {"codes", codes}};
     }
 
-    Json LogisticsJsonPresenter::groupOf(const domain::Shipment& shipment, const domain::ShipmentGroup* pGroup)
+    Json LogisticsJsonPresenter::groupOf(const domain::Shipment& subject, const domain::ShipmentGroup* pGroup)
     {
         Json result = nullptr;
         if (pGroup != nullptr)
@@ -111,7 +111,7 @@ namespace hubflow::logistics::adapters
             result["travelsWith"] = Json::array();
             for (std::size_t codeIndex = 0; codeIndex < pGroup->codes().size(); ++codeIndex)
             {
-                if (pGroup->codes()[codeIndex] != shipment.code())
+                if (pGroup->codes()[codeIndex] != subject.code())
                 {
                     result["travelsWith"].push_back(pGroup->codes()[codeIndex]);
                 }
@@ -139,7 +139,7 @@ namespace hubflow::logistics::adapters
                      {"occurredAt", movement.occurredAt}};
     }
 
-    Json LogisticsJsonPresenter::history(const domain::Shipment& shipment, const bool newestFirst)
+    Json LogisticsJsonPresenter::history(const domain::Shipment& subject, const bool newestFirst)
     {
         Json items = Json::array();
         const auto collect = [&items](const domain::Movement& entry)
@@ -148,23 +148,23 @@ namespace hubflow::logistics::adapters
         };
         if (newestFirst)
         {
-            shipment.history().forEachReverse(collect);
+            subject.history().forEachReverse(collect);
         }
         else
         {
-            shipment.history().forEachChronological(collect);
+            subject.history().forEachChronological(collect);
         }
-        return Json {{"code", shipment.code()}, {"order", newestFirst ? "desc" : "asc"}, {"items", items}};
+        return Json {{"code", subject.code()}, {"order", newestFirst ? "desc" : "asc"}, {"items", items}};
     }
 
-    Json LogisticsJsonPresenter::stateHistory(const domain::StateHistory& history)
+    Json LogisticsJsonPresenter::stateHistory(const domain::StateHistory& stateLog)
     {
-        return Json {{"bits", binary(history)},
-                     {"value", history.toWord()},
-                     {"states", stateNames(history)},
-                     {"count", history.activeCount()},
-                     {"any", history.isAnySet()},
-                     {"everRescheduled", history.isSet(domain::bitOf(domain::ShipmentStatus::Reprogramado))}};
+        return Json {{"bits", binary(stateLog)},
+                     {"value", stateLog.toWord()},
+                     {"states", stateNames(stateLog)},
+                     {"count", stateLog.activeCount()},
+                     {"any", stateLog.isAnySet()},
+                     {"everRescheduled", stateLog.isSet(domain::bitOf(domain::ShipmentStatus::Reprogramado))}};
     }
 
     Json LogisticsJsonPresenter::zoneSummary(const std::string& zoneCode, const domain::ZoneSummary& summary)
@@ -175,34 +175,34 @@ namespace hubflow::logistics::adapters
                      {"urgentCount", summary.urgentCount}};
     }
 
-    Json LogisticsJsonPresenter::metrics(const application::OperationsMetrics& metrics)
+    Json LogisticsJsonPresenter::metrics(const application::OperationsMetrics& operationsMetrics)
     {
         Json byStatus = Json::object();
         for (const auto status : domain::ALL_STATUSES)
         {
-            byStatus[Vocabulary::name(status)] = metrics.byStatus[domain::bitOf(status)];
+            byStatus[Vocabulary::name(status)] = operationsMetrics.byStatus[domain::bitOf(status)];
         }
         Json zones = Json::array();
-        for (std::size_t i = 0; i < metrics.pendingByZone.size(); ++i)
+        for (std::size_t i = 0; i < operationsMetrics.pendingByZone.size(); ++i)
         {
-            const auto& entry = metrics.pendingByZone[i];
+            const auto& entry = operationsMetrics.pendingByZone[i];
             Json item = zoneSummary(entry.code, entry.summary);
             item["name"] = entry.name;
             item["active"] = entry.active;
             zones.push_back(item);
         }
-        return Json {{"totalShipments", metrics.totalShipments},
+        return Json {{"totalShipments", operationsMetrics.totalShipments},
                      {"byStatus", byStatus},
-                     {"totalAttempts", metrics.totalAttempts},
+                     {"totalAttempts", operationsMetrics.totalAttempts},
                      {"pendingByZone", zones}};
     }
 
-    Json LogisticsJsonPresenter::shipments(const ds::DynamicArray<const domain::Shipment*>& shipments)
+    Json LogisticsJsonPresenter::shipments(const ds::DynamicArray<const domain::Shipment*>& shipmentList)
     {
         Json items = Json::array();
-        for (std::size_t shipmentIndex = 0; shipmentIndex < shipments.size(); ++shipmentIndex)
+        for (std::size_t shipmentIndex = 0; shipmentIndex < shipmentList.size(); ++shipmentIndex)
         {
-            items.push_back(shipmentSummary(*shipments[shipmentIndex]));
+            items.push_back(shipmentSummary(*shipmentList[shipmentIndex]));
         }
         return items;
     }

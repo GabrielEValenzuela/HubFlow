@@ -20,16 +20,16 @@ namespace hubflow::logistics::adapters
     {
     public:
         /// @brief Datos principales del envío.
-        static platform::Json shipmentSummary(const domain::Shipment& shipment);
+        static platform::Json shipmentSummary(const domain::Shipment& subject);
 
         /// @brief Un grupo de paquetes que viajan juntos.
-        static platform::Json group(const domain::ShipmentGroup& group);
+        static platform::Json group(const domain::ShipmentGroup& shipmentGroup);
 
         /// @brief Grupo con el que viaja @p shipment (o null si viaja solo), con los códigos de los demás.
-        static platform::Json groupOf(const domain::Shipment& shipment, const domain::ShipmentGroup* pGroup);
+        static platform::Json groupOf(const domain::Shipment& subject, const domain::ShipmentGroup* pGroup);
 
         /// @brief Los bultos de un envío con sus pesos, medidas y si ya se entregaron.
-        static platform::Json parcels(const domain::Shipment& shipment);
+        static platform::Json parcels(const domain::Shipment& subject);
 
         /// @brief Datos principales más historial de estados y último movimiento.
         static platform::Json shipment(const domain::Shipment& shipment);
@@ -38,19 +38,19 @@ namespace hubflow::logistics::adapters
         static platform::Json movement(const domain::Movement& movement);
 
         /// @brief Movimientos del envío, del más antiguo al más reciente o al revés.
-        static platform::Json history(const domain::Shipment& shipment, bool newestFirst);
+        static platform::Json history(const domain::Shipment& subject, bool newestFirst);
 
         /// @brief Estados por los que pasó el envío, como bits, valor numérico y nombres.
-        static platform::Json stateHistory(const domain::StateHistory& history);
+        static platform::Json stateHistory(const domain::StateHistory& stateLog);
 
         /// @brief Cantidad, peso total y envíos urgentes (de la mayor prioridad) de una zona.
         static platform::Json zoneSummary(const std::string& zoneCode, const domain::ZoneSummary& summary);
 
         /// @brief Totales de la operación por estado y por zona.
-        static platform::Json metrics(const application::OperationsMetrics& metrics);
+        static platform::Json metrics(const application::OperationsMetrics& operationsMetrics);
 
         /// @brief Lista de resúmenes de envíos.
-        static platform::Json shipments(const ds::DynamicArray<const domain::Shipment*>& shipments);
+        static platform::Json shipments(const ds::DynamicArray<const domain::Shipment*>& shipmentList);
     };
 
 } // namespace hubflow::logistics::adapters
