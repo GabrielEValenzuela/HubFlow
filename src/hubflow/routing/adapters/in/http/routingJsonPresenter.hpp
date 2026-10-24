@@ -28,19 +28,19 @@ namespace hubflow::routing::adapters
         static platform::Json searchTrace(const domain::SearchTrace& trace, const domain::RoadMap& map);
 
         /// @brief Datos principales de la hoja de ruta, sin paradas.
-        static platform::Json routeSummary(const domain::DeliveryRoute& route);
+        static platform::Json routeSummary(const domain::DeliveryRoute& deliveryRoute);
 
         /// @brief Hoja de ruta con sus paradas y la secuencia completa de búsqueda.
-        static platform::Json route(const domain::DeliveryRoute& route, const domain::RoadMap& map);
+        static platform::Json route(const domain::DeliveryRoute& deliveryRoute, const domain::RoadMap& map);
 
         /// @brief Hoja de ruta como la ve el repartidor: cada parada suma destinatario, servicio, peso y zona.
         static platform::Json courierSheet(const application::CourierRouteSheet& sheet, const domain::RoadMap& map);
 
         /// @brief Problema que resolvió el agente, listo para descargar.
-        static platform::Json initialState(const domain::DeliveryRoute& route, const domain::RoadMap& map);
+        static platform::Json initialState(const domain::DeliveryRoute& deliveryRoute, const domain::RoadMap& map);
 
         /// @brief Secuencia de búsqueda de la ruta, lista para descargar.
-        static platform::Json sequence(const domain::DeliveryRoute& route, const domain::RoadMap& map);
+        static platform::Json sequence(const domain::DeliveryRoute& deliveryRoute, const domain::RoadMap& map);
     };
 
 } // namespace hubflow::routing::adapters

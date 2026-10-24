@@ -41,30 +41,30 @@ namespace hubflow::routing::adapters
         return RoutePlanJson::searchTrace(map, trace);
     }
 
-    Json RoutingJsonPresenter::routeSummary(const domain::DeliveryRoute& route)
+    Json RoutingJsonPresenter::routeSummary(const domain::DeliveryRoute& deliveryRoute)
     {
         std::size_t resolved {0};
-        for (std::size_t stopIndex = 0; stopIndex < route.stops().size(); ++stopIndex)
+        for (std::size_t stopIndex = 0; stopIndex < deliveryRoute.stops().size(); ++stopIndex)
         {
-            resolved += route.stops()[stopIndex].outcome == domain::StopOutcome::Pending ? 0 : 1;
+            resolved += deliveryRoute.stops()[stopIndex].outcome == domain::StopOutcome::Pending ? 0 : 1;
         }
-        return Json {{"id", route.id()},
-                     {"courier", Json {{"id", route.courier().id}, {"name", route.courier().name}}},
-                     {"algorithm", Vocabulary::name(route.algorithm())},
-                     {"status", Vocabulary::name(route.status())},
-                     {"createdAt", route.createdAt()},
-                     {"stopCount", route.stops().size()},
+        return Json {{"id", deliveryRoute.id()},
+                     {"courier", Json {{"id", deliveryRoute.courier().id}, {"name", deliveryRoute.courier().name}}},
+                     {"algorithm", Vocabulary::name(deliveryRoute.algorithm())},
+                     {"status", Vocabulary::name(deliveryRoute.status())},
+                     {"createdAt", deliveryRoute.createdAt()},
+                     {"stopCount", deliveryRoute.stops().size()},
                      {"resolvedStops", resolved},
-                     {"totalCostKm", rounded(route.totalCostKm())},
-                     {"nodesExplored", route.totalNodesExplored()}};
+                     {"totalCostKm", rounded(deliveryRoute.totalCostKm())},
+                     {"nodesExplored", deliveryRoute.totalNodesExplored()}};
     }
 
-    Json RoutingJsonPresenter::route(const domain::DeliveryRoute& route, const domain::RoadMap& map)
+    Json RoutingJsonPresenter::route(const domain::DeliveryRoute& deliveryRoute, const domain::RoadMap& map)
     {
         Json stops = Json::array();
-        for (std::size_t stopIndex = 0; stopIndex < route.stops().size(); ++stopIndex)
+        for (std::size_t stopIndex = 0; stopIndex < deliveryRoute.stops().size(); ++stopIndex)
         {
-            const auto& stop = route.stops()[stopIndex];
+            const auto& stop = deliveryRoute.stops()[stopIndex];
             Json codes = Json::array();
             for (std::size_t codeIndex = 0; codeIndex < stop.shipmentCodes().size(); ++codeIndex)
             {
@@ -76,9 +76,9 @@ namespace hubflow::routing::adapters
                                   {"nodeId", stop.nodeId},
                                   {"outcome", Vocabulary::name(stop.outcome)}});
         }
-        Json body = routeSummary(route);
+        Json body = routeSummary(deliveryRoute);
         body["stops"] = stops;
-        body["sequence"] = sequence(route, map);
+        body["sequence"] = sequence(deliveryRoute, map);
         return body;
     }
 
@@ -120,14 +120,14 @@ namespace hubflow::routing::adapters
         return body;
     }
 
-    Json RoutingJsonPresenter::initialState(const domain::DeliveryRoute& route, const domain::RoadMap& map)
+    Json RoutingJsonPresenter::initialState(const domain::DeliveryRoute& deliveryRoute, const domain::RoadMap& map)
     {
-        return RoutePlanJson::initialState(map, route);
+        return RoutePlanJson::initialState(map, deliveryRoute);
     }
 
-    Json RoutingJsonPresenter::sequence(const domain::DeliveryRoute& route, const domain::RoadMap& map)
+    Json RoutingJsonPresenter::sequence(const domain::DeliveryRoute& deliveryRoute, const domain::RoadMap& map)
     {
-        return RoutePlanJson::sequence(map, route);
+        return RoutePlanJson::sequence(map, deliveryRoute);
     }
 
 } // namespace hubflow::routing::adapters
