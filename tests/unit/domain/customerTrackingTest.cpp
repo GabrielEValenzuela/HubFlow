@@ -14,7 +14,7 @@ using namespace hubflow;
 using logistics::domain::Phone;
 using logistics::domain::PostalCode;
 using logistics::domain::Recipient;
-using shared::domain::business_error;
+using shared::domain::BusinessError;
 using tracking::domain::CustomerTimeline;
 using tracking::domain::CustomerWording;
 using tracking::domain::DeliveryWindowPolicy;
@@ -45,7 +45,7 @@ TEST(PhoneValueObject, RejectsLettersAndMisplacedPlusSigns)
     EXPECT_FALSE(Phone::accepts("11 4521-77ab"));
     EXPECT_FALSE(Phone::accepts("11+45217788"));
     EXPECT_FALSE(Phone::accepts(""));
-    EXPECT_THROW(Phone {"abc"}, business_error);
+    EXPECT_THROW(Phone {"abc"}, BusinessError);
 }
 
 TEST(PhoneValueObject, MaskingRevealsOnlyTheLastFourDigits)
@@ -77,7 +77,7 @@ TEST(PostalCodeValueObject, RejectsAnythingElse)
     EXPECT_FALSE(PostalCode::accepts("C1425AB"));
     EXPECT_FALSE(PostalCode::accepts("CC425ABC"));
     EXPECT_FALSE(PostalCode::accepts(""));
-    EXPECT_THROW(PostalCode {"nope"}, business_error);
+    EXPECT_THROW(PostalCode {"nope"}, BusinessError);
 }
 
 TEST(RecipientValueObject, ValidatesNamePhoneAndPostalCodeTogether)
@@ -88,9 +88,9 @@ TEST(RecipientValueObject, ValidatesNamePhoneAndPostalCodeTogether)
     EXPECT_EQ(recipient.firstName(), "Bruno");
     EXPECT_EQ(recipient.phone().lastFour(), "4410");
     EXPECT_EQ(recipient.postalCode().value(), "1640");
-    EXPECT_THROW((Recipient {"A", "11 5532-4410", "1640"}), business_error);
-    EXPECT_THROW((Recipient {"Bruno", "1", "1640"}), business_error);
-    EXPECT_THROW((Recipient {"Bruno", "11 5532-4410", "x"}), business_error);
+    EXPECT_THROW((Recipient {"A", "11 5532-4410", "1640"}), BusinessError);
+    EXPECT_THROW((Recipient {"Bruno", "1", "1640"}), BusinessError);
+    EXPECT_THROW((Recipient {"Bruno", "11 5532-4410", "x"}), BusinessError);
 }
 
 TEST(CustomerWordingPhrases, UseTheCustomerLanguageOfTheJourney)
@@ -132,9 +132,9 @@ TEST(CustomerTimelineMapping, IsFinishedOnlyWhenTheLastStepIsTheDelivery)
 
 TEST(DeliveryWindowEstimate, StartsAtTheQuarterHourBeforeTheArrivalAndLastsAnHour)
 {
-    constexpr std::int64_t now {1700000000};
-    const auto window = DeliveryWindowPolicy::around(now, 50);
-    const std::int64_t arrival {now + 50 * 60};
+    constexpr std::int64_t NOW {1700000000};
+    const auto window = DeliveryWindowPolicy::around(NOW, 50);
+    const std::int64_t arrival {NOW + 50 * 60};
 
     EXPECT_EQ(window.from % DeliveryWindowPolicy::ROUNDING_SECONDS, 0);
     EXPECT_LE(window.from, arrival);
@@ -144,9 +144,9 @@ TEST(DeliveryWindowEstimate, StartsAtTheQuarterHourBeforeTheArrivalAndLastsAnHou
 
 TEST(DeliveryWindowEstimate, NeverStartsInThePast)
 {
-    constexpr std::int64_t now {1700000123};
+    constexpr std::int64_t NOW {1700000123};
 
-    EXPECT_EQ(DeliveryWindowPolicy::around(now, 0).from, now);
+    EXPECT_EQ(DeliveryWindowPolicy::around(NOW, 0).from, NOW);
 }
 
 TEST(TravelTimeEstimate, UsesTheSameAssumptionsAsThePlant)
