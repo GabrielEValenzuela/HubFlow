@@ -1,44 +1,46 @@
----
-BasedOnStyle: LLVM
-Standard: c++17
-IndentWidth: 4
-TabWidth: 4
-UseTab: Never
-ColumnLimit: 120
-AccessModifierOffset: -4
-BreakBeforeBraces: Allman
+AlignAfterOpenBracket: Align
+AlignConsecutiveMacros: Consecutive
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+AlignEscapedNewlines: Right
+AlignOperands: Align
+AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: true
+PackConstructorInitializers: BinPack
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: Never
-AllowShortLoopsOnASingleLine: false
-AllowShortBlocksOnASingleLine: Never
-AllowShortLambdasOnASingleLine: Empty
-AllowShortEnumsOnASingleLine: false
-AlignConsecutiveAssignments: Consecutive
-AlignConsecutiveDeclarations: Consecutive
-AlignTrailingComments: true
-AlignAfterOpenBracket: Align
-BinPackParameters: false
-BinPackArguments: false
-AllowAllParametersOfDeclarationOnNextLine: false
-PointerAlignment: Left
-DerivePointerAlignment: false
-SpaceAfterTemplateKeyword: true
+AllowShortLambdasOnASingleLine: Inline
+AllowShortLoopsOnASingleLine: true
+AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: Yes
-NamespaceIndentation: None
-FixNamespaceComments: true
-IncludeBlocks: Regroup
-IncludeCategories:
-  - Regex: '^<.*>'
-    Priority: 3
-  - Regex: '^"(datastructures|hubflow)/'
-    Priority: 2
-  - Regex: '.*'
-    Priority: 1
-SortIncludes: CaseSensitive
-SpaceBeforeCpp11BracedList: true
-Cpp11BracedListStyle: true
-PackConstructorInitializers: Never
+BinPackArguments: false
+BinPackParameters: false
+BreakBeforeBraces: Allman
 BreakConstructorInitializers: BeforeComma
-ConstructorInitializerIndentWidth: 4
-SeparateDefinitionBlocks: Always
-...
+BreakInheritanceList: BeforeComma
+FixNamespaceComments: true
+IncludeBlocks: Preserve
+IndentCaseLabels: true
+SortIncludes: CaseSensitive
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: false
+SpaceBeforeAssignmentOperators: true
+Cpp11BracedListStyle: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeCpp11BracedList: true
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpacesInParens: Never
+Standard: Auto
+SpacesInAngles: Never
+IndentWidth: 4
+TabWidth: 4
+AccessModifierOffset: -4
+UseTab: Never
+PointerAlignment: Left
+NamespaceIndentation: All
+ColumnLimit: 120
