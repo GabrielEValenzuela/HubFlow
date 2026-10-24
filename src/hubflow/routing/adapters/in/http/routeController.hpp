@@ -46,7 +46,7 @@ namespace hubflow::routing::adapters
     class RouteController final : public platform::Controller
     {
     public:
-        explicit RouteController(RouteUseCases useCases);
+        explicit RouteController(const RouteUseCases& useCases);
 
     private:
         void registerRoutes(platform::ApiRouter& router) override;

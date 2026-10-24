@@ -18,6 +18,7 @@ namespace hubflow::routing::application
         {
             std::vector<std::optional<StopShipmentDetails>> details;
             const auto codes = route.stops()[stopIndex].shipmentCodes();
+            details.reserve(codes.size());
             for (std::size_t codeIndex = 0; codeIndex < codes.size(); ++codeIndex)
             {
                 details.push_back(m_directory.detailsOf(codes[codeIndex]));

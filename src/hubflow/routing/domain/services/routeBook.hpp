@@ -21,12 +21,12 @@ namespace hubflow::routing::domain
         RouteBook& operator=(const RouteBook&) = delete;
 
         /// @brief Próxima identidad de ruta.
-        std::uint64_t nextIdentity() noexcept;
+        std::uint64_t nextIdentity() const noexcept;
 
         /// @brief Toma ownership de @p pRoute.
         DeliveryRoute& adopt(DeliveryRoute* pRoute);
 
-        /// @throws business_error (NotFound) si no existe.
+        /// @throws BusinessError (NotFound) si no existe.
         DeliveryRoute& require(std::uint64_t id) const;
 
         /// @brief Visita las rutas en orden de creación.

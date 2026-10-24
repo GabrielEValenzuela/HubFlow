@@ -32,7 +32,7 @@ namespace hubflow::routing::adapters
         }
     } // namespace
 
-    RouteController::RouteController(RouteUseCases useCases)
+    RouteController::RouteController(const RouteUseCases& useCases)
         : m_useCases {useCases}
     {
     }

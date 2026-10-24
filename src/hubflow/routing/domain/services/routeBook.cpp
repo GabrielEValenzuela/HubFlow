@@ -10,7 +10,7 @@ namespace hubflow::routing::domain
         m_routes.forEach([](DeliveryRoute* pRoute) { delete pRoute; });
     }
 
-    std::uint64_t RouteBook::nextIdentity() noexcept
+    std::uint64_t RouteBook::nextIdentity() const noexcept
     {
         return m_lastId + 1;
     }
@@ -31,7 +31,7 @@ namespace hubflow::routing::domain
             m_routes.findFirst([id](const DeliveryRoute* pRoute) { return pRoute->id() == id; });
         if (ppFound == nullptr)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::NotFound, "route.not_found", "Hoja de ruta inexistente"};
         }
         return **ppFound;
