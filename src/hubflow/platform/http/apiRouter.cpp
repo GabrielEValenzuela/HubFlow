@@ -200,7 +200,7 @@ namespace hubflow::platform
             const std::string header {request.get_header_value("Authorization")};
             if (header.rfind(BEARER_PREFIX, 0) != 0)
             {
-                throw shared::domain::business_error {
+                throw shared::domain::BusinessError {
                     ErrorKind::Unauthorized, "auth.missing_token", "Falta el token de sesión"};
             }
             principal = m_authenticate.execute(header.substr(std::char_traits<char>::length(BEARER_PREFIX)));
@@ -228,8 +228,8 @@ namespace hubflow::platform
         {
             if (stored->method != context.request.method || stored->path != context.request.path)
             {
-                throw validation_error {HttpStatus::UnprocessableEntity,
-                                        {{KEY_FIELD, "La clave ya se usó en otro método o ruta"}}};
+                throw ValidationError {HttpStatus::UnprocessableEntity,
+                                       {{KEY_FIELD, "La clave ya se usó en otro método o ruta"}}};
             }
             const Json envelope = Json::parse(stored->body);
             HttpResponse replayed;
@@ -269,8 +269,8 @@ namespace hubflow::platform
         const std::string key {hasKey ? context.request.get_header_value(IDEMPOTENCY_KEY_HEADER) : std::string {}};
         if (hasKey && (key.empty() || key.size() > MAX_IDEMPOTENCY_KEY_LENGTH))
         {
-            throw validation_error {HttpStatus::UnprocessableEntity,
-                                    {{KEY_FIELD, "Debe tener entre 1 y 80 caracteres"}}};
+            throw ValidationError {HttpStatus::UnprocessableEntity,
+                                   {{KEY_FIELD, "Debe tener entre 1 y 80 caracteres"}}};
         }
         const bool replayed {hasKey && replay(context, key, response)};
         if (!replayed)
@@ -289,17 +289,17 @@ namespace hubflow::platform
         return [this, handler = std::move(handler), access, keyed](const httplib::Request& request,
                                                                    httplib::Response& response)
         {
-            const std::lock_guard<std::mutex> lock {m_mutex};
+            const std::scoped_lock lock {m_mutex};
             try
             {
                 const RequestContext context {request, principalOf(request, access)};
                 respond(context, handler, response, keyed && context.principal.has_value());
             }
-            catch (const validation_error& error)
+            catch (const ValidationError& error)
             {
                 problem(response, error.status(), "request.invalid", "Revisá los campos indicados", error.errors());
             }
-            catch (const shared::domain::business_error& error)
+            catch (const shared::domain::BusinessError& error)
             {
                 problem(response, statusOf(error.errorKind()), error.code(), error.what());
                 if (error.retryAfterSeconds() > 0)
