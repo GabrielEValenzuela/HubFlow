@@ -6,8 +6,11 @@ namespace hubflow::sorting::application
 {
     namespace
     {
-        const domain::LinearBatchSearch gs_linearSearchImpl;
-        const domain::BatchSearch& gs_linearSearch {gs_linearSearchImpl};
+        const domain::BatchSearch& linearSearch()
+        {
+            static const domain::LinearBatchSearch s_search;
+            return s_search;
+        }
     } // namespace
 
     LinearSearchInSortingBatch::LinearSearchInSortingBatch(const domain::SortingDesk& desk)
@@ -20,7 +23,7 @@ namespace hubflow::sorting::application
                                                                    const std::string& code) const
     {
         principal.require(identity::domain::Permission::OperateSortingDesk);
-        return gs_linearSearch.search(m_desk.require(batchId), code);
+        return linearSearch().search(m_desk.require(batchId), code);
     }
 
 } // namespace hubflow::sorting::application

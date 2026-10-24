@@ -6,10 +6,16 @@ namespace hubflow::sorting::application
 {
     namespace
     {
-        const domain::LinearBatchSearch gs_linearSearchImpl;
-        const domain::BinaryBatchSearch gs_binarySearchImpl;
-        const domain::BatchSearch& gs_linearSearch {gs_linearSearchImpl};
-        const domain::BatchSearch& gs_binarySearch {gs_binarySearchImpl};
+        const domain::BatchSearch& linearSearch()
+        {
+            static const domain::LinearBatchSearch s_search;
+            return s_search;
+        }
+        const domain::BatchSearch& binarySearch()
+        {
+            static const domain::BinaryBatchSearch s_search;
+            return s_search;
+        }
 
         constexpr const char* BINARY_REQUIRES_ORDER {"La búsqueda binaria requiere el lote ordenado por código"};
     } // namespace
@@ -25,10 +31,10 @@ namespace hubflow::sorting::application
     {
         principal.require(identity::domain::Permission::OperateSortingDesk);
         const domain::SortingBatch& target = m_desk.require(batchId);
-        SearchComparison comparison {gs_linearSearch.search(target, code), std::nullopt, ""};
+        SearchComparison comparison {linearSearch().search(target, code), std::nullopt, ""};
         if (target.sortedBy() == domain::SortCriteria::CodeAscending)
         {
-            comparison.binary = gs_binarySearch.search(target, code);
+            comparison.binary = binarySearch().search(target, code);
         }
         else
         {
