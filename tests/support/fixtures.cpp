@@ -16,7 +16,7 @@ namespace hubflow::test
             double costKm;
         };
 
-        const routing::domain::RoadNode CITY_NODES[] {
+        const routing::domain::RoadNode gs_cityNodes[] {
             {"HUB", "Centro de Distribución", true, "CENTRO", 10.0, 10.0},
             {"C1", "Plaza Mayor", false, "CENTRO", 7.0, 10.0},
             {"C2", "Mercado Central", false, "CENTRO", 13.0, 11.0},
@@ -147,7 +147,7 @@ namespace hubflow::test
     void buildReferenceCity(routing::domain::RoadMap& map,
                             const std::map<std::string, routing::domain::RoadNode>& overrides)
     {
-        for (const auto& node : CITY_NODES)
+        for (const auto& node : gs_cityNodes)
         {
             const auto found = overrides.find(node.id);
             map.addNode(found == overrides.end() ? node : found->second);
