@@ -203,7 +203,7 @@ namespace
             return *m_spConnection;
         }
 
-        identity::domain::UserState addCourier(identity::application::UserRepository& users)
+        static identity::domain::UserState addCourier(identity::application::UserRepository& users)
         {
             identity::domain::UserState user;
             user.id = users.nextIdentity();
@@ -333,7 +333,7 @@ TEST_F(MySqlRepositories, ShipmentGroupsSurviveReloadAndCanBeRemoved)
 TEST_F(MySqlRepositories, RoadMapLoadsReferenceCity)
 {
     routing::adapters::MySqlRoadMapRepository mapsAdapter {connection()};
-    routing::application::RoadMapRepository& maps = mapsAdapter;
+    const routing::application::RoadMapRepository& maps = mapsAdapter;
     routing::domain::RoadMap map;
 
     maps.loadInto(map);
@@ -459,9 +459,9 @@ TEST_F(MySqlRepositories, IdempotencyStoreKeepsTheFirstResponse)
 TEST_F(MySqlRepositories, MigrationSeedsTheReferenceCatalogsAndPermissions)
 {
     logistics::adapters::MySqlCatalogRepository catalogsAdapter {connection()};
-    logistics::application::CatalogRepository& catalogs = catalogsAdapter;
+    const logistics::application::CatalogRepository& catalogs = catalogsAdapter;
     identity::adapters::MySqlRolePermissionRepository grantsAdapter {connection()};
-    identity::application::RolePermissionRepository& grants = grantsAdapter;
+    const identity::application::RolePermissionRepository& grants = grantsAdapter;
     CatalogCollector collector;
     GrantCollector permissions;
 
@@ -480,7 +480,7 @@ TEST_F(MySqlRepositories, MigrationSeedsTheReferenceCatalogsAndPermissions)
 TEST_F(MySqlRepositories, CatalogChangesAreUpsertedAndKeepTheirOrder)
 {
     logistics::adapters::MySqlCatalogRepository catalogsAdapter {connection()};
-    logistics::application::CatalogRepository& catalogs = catalogsAdapter;
+    const logistics::application::CatalogRepository& catalogs = catalogsAdapter;
     catalogs.saveZone({"OESTE", "Oeste", true});
     catalogs.saveZone({"NORTE", "Zona Norte", false});
     catalogs.saveServiceLevel({"RELAMPAGO", "Relámpago", 10, true});
@@ -519,10 +519,10 @@ TEST_F(MySqlRepositories, ShipmentFeaturesSurviveReload)
 TEST_F(MySqlRepositories, NewMapPointsAndTheirChangesSurviveReload)
 {
     logistics::adapters::MySqlCatalogRepository catalogsAdapter {connection()};
-    logistics::application::CatalogRepository& catalogs = catalogsAdapter;
+    const logistics::application::CatalogRepository& catalogs = catalogsAdapter;
     catalogs.saveZone({"OESTE", "Oeste", true});
     routing::adapters::MySqlRoadMapRepository mapsAdapter {connection()};
-    routing::application::RoadMapRepository& maps = mapsAdapter;
+    const routing::application::RoadMapRepository& maps = mapsAdapter;
     ds::DynamicArray<routing::domain::RoadLink> links;
     links.pushBack({"HUB", 4.5});
     maps.addNode({"O1", "Plaza Oeste", false, "OESTE", 6.0, 10.0, true}, links);
