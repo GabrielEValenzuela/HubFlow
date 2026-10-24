@@ -1,10 +1,9 @@
 SHELL := /bin/bash
 COMPOSE := docker compose
 HTTP_PORT = $(shell sed -n 's/^HUBFLOW_HTTP_PORT=//p' .env 2>/dev/null | tail -1 | grep . || echo 8480)
-FORMAT_FILES = $(shell find src tests -name '*.cpp' -o -name '*.hpp')
 
 .DEFAULT_GOAL := help
-.PHONY: help env up down logs ps reset-db build test asan-test itest format format-check docs clean
+.PHONY: help env up down logs ps reset-db build test asan-test itest format format-check tidy tidy-fix cppcheck lint docs clean
 
 help: ## Lista los targets disponibles
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -57,10 +56,22 @@ itest: env ## Tests de integracion contra MySQL (hubflow_test) dentro del conten
 	$(COMPOSE) run --rm --no-deps -e DB_TEST_NAME=hubflow_test api hubflow_integration_tests
 
 format: ## Aplica clang-format
-	@clang-format -i $(FORMAT_FILES)
+	@scripts/format.sh
 
 format-check: ## Verifica clang-format sin modificar
-	@clang-format --dry-run --Werror $(FORMAT_FILES)
+	@scripts/format.sh --check
+
+tidy: ## Analisis estatico con clang-tidy
+	@scripts/tidy.sh
+
+tidy-fix: ## clang-tidy aplicando correcciones automaticas
+	@scripts/tidy.sh --fix
+
+cppcheck: ## Analisis estatico con cppcheck
+	@scripts/cppcheck.sh
+
+lint: ## format-check + clang-tidy + cppcheck con resumen
+	@scripts/lint.sh
 
 docs: ## Genera la documentacion Doxygen en build/docs
 	doxygen Doxyfile
