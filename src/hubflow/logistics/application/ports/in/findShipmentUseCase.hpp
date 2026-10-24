@@ -4,6 +4,7 @@
 #include "hubflow/logistics/domain/services/shipmentLookup.hpp"
 #include "hubflow/shared/application/principal.hpp"
 #include "hubflow/shared/application/useCase.hpp"
+#include <cstdint>
 
 #include <string>
 
@@ -11,7 +12,7 @@ namespace hubflow::logistics::application
 {
 
     /// @brief Estructura con la que se busca un envío por código.
-    enum class LookupIndex
+    enum class LookupIndex : std::uint8_t
     {
         LinkedList,
         Bst,

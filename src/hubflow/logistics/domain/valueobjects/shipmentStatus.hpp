@@ -2,6 +2,7 @@
 #define HUBFLOW_LOGISTICS_DOMAIN_VALUEOBJECTS_SHIPMENT_STATUS_HPP
 
 #include "datastructures/bitSet.hpp"
+#include <cstdint>
 
 #include <cstddef>
 
@@ -9,7 +10,7 @@ namespace hubflow::logistics::domain
 {
 
     /// @brief Estado del envío. Su valor es la posición del bit en el StateHistory.
-    enum class ShipmentStatus
+    enum class ShipmentStatus : std::uint8_t
     {
         Recibido = 0,
         Clasificado = 1,
