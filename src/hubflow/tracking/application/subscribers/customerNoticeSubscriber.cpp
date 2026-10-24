@@ -15,9 +15,9 @@ constexpr const char* CHANNEL {"SMS"};
 std::size_t deliveredParcels(const logistics::domain::ShipmentState& state)
 {
     std::size_t delivered {0};
-    for (std::size_t i = 0; i < state.draft.parcels.size(); ++i)
+    for (std::size_t parcelIndex = 0; parcelIndex < state.draft.parcels.size(); ++parcelIndex)
     {
-        delivered += state.draft.parcels[i].delivered ? 1 : 0;
+        delivered += state.draft.parcels[parcelIndex].delivered ? 1 : 0;
     }
     return delivered;
 }

@@ -29,7 +29,7 @@ SortingBatch& SortingDesk::require(const std::uint64_t id) const
     return *m_pActive;
 }
 
-const SortingBatch* SortingDesk::active() const noexcept
+const SortingBatch* SortingDesk::activeBatch() const noexcept
 {
     return m_pActive;
 }

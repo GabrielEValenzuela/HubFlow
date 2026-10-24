@@ -63,8 +63,8 @@ public:
      * todo sin cargar nada.
      * @throws business_error NotFound (un código no está por cargar) o Conflict (grupo incompleto).
      */
-    ds::DynamicArray<logistics::domain::Shipment*> process(const ds::DynamicArray<std::string>&        codes,
-                                                           const logistics::domain::ShipmentGroupBook& groups);
+    ds::DynamicArray<logistics::domain::Shipment*> processByCodes(const ds::DynamicArray<std::string>&        codes,
+                                                                  const logistics::domain::ShipmentGroupBook& groups);
 
     /**
      * @brief Devuelve a la mesa el envío @p code, siempre que sea el último que se procesó, junto con los
@@ -87,7 +87,7 @@ public:
     const std::string&                             zone() const noexcept;
     std::size_t                                    size() const noexcept;
     SortCriteria                                   sortedBy() const noexcept;
-    const logistics::domain::Shipment&             at(std::size_t index) const;
+    const logistics::domain::Shipment&             shipmentAt(std::size_t index) const;
     const ds::Queue<logistics::domain::Shipment*>& preparation() const noexcept;
     const ds::Stack<logistics::domain::Shipment*>& processed() const noexcept;
 

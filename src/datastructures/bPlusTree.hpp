@@ -11,7 +11,7 @@ namespace hubflow::ds
  *
  * - Nodos internos: hasta ORDER-1 claves separadoras y ORDER hijos. Una clave mayor o igual
  *   al separador desciende por la derecha.
- * - Hojas: claves y punteros a @c Value, enlazadas por @c pNext para recorridos secuenciales.
+ * - Hojas: claves y punteros a @c TValue, enlazadas por @c pNext para recorridos secuenciales.
  * - Todas las hojas quedan a la misma profundidad porque el árbol sólo crece por la raíz.
  * - No admite duplicados. La eliminación no forma parte del alcance.
  * - Cada nodo reserva una posición extra para alojar el desborde antes de dividirse.
@@ -25,11 +25,11 @@ namespace hubflow::ds
  * | find      | O(log n) | O(log n)     |
  * | range     | O(log n) | O(log n + k) |
  *
- * @tparam Key clave con operator<.
- * @tparam Value tipo apuntado (no propietario).
+ * @tparam TKey clave con operator<.
+ * @tparam TValue tipo apuntado (no propietario).
  * @tparam ORDER máximo de hijos por nodo interno (por defecto 4).
  */
-template <typename Key, typename Value, std::size_t ORDER = 4>
+template <typename TKey, typename TValue, std::size_t ORDER = 4>
 class BPlusTree final
 {
     static_assert(ORDER >= 3, "El orden mínimo de un B+ es 3");
@@ -42,16 +42,16 @@ public:
     {
         bool        isLeaf;
         std::size_t keyCount;
-        Key         keys[ORDER];
+        TKey        keys[ORDER];
         Node*       pChildren[ORDER + 1];
-        Value*      pValues[ORDER];
+        TValue*     pValues[ORDER];
         Node*       pNext;
     };
 
     /// @brief Resultado de una búsqueda puntual.
     struct Lookup
     {
-        Value*      pValue;
+        TValue*     pValue;
         std::size_t visited;
     };
 
@@ -70,7 +70,7 @@ public:
      * división de nodos internos y creación de una nueva raíz.
      * @return false si la clave ya existía.
      */
-    bool insert(const Key& key, Value* pValue)
+    bool insert(const TKey& key, TValue* pValue)
     {
         const bool inserted {find(key).pValue == nullptr};
         if (inserted && m_pRoot == nullptr)
@@ -80,7 +80,7 @@ public:
         }
         else if (inserted)
         {
-            Key   promoted {};
+            TKey  promoted {};
             Node* pSibling = nullptr;
             insertInto(m_pRoot, key, pValue, promoted, pSibling);
             if (pSibling != nullptr)
@@ -93,7 +93,7 @@ public:
     }
 
     /// @brief Búsqueda puntual contando nodos visitados (internos más la hoja).
-    Lookup find(const Key& key) const
+    Lookup find(const TKey& key) const
     {
         Lookup result {nullptr, 0};
         if (m_pRoot != nullptr)
@@ -117,8 +117,8 @@ public:
      * @c pNext sin recorrer el resto del árbol.
      * @return nodos visitados (descenso + hojas adicionales).
      */
-    template <typename Visitor>
-    std::size_t range(const Key& from, const Key& to, Visitor visit) const
+    template <typename TVisitor>
+    std::size_t range(const TKey& from, const TKey& to, TVisitor visit) const
     {
         std::size_t visited {0};
         if (m_pRoot != nullptr && !(to < from))
@@ -143,8 +143,8 @@ public:
     }
 
     /// @brief Recorre todas las claves en orden siguiendo los enlaces entre hojas.
-    template <typename Visitor>
-    void forEachInOrder(Visitor visit) const
+    template <typename TVisitor>
+    void forEachInOrder(TVisitor visit) const
     {
         for (const Node* pLeaf = leftmostLeaf(); pLeaf != nullptr; pLeaf = pLeaf->pNext)
         {
@@ -183,15 +183,15 @@ public:
         return m_size;
     }
 
-    bool empty() const noexcept
+    bool isEmpty() const noexcept
     {
         return m_pRoot == nullptr;
     }
 
 private:
-    static bool equals(const Key& a, const Key& b)
+    static bool equals(const TKey& left, const TKey& right)
     {
-        return !(a < b) && !(b < a);
+        return !(left < right) && !(right < left);
     }
 
     static Node* newNode(const bool isLeaf)
@@ -211,7 +211,7 @@ private:
         return pNode;
     }
 
-    static std::size_t childIndex(const Node* pNode, const Key& key)
+    static std::size_t childIndex(const Node* pNode, const TKey& key)
     {
         std::size_t index {0};
         while (index < pNode->keyCount && !(key < pNode->keys[index]))
@@ -221,7 +221,7 @@ private:
         return index;
     }
 
-    const Node* descendToLeaf(const Key& key, std::size_t& visited) const
+    const Node* descendToLeaf(const TKey& key, std::size_t& visited) const
     {
         const Node* pNode = m_pRoot;
         ++visited;
@@ -243,7 +243,7 @@ private:
         return pNode;
     }
 
-    void insertInto(Node* pNode, const Key& key, Value* pValue, Key& promoted, Node*& pSibling)
+    void insertInto(Node* pNode, const TKey& key, TValue* pValue, TKey& promoted, Node*& pSibling)
     {
         if (pNode->isLeaf)
         {
@@ -256,7 +256,7 @@ private:
         else
         {
             const std::size_t index {childIndex(pNode, key)};
-            Key               childPromoted {};
+            TKey              childPromoted {};
             Node*             pChildSibling = nullptr;
             insertInto(pNode->pChildren[index], key, pValue, childPromoted, pChildSibling);
             if (pChildSibling != nullptr)
@@ -270,7 +270,7 @@ private:
         }
     }
 
-    static void insertIntoLeaf(Node* pLeaf, const Key& key, Value* pValue)
+    static void insertIntoLeaf(Node* pLeaf, const TKey& key, TValue* pValue)
     {
         std::size_t i {pLeaf->keyCount};
         while (i > 0 && key < pLeaf->keys[i - 1])
@@ -284,7 +284,7 @@ private:
         ++pLeaf->keyCount;
     }
 
-    static void insertIntoInternal(Node* pNode, const std::size_t index, const Key& key, Node* pRightChild)
+    static void insertIntoInternal(Node* pNode, const std::size_t index, const TKey& key, Node* pRightChild)
     {
         for (std::size_t i = pNode->keyCount; i > index; --i)
         {
@@ -296,7 +296,7 @@ private:
         ++pNode->keyCount;
     }
 
-    static void splitLeaf(Node* pLeaf, Key& promoted, Node*& pSibling)
+    static void splitLeaf(Node* pLeaf, TKey& promoted, Node*& pSibling)
     {
         const std::size_t leftCount {pLeaf->keyCount / 2};
         Node*             pRight = newNode(true);
@@ -314,7 +314,7 @@ private:
         pSibling         = pRight;
     }
 
-    static void splitInternal(Node* pNode, Key& promoted, Node*& pSibling)
+    static void splitInternal(Node* pNode, TKey& promoted, Node*& pSibling)
     {
         const std::size_t middle {pNode->keyCount / 2};
         Node*             pRight = newNode(false);
@@ -333,7 +333,7 @@ private:
         pSibling                          = pRight;
     }
 
-    void growNewRoot(const Key& separator, Node* pRightChild)
+    void growNewRoot(const TKey& separator, Node* pRightChild)
     {
         Node* pNewRoot         = newNode(false);
         pNewRoot->keys[0]      = separator;

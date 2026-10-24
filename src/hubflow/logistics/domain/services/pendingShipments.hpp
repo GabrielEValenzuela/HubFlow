@@ -52,11 +52,11 @@ public:
     bool               contains(const Shipment* pShipment) const noexcept;
     const PendingNode* head() const noexcept;
     std::size_t        size() const noexcept;
-    bool               empty() const noexcept;
+    bool               isEmpty() const noexcept;
 
     /// @brief Visita los envíos en orden de despacho.
-    template <typename Visitor>
-    void forEach(Visitor visit) const
+    template <typename TVisitor>
+    void forEach(TVisitor visit) const
     {
         for (const PendingNode* pNode = m_pHead; pNode != nullptr; pNode = pNode->pNext)
         {

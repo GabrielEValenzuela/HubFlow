@@ -32,17 +32,17 @@ PublicTracking TrackingViewBuilder::publicView(const TrackedShipment& shipment)
     {
         events.pushBack(milestone);
     }
-    const auto     timeline = domain::CustomerTimeline::from(events);
+    const auto     timeline = domain::CustomerTimeline::fromEvents(events);
     PublicTracking view;
     view.code = shipment.code;
-    if (!timeline.empty())
+    if (!timeline.isEmpty())
     {
-        view.current  = timeline.current();
-        view.finished = timeline.finished();
+        view.current  = timeline.currentEntry();
+        view.finished = timeline.isFinished();
     }
     for (std::size_t i = 0; i < timeline.size(); ++i)
     {
-        view.timeline.push_back(timeline.entry(i));
+        view.timeline.push_back(timeline.entryAt(i));
     }
     return view;
 }

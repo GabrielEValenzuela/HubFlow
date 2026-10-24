@@ -10,8 +10,8 @@
 
 namespace
 {
-template <typename Container>
-std::vector<int> collect(const Container& container)
+template <typename TContainer>
+std::vector<int> collect(const TContainer& container)
 {
     std::vector<int> values;
     container.forEach(
@@ -74,7 +74,7 @@ TEST(SinglyLinkedList, PopOnEmptyListReturnsFalse)
     int                                value {7};
     EXPECT_FALSE(list.popFront(value));
     EXPECT_EQ(value, 7);
-    EXPECT_TRUE(list.empty());
+    EXPECT_TRUE(list.isEmpty());
 }
 
 TEST(DoublyLinkedList, TraversesForwardAndBackwardWithPrevLinks)

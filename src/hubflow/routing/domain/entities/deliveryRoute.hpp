@@ -37,9 +37,9 @@ struct RouteStop
     {
         ds::DynamicArray<std::string> codes;
         codes.pushBack(shipmentCode);
-        for (std::size_t i = 0; i < companions.size(); ++i)
+        for (std::size_t companionIndex = 0; companionIndex < companions.size(); ++companionIndex)
         {
-            codes.pushBack(companions[i]);
+            codes.pushBack(companions[companionIndex]);
         }
         return codes;
     }
@@ -48,9 +48,9 @@ struct RouteStop
     bool includes(const std::string& code) const
     {
         bool found {shipmentCode == code};
-        for (std::size_t i = 0; i < companions.size() && !found; ++i)
+        for (std::size_t companionIndex = 0; companionIndex < companions.size() && !found; ++companionIndex)
         {
-            found = companions[i] == code;
+            found = companions[companionIndex] == code;
         }
         return found;
     }
@@ -111,8 +111,8 @@ public:
     const RouteStop& stop(std::size_t order) const;
 
     /// @brief Visita los tramos en orden de recorrido.
-    template <typename Visitor>
-    void forEachSegment(Visitor visit) const
+    template <typename TVisitor>
+    void forEachSegment(TVisitor visit) const
     {
         m_segments.forEach(
             [&visit](const SearchTrace* pTrace)

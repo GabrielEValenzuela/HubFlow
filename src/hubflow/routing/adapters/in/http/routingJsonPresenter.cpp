@@ -44,9 +44,9 @@ Json RoutingJsonPresenter::searchTrace(const domain::SearchTrace& trace, const d
 Json RoutingJsonPresenter::routeSummary(const domain::DeliveryRoute& route)
 {
     std::size_t resolved {0};
-    for (std::size_t i = 0; i < route.stops().size(); ++i)
+    for (std::size_t stopIndex = 0; stopIndex < route.stops().size(); ++stopIndex)
     {
-        resolved += route.stops()[i].outcome == domain::StopOutcome::Pending ? 0 : 1;
+        resolved += route.stops()[stopIndex].outcome == domain::StopOutcome::Pending ? 0 : 1;
     }
     return Json {{"id", route.id()},
                  {"courier", Json {{"id", route.courier().id}, {"name", route.courier().name}}},
@@ -62,13 +62,13 @@ Json RoutingJsonPresenter::routeSummary(const domain::DeliveryRoute& route)
 Json RoutingJsonPresenter::route(const domain::DeliveryRoute& route, const domain::RoadMap& map)
 {
     Json stops = Json::array();
-    for (std::size_t i = 0; i < route.stops().size(); ++i)
+    for (std::size_t stopIndex = 0; stopIndex < route.stops().size(); ++stopIndex)
     {
-        const auto& stop  = route.stops()[i];
+        const auto& stop  = route.stops()[stopIndex];
         Json        codes = Json::array();
-        for (std::size_t j = 0; j < stop.shipmentCodes().size(); ++j)
+        for (std::size_t codeIndex = 0; codeIndex < stop.shipmentCodes().size(); ++codeIndex)
         {
-            codes.push_back(stop.shipmentCodes()[j]);
+            codes.push_back(stop.shipmentCodes()[codeIndex]);
         }
         stops.push_back(Json {{"order", stop.order},
                               {"shipmentCode", stop.shipmentCode},
@@ -85,10 +85,10 @@ Json RoutingJsonPresenter::route(const domain::DeliveryRoute& route, const domai
 Json RoutingJsonPresenter::courierSheet(const application::CourierRouteSheet& sheet, const domain::RoadMap& map)
 {
     Json body = route(sheet.route, map);
-    for (std::size_t i = 0; i < sheet.stopDetails.size(); ++i)
+    for (std::size_t stopIndex = 0; stopIndex < sheet.stopDetails.size(); ++stopIndex)
     {
         Json shipments = Json::array();
-        for (const auto& details : sheet.stopDetails[i])
+        for (const auto& details : sheet.stopDetails[stopIndex])
         {
             if (details.has_value())
             {
@@ -108,13 +108,13 @@ Json RoutingJsonPresenter::courierSheet(const application::CourierRouteSheet& sh
                                           {"parcels", parcels}});
             }
         }
-        body["stops"][i]["shipments"] = shipments;
+        body["stops"][stopIndex]["shipments"] = shipments;
         if (!shipments.empty())
         {
-            body["stops"][i]["recipient"] = shipments[0]["recipient"];
-            body["stops"][i]["service"]   = shipments[0]["service"];
-            body["stops"][i]["zone"]      = shipments[0]["zone"];
-            body["stops"][i]["weightKg"]  = shipments[0]["weightKg"];
+            body["stops"][stopIndex]["recipient"] = shipments[0]["recipient"];
+            body["stops"][stopIndex]["service"]   = shipments[0]["service"];
+            body["stops"][stopIndex]["zone"]      = shipments[0]["zone"];
+            body["stops"][stopIndex]["weightKg"]  = shipments[0]["weightKg"];
         }
     }
     return body;

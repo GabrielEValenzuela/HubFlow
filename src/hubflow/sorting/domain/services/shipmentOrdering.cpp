@@ -21,9 +21,10 @@ const ShipmentOrdering& ShipmentOrdering::of(const SortCriteria criteria)
                                                    : static_cast<const ShipmentOrdering&>(gs_weightDescending);
 }
 
-bool CodeAscendingOrdering::precedes(const logistics::domain::Shipment& a, const logistics::domain::Shipment& b) const
+bool CodeAscendingOrdering::precedes(const logistics::domain::Shipment& candidate,
+                                     const logistics::domain::Shipment& existing) const
 {
-    return a.code() < b.code();
+    return candidate.code() < existing.code();
 }
 
 SortCriteria CodeAscendingOrdering::criteria() const noexcept
@@ -31,10 +32,10 @@ SortCriteria CodeAscendingOrdering::criteria() const noexcept
     return SortCriteria::CodeAscending;
 }
 
-bool WeightDescendingOrdering::precedes(const logistics::domain::Shipment& a,
-                                        const logistics::domain::Shipment& b) const
+bool WeightDescendingOrdering::precedes(const logistics::domain::Shipment& candidate,
+                                        const logistics::domain::Shipment& existing) const
 {
-    return a.weightKg() > b.weightKg();
+    return candidate.weightKg() > existing.weightKg();
 }
 
 SortCriteria WeightDescendingOrdering::criteria() const noexcept

@@ -29,7 +29,7 @@ public:
     SortingBatch& require(std::uint64_t id) const;
 
     /// @brief Lote activo o nullptr.
-    const SortingBatch* active() const noexcept;
+    const SortingBatch* activeBatch() const noexcept;
 
     /// @brief Cierra (destruye) el lote activo.
     void close() noexcept;

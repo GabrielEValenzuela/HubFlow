@@ -9,7 +9,7 @@ namespace hubflow::ds
 /**
  * @brief Lista simplemente enlazada con punteros a cabeza y cola.
  *
- * Ownership: crea y destruye únicamente sus nodos. Si @p T es un puntero, el objeto apuntado
+ * Ownership: crea y destruye únicamente sus nodos. Si @p TElement es un puntero, el objeto apuntado
  * nunca se libera: queda a cargo de su dueño.
  *
  * | Operación     | Complejidad |
@@ -20,17 +20,17 @@ namespace hubflow::ds
  * | removeFirstIf | O(n)        |
  * | findFirst     | O(n)        |
  *
- * @tparam T tipo almacenado (copiable).
+ * @tparam TElement tipo almacenado (copiable).
  */
-template <typename T>
+template <typename TElement>
 class SinglyLinkedList final
 {
 public:
     /// @brief Nodo: valor y enlace al siguiente.
     struct Node
     {
-        T     value;
-        Node* pNext;
+        TElement value;
+        Node*    pNext;
     };
 
     SinglyLinkedList() = default;
@@ -71,7 +71,7 @@ public:
     }
 
     /// @brief Inserta al inicio. O(1).
-    void pushFront(const T& value)
+    void pushFront(const TElement& value)
     {
         m_pHead = new Node {value, m_pHead};
         if (m_pTail == nullptr)
@@ -82,7 +82,7 @@ public:
     }
 
     /// @brief Inserta al final usando el puntero a la cola. O(1).
-    void pushBack(const T& value)
+    void pushBack(const TElement& value)
     {
         Node* pNode = new Node {value, nullptr};
         if (m_pTail == nullptr)
@@ -99,16 +99,16 @@ public:
 
     /**
      * @brief Extrae el primer elemento.
-     * @param[out] out valor extraído.
+     * @param[out] removed valor extraído.
      * @return false si la lista estaba vacía.
      */
-    bool popFront(T& out)
+    bool popFront(TElement& removed)
     {
         const bool hasElements {m_pHead != nullptr};
         if (hasElements)
         {
             Node* pFirst = m_pHead;
-            out          = pFirst->value;
+            removed      = pFirst->value;
             m_pHead      = pFirst->pNext;
             if (m_pHead == nullptr)
             {
@@ -124,8 +124,8 @@ public:
      * @brief Elimina el primer nodo cuyo valor cumple @p matches.
      * @return true si eliminó un nodo.
      */
-    template <typename Predicate>
-    bool removeFirstIf(Predicate matches)
+    template <typename TPredicate>
+    bool removeFirstIf(TPredicate matches)
     {
         Node* pPrevious = nullptr;
         Node* pCurrent  = m_pHead;
@@ -143,10 +143,10 @@ public:
     }
 
     /// @brief Primer valor que cumple @p matches, o nullptr. O(n).
-    template <typename Predicate>
-    const T* findFirst(Predicate matches) const
+    template <typename TPredicate>
+    const TElement* findFirst(TPredicate matches) const
     {
-        const T* pFound = nullptr;
+        const TElement* pFound = nullptr;
         for (Node* pCurrent = m_pHead; pCurrent != nullptr && pFound == nullptr; pCurrent = pCurrent->pNext)
         {
             if (matches(pCurrent->value))
@@ -158,8 +158,8 @@ public:
     }
 
     /// @brief Visita los valores de la cabeza a la cola.
-    template <typename Visitor>
-    void forEach(Visitor visit) const
+    template <typename TVisitor>
+    void forEach(TVisitor visit) const
     {
         for (Node* pCurrent = m_pHead; pCurrent != nullptr; pCurrent = pCurrent->pNext)
         {
@@ -191,7 +191,7 @@ public:
         return m_size;
     }
 
-    bool empty() const noexcept
+    bool isEmpty() const noexcept
     {
         return m_pHead == nullptr;
     }

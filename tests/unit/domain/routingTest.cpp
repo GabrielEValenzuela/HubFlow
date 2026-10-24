@@ -31,9 +31,9 @@ protected:
     std::vector<std::string> pathOf(const SearchTrace& trace) const
     {
         std::vector<std::string> ids;
-        for (std::size_t i = 0; i < trace.path.size(); ++i)
+        for (std::size_t pathPosition = 0; pathPosition < trace.path.size(); ++pathPosition)
         {
-            ids.push_back(map.node(trace.path[i]).id);
+            ids.push_back(map.node(trace.path[pathPosition]).id);
         }
         return ids;
     }
@@ -41,12 +41,12 @@ protected:
     double pathCost(const SearchTrace& trace) const
     {
         double total {0.0};
-        for (std::size_t i = 1; i < trace.path.size(); ++i)
+        for (std::size_t pathPosition = 1; pathPosition < trace.path.size(); ++pathPosition)
         {
-            map.graph().forEachNeighbor(trace.path[i - 1],
+            map.graph().forEachNeighbor(trace.path[pathPosition - 1],
                                         [&](const std::size_t to, const double weight)
                                         {
-                                            if (to == trace.path[i])
+                                            if (to == trace.path[pathPosition])
                                             {
                                                 total += weight;
                                             }

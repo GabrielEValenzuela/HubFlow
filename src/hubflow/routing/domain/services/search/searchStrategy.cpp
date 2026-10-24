@@ -51,9 +51,9 @@ ds::DynamicArray<std::size_t> pathTo(const SearchNode* pGoal)
 std::size_t countTrue(const ds::DynamicArray<bool>& flags)
 {
     std::size_t count {0};
-    for (std::size_t i = 0; i < flags.size(); ++i)
+    for (std::size_t flagIndex = 0; flagIndex < flags.size(); ++flagIndex)
     {
-        count += flags[i] ? 1 : 0;
+        count += flags[flagIndex] ? 1 : 0;
     }
     return count;
 }

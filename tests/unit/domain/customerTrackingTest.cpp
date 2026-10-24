@@ -111,13 +111,13 @@ TEST(CustomerTimelineMapping, KeepsTheOrderAndUsesTheCustomerPhrases)
     events.pushBack(MilestoneEvent {Milestone::OnTheWay, 200});
     events.pushBack(MilestoneEvent {Milestone::RetryScheduled, 300});
 
-    const auto timeline = CustomerTimeline::from(events);
+    const auto timeline = CustomerTimeline::fromEvents(events);
 
     ASSERT_EQ(timeline.size(), 3U);
-    EXPECT_EQ(timeline.entry(0).text, "Recibimos tu paquete en el centro de distribución");
-    EXPECT_EQ(timeline.entry(1).occurredAt, 200);
-    EXPECT_EQ(timeline.current().milestone, Milestone::RetryScheduled);
-    EXPECT_FALSE(timeline.finished());
+    EXPECT_EQ(timeline.entryAt(0).text, "Recibimos tu paquete en el centro de distribución");
+    EXPECT_EQ(timeline.entryAt(1).occurredAt, 200);
+    EXPECT_EQ(timeline.currentEntry().milestone, Milestone::RetryScheduled);
+    EXPECT_FALSE(timeline.isFinished());
 }
 
 TEST(CustomerTimelineMapping, IsFinishedOnlyWhenTheLastStepIsTheDelivery)
@@ -126,8 +126,8 @@ TEST(CustomerTimelineMapping, IsFinishedOnlyWhenTheLastStepIsTheDelivery)
     events.pushBack(MilestoneEvent {Milestone::OnTheWay, 1});
     events.pushBack(MilestoneEvent {Milestone::Delivered, 2});
 
-    EXPECT_TRUE(CustomerTimeline::from(events).finished());
-    EXPECT_TRUE(CustomerTimeline::from(ds::DynamicArray<MilestoneEvent> {}).empty());
+    EXPECT_TRUE(CustomerTimeline::fromEvents(events).isFinished());
+    EXPECT_TRUE(CustomerTimeline::fromEvents(ds::DynamicArray<MilestoneEvent> {}).isEmpty());
 }
 
 TEST(DeliveryWindowEstimate, StartsAtTheQuarterHourBeforeTheArrivalAndLastsAnHour)

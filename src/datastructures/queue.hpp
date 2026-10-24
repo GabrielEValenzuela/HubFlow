@@ -12,19 +12,19 @@ namespace hubflow::ds
  *
  * Mantener @c m_pRear hace que enqueue sea O(1); sin él, encolar requeriría recorrer toda la
  * cola (O(n)). dequeue y front son O(1).
- * Ownership: libera sólo sus nodos; si @p T es puntero nunca ejecuta @c delete sobre él.
+ * Ownership: libera sólo sus nodos; si @p TElement es puntero nunca ejecuta @c delete sobre él.
  *
- * @tparam T tipo almacenado (copiable).
+ * @tparam TElement tipo almacenado (copiable).
  */
-template <typename T>
+template <typename TElement>
 class Queue final
 {
 public:
     /// @brief Nodo con enlace al siguiente en salir.
     struct Node
     {
-        T     value;
-        Node* pNext;
+        TElement value;
+        Node*    pNext;
     };
 
     Queue() = default;
@@ -38,7 +38,7 @@ public:
     Queue& operator=(const Queue&) = delete;
 
     /// @brief Encola al final. O(1).
-    void enqueue(const T& value)
+    void enqueue(const TElement& value)
     {
         Node* pNode = new Node {value, nullptr};
         if (m_pRear == nullptr)
@@ -57,11 +57,11 @@ public:
      * @brief Desencola el frente. O(1).
      * @throws std::underflow_error si la cola está vacía.
      */
-    T dequeue()
+    TElement dequeue()
     {
         requireElements();
-        Node*   pOld = m_pFront;
-        const T value {pOld->value};
+        Node*          pOld = m_pFront;
+        const TElement value {pOld->value};
         m_pFront = pOld->pNext;
         if (m_pFront == nullptr)
         {
@@ -76,7 +76,7 @@ public:
      * @brief Elemento del frente. O(1).
      * @throws std::underflow_error si la cola está vacía.
      */
-    const T& front() const
+    const TElement& front() const
     {
         requireElements();
         return m_pFront->value;
@@ -86,15 +86,15 @@ public:
      * @brief Elemento del final. O(1).
      * @throws std::underflow_error si la cola está vacía.
      */
-    const T& rear() const
+    const TElement& rear() const
     {
         requireElements();
         return m_pRear->value;
     }
 
     /// @brief Recorre de front a rear.
-    template <typename Visitor>
-    void forEach(Visitor visit) const
+    template <typename TVisitor>
+    void forEach(TVisitor visit) const
     {
         for (Node* pCurrent = m_pFront; pCurrent != nullptr; pCurrent = pCurrent->pNext)
         {

@@ -28,7 +28,7 @@ TrackingAccess VerifyTracking::execute(const VerificationRequest& request)
         throw TrackingErrors::tooManyAttempts(decision.retryAfterSeconds);
     }
     const domain::VerificationProof proof {request.phoneLast4, request.postalCode};
-    if (proof.empty())
+    if (proof.isEmpty())
     {
         throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
                                               "tracking.proof_missing",

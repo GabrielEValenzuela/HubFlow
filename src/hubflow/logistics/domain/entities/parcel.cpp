@@ -50,12 +50,12 @@ double Parcel::billableWeightKg() const noexcept
     return weightKg() > volumetricWeightKg() ? weightKg() : volumetricWeightKg();
 }
 
-bool Parcel::delivered() const noexcept
+bool Parcel::isDelivered() const noexcept
 {
     return m_delivered;
 }
 
-ParcelData Parcel::data() const noexcept
+ParcelData Parcel::details() const noexcept
 {
     return ParcelData {
         weightKg(), m_dimensions.lengthCm(), m_dimensions.widthCm(), m_dimensions.heightCm(), m_delivered};

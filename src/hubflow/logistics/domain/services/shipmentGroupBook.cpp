@@ -20,9 +20,9 @@ ShipmentGroup& ShipmentGroupBook::form(const std::string&                   id,
                                        const shared::domain::ActorContext&  context)
 {
     std::string deliveryPoint;
-    for (std::size_t i = 0; i < codes.size(); ++i)
+    for (std::size_t codeIndex = 0; codeIndex < codes.size(); ++codeIndex)
     {
-        const Shipment& shipment = catalog.require(codes[i]);
+        const Shipment& shipment = catalog.require(codes[codeIndex]);
         if (groupOf(shipment.code()) != nullptr)
         {
             throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
@@ -35,7 +35,7 @@ ShipmentGroup& ShipmentGroupBook::form(const std::string&                   id,
                                                   "shipment_group.not_awaiting",
                                                   "El paquete " + shipment.code() + " ya salió a reparto o se entregó"};
         }
-        if (i == 0)
+        if (codeIndex == 0)
         {
             deliveryPoint = shipment.deliveryPoint();
         }
@@ -84,9 +84,9 @@ ShipmentGroup* ShipmentGroupBook::groupOf(const std::string& code) const
 
 void ShipmentGroupBook::ensureDissolvable(const ShipmentGroup& group, const ShipmentCatalog& catalog) const
 {
-    for (std::size_t i = 0; i < group.codes().size(); ++i)
+    for (std::size_t codeIndex = 0; codeIndex < group.codes().size(); ++codeIndex)
     {
-        if (catalog.require(group.codes()[i]).status() == ShipmentStatus::EnReparto)
+        if (catalog.require(group.codes()[codeIndex]).status() == ShipmentStatus::EnReparto)
         {
             throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
                                                   "shipment_group.in_delivery",

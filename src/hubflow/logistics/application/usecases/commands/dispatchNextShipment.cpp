@@ -23,7 +23,7 @@ const domain::Shipment& DispatchNextShipment::execute(const shared::application:
                                                       const std::string&                    note)
 {
     principal.require(identity::domain::Permission::OperateShipments);
-    if (m_model.pending.empty())
+    if (m_model.pending.isEmpty())
     {
         throw shared::domain::business_error {
             shared::domain::ErrorKind::Conflict, "pending.empty", "No hay envíos pendientes"};

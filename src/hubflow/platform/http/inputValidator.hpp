@@ -74,26 +74,26 @@ public:
      * @param parse función que convierte el texto al valor del vocabulario.
      * @param allowed lista legible de valores (para el mensaje de error).
      */
-    template <typename Enum, typename Parser>
-    Enum requiredTerm(const std::string& field, Parser parse, const std::string& allowed)
+    template <typename TEnum, typename TParser>
+    TEnum requiredTerm(const std::string& field, TParser parse, const std::string& allowed)
     {
-        const std::string   text {requiredText(field, 1, 32)};
-        std::optional<Enum> parsed {parse(text)};
+        const std::string    text {requiredText(field, 1, 32)};
+        std::optional<TEnum> parsed {parse(text)};
         if (!parsed.has_value() && !text.empty())
         {
             fail(field, "Debe ser uno de: " + allowed);
         }
-        return parsed.value_or(Enum {});
+        return parsed.value_or(TEnum {});
     }
 
     /// @brief Variante opcional de @c requiredTerm.
-    template <typename Enum, typename Parser>
-    std::optional<Enum> optionalTerm(const std::string& field, Parser parse, const std::string& allowed)
+    template <typename TEnum, typename TParser>
+    std::optional<TEnum> optionalTerm(const std::string& field, TParser parse, const std::string& allowed)
     {
-        std::optional<Enum> result;
+        std::optional<TEnum> result;
         if (has(field))
         {
-            result = requiredTerm<Enum>(field, parse, allowed);
+            result = requiredTerm<TEnum>(field, parse, allowed);
         }
         return result;
     }

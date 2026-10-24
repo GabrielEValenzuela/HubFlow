@@ -47,9 +47,9 @@ void RouteController::registerRoutes(platform::ApiRouter& router)
                    input.validate();
                    const auto routes = m_useCases.list.execute(context.user());
                    Json       items  = Json::array();
-                   for (std::size_t i = 0; i < routes.size(); ++i)
+                   for (std::size_t routeIndex = 0; routeIndex < routes.size(); ++routeIndex)
                    {
-                       items.push_back(RoutingJsonPresenter::routeSummary(*routes[i]));
+                       items.push_back(RoutingJsonPresenter::routeSummary(*routes[routeIndex]));
                    }
                    return platform::HttpResponse::ok(page(items, paging.first, paging.second));
                });

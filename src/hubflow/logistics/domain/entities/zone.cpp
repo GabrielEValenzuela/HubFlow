@@ -85,7 +85,7 @@ const std::string& Zone::name() const noexcept
     return m_state.name;
 }
 
-bool Zone::active() const noexcept
+bool Zone::isActive() const noexcept
 {
     return m_state.active;
 }

@@ -52,9 +52,10 @@ void RoadMapController::registerRoutes(platform::ApiRouter& router)
             request.zone  = input.code("zone");
             request.x     = input.requiredNumber("x", MIN_COORDINATE, MAX_COORDINATE);
             request.y     = input.requiredNumber("y", MIN_COORDINATE, MAX_COORDINATE);
-            for (const auto& [to, costKm] : input.textNumberPairs("links", "to", MAX_NODE_ID, "costKm", MAX_COORDINATE))
+            for (const auto& [destinationId, costKm] :
+                 input.textNumberPairs("links", "to", MAX_NODE_ID, "costKm", MAX_COORDINATE))
             {
-                request.links.pushBack(domain::RoadLink {to, costKm});
+                request.links.pushBack(domain::RoadLink {destinationId, costKm});
             }
             input.validate();
             const auto& node = m_addNode.execute(context.user(), request);

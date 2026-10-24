@@ -18,18 +18,18 @@ namespace hubflow::ds
  * | forEach        | O(n)        |
  * | forEachReverse | O(n)        |
  *
- * @tparam T tipo almacenado (copiable).
+ * @tparam TElement tipo almacenado (copiable).
  */
-template <typename T>
+template <typename TElement>
 class DoublyLinkedList final
 {
 public:
     /// @brief Nodo con enlaces al anterior y al siguiente.
     struct Node
     {
-        T     value;
-        Node* pPrev;
-        Node* pNext;
+        TElement value;
+        Node*    pPrev;
+        Node*    pNext;
     };
 
     DoublyLinkedList() = default;
@@ -43,7 +43,7 @@ public:
     DoublyLinkedList& operator=(const DoublyLinkedList&) = delete;
 
     /// @brief Agrega al final. O(1).
-    void pushBack(const T& value)
+    void pushBack(const TElement& value)
     {
         Node* pNode = new Node {value, m_pTail, nullptr};
         if (m_pTail == nullptr)
@@ -59,8 +59,8 @@ public:
     }
 
     /// @brief Recorre del más antiguo al más reciente siguiendo @c pNext.
-    template <typename Visitor>
-    void forEach(Visitor visit) const
+    template <typename TVisitor>
+    void forEach(TVisitor visit) const
     {
         for (Node* pCurrent = m_pHead; pCurrent != nullptr; pCurrent = pCurrent->pNext)
         {
@@ -69,8 +69,8 @@ public:
     }
 
     /// @brief Recorre del más reciente al más antiguo siguiendo @c pPrev.
-    template <typename Visitor>
-    void forEachReverse(Visitor visit) const
+    template <typename TVisitor>
+    void forEachReverse(TVisitor visit) const
     {
         for (Node* pCurrent = m_pTail; pCurrent != nullptr; pCurrent = pCurrent->pPrev)
         {
@@ -106,7 +106,7 @@ public:
         return m_size;
     }
 
-    bool empty() const noexcept
+    bool isEmpty() const noexcept
     {
         return m_pHead == nullptr;
     }

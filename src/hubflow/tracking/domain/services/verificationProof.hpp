@@ -12,7 +12,7 @@ struct VerificationProof
     std::string phoneLast4;
     std::string postalCode;
 
-    bool empty() const noexcept
+    bool isEmpty() const noexcept
     {
         return phoneLast4.empty() && postalCode.empty();
     }

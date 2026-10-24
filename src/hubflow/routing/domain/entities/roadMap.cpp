@@ -34,7 +34,7 @@ std::size_t RoadMap::declareNode(const RoadNode&                     node,
                                               "road_node.invalid_data",
                                               "El punto necesita un código de hasta 16 caracteres y un nombre"};
     }
-    if (links.empty())
+    if (links.isEmpty())
     {
         throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
                                               "road_node.unconnected",
@@ -43,20 +43,20 @@ std::size_t RoadMap::declareNode(const RoadNode&                     node,
     RoadNode created {node};
     created.isHub  = false;
     created.active = true;
-    for (std::size_t i = 0; i < links.size(); ++i)
+    for (std::size_t linkIndex = 0; linkIndex < links.size(); ++linkIndex)
     {
-        const RoadNode& target = this->node(require(links[i].toId));
+        const RoadNode& target = this->node(require(links[linkIndex].destinationId));
         const double    straight {std::hypot(created.x - target.x, created.y - target.y)};
-        for (std::size_t j = 0; j < i; ++j)
+        for (std::size_t earlierLinkIndex = 0; earlierLinkIndex < linkIndex; ++earlierLinkIndex)
         {
-            if (links[j].toId == links[i].toId)
+            if (links[earlierLinkIndex].destinationId == links[linkIndex].destinationId)
             {
                 throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
                                                       "road_edge.duplicate",
                                                       "Hay dos calles hacia el mismo punto"};
             }
         }
-        if (links[i].costKm + COST_TOLERANCE < straight)
+        if (links[linkIndex].costKm + COST_TOLERANCE < straight)
         {
             throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
                                                   "road_edge.inadmissible",
@@ -64,9 +64,9 @@ std::size_t RoadMap::declareNode(const RoadNode&                     node,
         }
     }
     const std::size_t index {addNode(created)};
-    for (std::size_t i = 0; i < links.size(); ++i)
+    for (std::size_t linkIndex = 0; linkIndex < links.size(); ++linkIndex)
     {
-        connect(created.id, links[i].toId, links[i].costKm);
+        connect(created.id, links[linkIndex].destinationId, links[linkIndex].costKm);
     }
     raise(new RoadNodeAdded {created, links, context});
     return index;
@@ -101,18 +101,18 @@ void RoadMap::reviseNode(const std::string&                  id,
     }
 }
 
-void RoadMap::connect(const std::string& fromId, const std::string& toId, const double costKm)
+void RoadMap::connect(const std::string& originId, const std::string& destinationId, const double costKm)
 {
-    const std::size_t from {require(fromId)};
-    const std::size_t to {require(toId)};
-    if (from == to || costKm + COST_TOLERANCE < straightLine(from, to))
+    const std::size_t origin {require(originId)};
+    const std::size_t destination {require(destinationId)};
+    if (origin == destination || costKm + COST_TOLERANCE < straightLine(origin, destination))
     {
         throw shared::domain::business_error {
             shared::domain::ErrorKind::Validation,
             "road_edge.inadmissible",
             "La arista es un lazo o su costo es menor que la distancia en línea recta"};
     }
-    m_graph.addEdge(from, to, costKm);
+    m_graph.addEdge(origin, destination, costKm);
 }
 
 std::optional<std::size_t> RoadMap::indexOf(const std::string& id) const
@@ -150,11 +150,11 @@ std::size_t RoadMap::hub() const
     return *index;
 }
 
-double RoadMap::straightLine(const std::size_t from, const std::size_t to) const
+double RoadMap::straightLine(const std::size_t origin, const std::size_t destination) const
 {
-    const RoadNode& a = m_graph.vertex(from);
-    const RoadNode& b = m_graph.vertex(to);
-    return std::hypot(a.x - b.x, a.y - b.y);
+    const RoadNode& originNode      = m_graph.vertex(origin);
+    const RoadNode& destinationNode = m_graph.vertex(destination);
+    return std::hypot(originNode.x - destinationNode.x, originNode.y - destinationNode.y);
 }
 
 const RoadNode& RoadMap::node(const std::size_t index) const

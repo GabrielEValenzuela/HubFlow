@@ -39,19 +39,19 @@ bool ServiceCriterion::matches(const logistics::domain::Shipment& shipment) cons
     return shipment.service() == m_service;
 }
 
-CodeSet UnionOperation::apply(const CodeSet& a, const CodeSet& b) const
+CodeSet UnionOperation::apply(const CodeSet& first, const CodeSet& second) const
 {
-    return a.unite(b);
+    return first.unite(second);
 }
 
-CodeSet IntersectionOperation::apply(const CodeSet& a, const CodeSet& b) const
+CodeSet IntersectionOperation::apply(const CodeSet& first, const CodeSet& second) const
 {
-    return a.intersect(b);
+    return first.intersect(second);
 }
 
-CodeSet DifferenceOperation::apply(const CodeSet& a, const CodeSet& b) const
+CodeSet DifferenceOperation::apply(const CodeSet& first, const CodeSet& second) const
 {
-    return a.difference(b);
+    return first.difference(second);
 }
 
 } // namespace hubflow::insights::domain

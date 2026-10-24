@@ -13,9 +13,9 @@ namespace hubflow::ds
  *
  * | Operación          | Complejidad                          |
  * |--------------------|--------------------------------------|
- * | set / reset / test | O(1)                                 |
- * | count              | O(k), k = bits activos (Kernighan)   |
- * | any / none         | O(1)                                 |
+ * | set / unset / isSet | O(1)                                 |
+ * | activeCount           | O(k), k = bits activos (Kernighan)   |
+ * | isAnySet / isNoneSet         | O(1)                                 |
  * | AND / OR / XOR     | O(1): operan sobre la palabra entera |
  *
  * @tparam BITS cantidad de posiciones.
@@ -29,10 +29,10 @@ public:
     BitSet() = default;
 
     /// @brief Construye desde una palabra cruda descartando bits fuera de rango.
-    static BitSet fromRaw(const std::uint32_t raw) noexcept
+    static BitSet fromWord(const std::uint32_t word) noexcept
     {
         BitSet bitSet;
-        bitSet.m_word = raw & mask();
+        bitSet.m_word = word & mask();
         return bitSet;
     }
 
@@ -43,19 +43,19 @@ public:
     }
 
     /// @throws std::out_of_range si @p position >= BITS.
-    void reset(const std::size_t position)
+    void unset(const std::size_t position)
     {
         m_word &= ~bit(position);
     }
 
     /// @throws std::out_of_range si @p position >= BITS.
-    bool test(const std::size_t position) const
+    bool isSet(const std::size_t position) const
     {
         return (m_word & bit(position)) != 0;
     }
 
     /// @brief Cantidad de bits activos (algoritmo de Kernighan).
-    std::size_t count() const noexcept
+    std::size_t activeCount() const noexcept
     {
         std::size_t active {0};
         for (std::uint32_t rest = m_word; rest != 0; rest &= rest - 1)
@@ -65,29 +65,29 @@ public:
         return active;
     }
 
-    bool any() const noexcept
+    bool isAnySet() const noexcept
     {
         return m_word != 0;
     }
 
-    bool none() const noexcept
+    bool isNoneSet() const noexcept
     {
         return m_word == 0;
     }
 
     BitSet operator&(const BitSet& other) const noexcept
     {
-        return fromRaw(m_word & other.m_word);
+        return fromWord(m_word & other.m_word);
     }
 
     BitSet operator|(const BitSet& other) const noexcept
     {
-        return fromRaw(m_word | other.m_word);
+        return fromWord(m_word | other.m_word);
     }
 
     BitSet operator^(const BitSet& other) const noexcept
     {
-        return fromRaw(m_word ^ other.m_word);
+        return fromWord(m_word ^ other.m_word);
     }
 
     bool operator==(const BitSet& other) const noexcept
@@ -95,7 +95,7 @@ public:
         return m_word == other.m_word;
     }
 
-    std::uint32_t raw() const noexcept
+    std::uint32_t toWord() const noexcept
     {
         return m_word;
     }

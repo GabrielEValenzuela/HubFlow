@@ -169,7 +169,7 @@ TEST(RoutingFlow, ResolvingAStopWithADifferentOutcomeIsAConflict)
     }
     catch (const business_error& error)
     {
-        kind = error.kind();
+        kind = error.errorKind();
     }
 
     EXPECT_EQ(kind, shared::domain::ErrorKind::Conflict);

@@ -44,7 +44,7 @@ public:
 
     const std::string&          code() const noexcept;
     const std::string&          name() const noexcept;
-    bool                        active() const noexcept;
+    bool                        isActive() const noexcept;
     const ShipmentFeatureState& state() const noexcept;
 
 private:

@@ -20,10 +20,10 @@ class ModuleSet final
 {
 public:
     /// @brief Da de alta un módulo y devuelve una referencia para que otros módulos tomen sus puertos.
-    template <typename Module>
-    Module& add(std::unique_ptr<Module> spModule)
+    template <typename TModule>
+    TModule& add(std::unique_ptr<TModule> spModule)
     {
-        Module& module = *spModule;
+        TModule& module = *spModule;
         m_modules.push_back(std::move(spModule));
         return module;
     }

@@ -90,7 +90,7 @@ unsigned ServiceLevel::priority() const noexcept
     return m_state.priority;
 }
 
-bool ServiceLevel::active() const noexcept
+bool ServiceLevel::isActive() const noexcept
 {
     return m_state.active;
 }

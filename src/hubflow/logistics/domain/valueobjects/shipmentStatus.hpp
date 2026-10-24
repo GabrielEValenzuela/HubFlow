@@ -44,7 +44,7 @@ bool isAwaitingDispatch(ShipmentStatus status) noexcept;
  * - REPROGRAMADO → CLASIFICADO | EN_REPARTO
  * - ENTREGADO es terminal.
  */
-bool canTransition(ShipmentStatus from, ShipmentStatus to) noexcept;
+bool canTransition(ShipmentStatus currentStatus, ShipmentStatus targetStatus) noexcept;
 
 } // namespace hubflow::logistics::domain
 

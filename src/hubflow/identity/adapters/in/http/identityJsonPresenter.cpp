@@ -22,9 +22,9 @@ platform::Json IdentityJsonPresenter::session(const application::Session& sessio
 platform::Json IdentityJsonPresenter::users(const ds::DynamicArray<domain::UserState>& users)
 {
     platform::Json items = platform::Json::array();
-    for (std::size_t i = 0; i < users.size(); ++i)
+    for (std::size_t userIndex = 0; userIndex < users.size(); ++userIndex)
     {
-        items.push_back(user(users[i]));
+        items.push_back(user(users[userIndex]));
     }
     return items;
 }

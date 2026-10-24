@@ -19,11 +19,11 @@ Shipment::Shipment(const ShipmentDraft& draft, const QueueTicket& ticket)
     , m_deliveryPoint {draft.deliveryPoint}
     , m_ticket {ticket}
 {
-    for (std::size_t i = 0; i < draft.features.size(); ++i)
+    for (std::size_t featureIndex = 0; featureIndex < draft.features.size(); ++featureIndex)
     {
-        if (!hasFeature(draft.features[i]))
+        if (!hasFeature(draft.features[featureIndex]))
         {
-            m_features.pushBack(CatalogCode {draft.features[i]}.value());
+            m_features.pushBack(CatalogCode {draft.features[featureIndex]}.value());
         }
     }
     adoptParcels(draft.parcels);
@@ -31,15 +31,15 @@ Shipment::Shipment(const ShipmentDraft& draft, const QueueTicket& ticket)
 
 Shipment::~Shipment()
 {
-    for (std::size_t i = 0; i < m_parcels.size(); ++i)
+    for (std::size_t parcelIndex = 0; parcelIndex < m_parcels.size(); ++parcelIndex)
     {
-        delete m_parcels[i];
+        delete m_parcels[parcelIndex];
     }
 }
 
 void Shipment::adoptParcels(const ds::DynamicArray<ParcelData>& parcels)
 {
-    if (parcels.empty() || parcels.size() > MAX_PARCELS)
+    if (parcels.isEmpty() || parcels.size() > MAX_PARCELS)
     {
         throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
                                               "shipment.parcels_invalid",
@@ -47,16 +47,16 @@ void Shipment::adoptParcels(const ds::DynamicArray<ParcelData>& parcels)
     }
     try
     {
-        for (std::size_t i = 0; i < parcels.size(); ++i)
+        for (std::size_t parcelIndex = 0; parcelIndex < parcels.size(); ++parcelIndex)
         {
-            m_parcels.pushBack(new Parcel {m_code.value(), i + 1, parcels.size(), parcels[i]});
+            m_parcels.pushBack(new Parcel {m_code.value(), parcelIndex + 1, parcels.size(), parcels[parcelIndex]});
         }
     }
     catch (...)
     {
-        for (std::size_t i = 0; i < m_parcels.size(); ++i)
+        for (std::size_t parcelIndex = 0; parcelIndex < m_parcels.size(); ++parcelIndex)
         {
-            delete m_parcels[i];
+            delete m_parcels[parcelIndex];
         }
         m_parcels.clear();
         throw;
@@ -78,7 +78,7 @@ Shipment* Shipment::restore(const ShipmentState& state)
     Shipment* pShipment       = new Shipment {state.draft, QueueTicket {state.ticket}};
     pShipment->m_status       = state.status;
     pShipment->m_attempts     = state.attempts;
-    pShipment->m_stateHistory = StateHistory::fromRaw(state.stateBits);
+    pShipment->m_stateHistory = StateHistory::fromWord(state.stateBits);
     return pShipment;
 }
 
@@ -131,7 +131,7 @@ void Shipment::confirmParcel(const std::size_t ordinal, const shared::domain::Ac
             shared::domain::ErrorKind::NotFound, "parcel.not_found", "El bulto no existe en este paquete"};
     }
     Parcel* pParcel = m_parcels[ordinal - 1];
-    if (!pParcel->delivered())
+    if (!pParcel->isDelivered())
     {
         pParcel->confirmDelivery();
         raise(new ParcelDeliveryConfirmed {state(), ordinal, context});
@@ -140,9 +140,9 @@ void Shipment::confirmParcel(const std::size_t ordinal, const shared::domain::Ac
 
 void Shipment::confirmAllParcels(const shared::domain::ActorContext& context)
 {
-    for (std::size_t i = 0; i < m_parcels.size(); ++i)
+    for (std::size_t parcelIndex = 0; parcelIndex < m_parcels.size(); ++parcelIndex)
     {
-        confirmParcel(i + 1, context);
+        confirmParcel(parcelIndex + 1, context);
     }
 }
 
@@ -203,9 +203,9 @@ double Shipment::weightKg() const noexcept
 double Shipment::realWeightKg() const noexcept
 {
     double total {0.0};
-    for (std::size_t i = 0; i < m_parcels.size(); ++i)
+    for (std::size_t parcelIndex = 0; parcelIndex < m_parcels.size(); ++parcelIndex)
     {
-        total += m_parcels[i]->weightKg();
+        total += m_parcels[parcelIndex]->weightKg();
     }
     return total;
 }
@@ -213,9 +213,9 @@ double Shipment::realWeightKg() const noexcept
 double Shipment::billableWeightKg() const noexcept
 {
     double total {0.0};
-    for (std::size_t i = 0; i < m_parcels.size(); ++i)
+    for (std::size_t parcelIndex = 0; parcelIndex < m_parcels.size(); ++parcelIndex)
     {
-        total += m_parcels[i]->billableWeightKg();
+        total += m_parcels[parcelIndex]->billableWeightKg();
     }
     return total;
 }
@@ -233,9 +233,9 @@ const Parcel& Shipment::parcel(const std::size_t index) const
 std::size_t Shipment::pendingParcelCount() const noexcept
 {
     std::size_t pending {0};
-    for (std::size_t i = 0; i < m_parcels.size(); ++i)
+    for (std::size_t parcelIndex = 0; parcelIndex < m_parcels.size(); ++parcelIndex)
     {
-        pending += m_parcels[i]->delivered() ? 0 : 1;
+        pending += m_parcels[parcelIndex]->isDelivered() ? 0 : 1;
     }
     return pending;
 }
@@ -298,9 +298,9 @@ bool Shipment::isAwaitingDispatch() const noexcept
 ShipmentState Shipment::state() const
 {
     ds::DynamicArray<ParcelData> parcels;
-    for (std::size_t i = 0; i < m_parcels.size(); ++i)
+    for (std::size_t parcelIndex = 0; parcelIndex < m_parcels.size(); ++parcelIndex)
     {
-        parcels.pushBack(m_parcels[i]->data());
+        parcels.pushBack(m_parcels[parcelIndex]->details());
     }
     return ShipmentState {
         ShipmentDraft {id(),
@@ -315,7 +315,7 @@ ShipmentState Shipment::state() const
                        parcels},
         m_status,
         m_attempts,
-        m_stateHistory.raw(),
+        m_stateHistory.toWord(),
         m_ticket.number(),
     };
 }

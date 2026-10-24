@@ -41,9 +41,9 @@ MySqlShipmentGroupRepository::MySqlShipmentGroupRepository(platform::MySqlConnec
 void MySqlShipmentGroupRepository::add(const domain::ShipmentGroupState& state)
 {
     m_connection.execute(INSERT_GROUP, {state.id, state.deliveryPoint});
-    for (std::size_t i = 0; i < state.codes.size(); ++i)
+    for (std::size_t codeIndex = 0; codeIndex < state.codes.size(); ++codeIndex)
     {
-        m_connection.execute(INSERT_MEMBER, {state.id, state.codes[i], std::uint64_t {i}});
+        m_connection.execute(INSERT_MEMBER, {state.id, state.codes[codeIndex], std::uint64_t {codeIndex}});
     }
 }
 

@@ -50,7 +50,7 @@ public:
                     const shared::domain::ActorContext& context);
 
     /// @throws business_error si algún extremo no existe o el costo es menor a la línea recta.
-    void connect(const std::string& fromId, const std::string& toId, double costKm);
+    void connect(const std::string& originId, const std::string& destinationId, double costKm);
 
     /// @brief Índice del nodo por id (búsqueda lineal O(V)).
     std::optional<std::size_t> indexOf(const std::string& id) const;
@@ -62,7 +62,7 @@ public:
     std::size_t hub() const;
 
     /// @brief Distancia en línea recta entre dos nodos: heurística h(n) del PUM.
-    double straightLine(std::size_t from, std::size_t to) const;
+    double straightLine(std::size_t origin, std::size_t destination) const;
 
     const RoadNode&            node(std::size_t index) const;
     const ds::Graph<RoadNode>& graph() const noexcept;

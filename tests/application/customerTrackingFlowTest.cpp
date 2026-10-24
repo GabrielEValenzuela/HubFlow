@@ -34,8 +34,8 @@ std::int64_t nowOf(const test::ApplicationHarness& app)
     return clock.now();
 }
 
-template <typename Action>
-business_error failureOf(Action action)
+template <typename TAction>
+business_error failureOf(TAction action)
 {
     try
     {
@@ -163,11 +163,11 @@ TEST(CustomerTracking, UnknownMalformedAndFailedVerificationAreIndistinguishable
 
     for (const auto* pError : {&malformed, &unknownVerification, &wrongProof})
     {
-        EXPECT_EQ(pError->kind(), unknown.kind());
+        EXPECT_EQ(pError->errorKind(), unknown.errorKind());
         EXPECT_EQ(pError->code(), unknown.code());
         EXPECT_STREQ(pError->what(), unknown.what());
     }
-    EXPECT_EQ(unknown.kind(), ErrorKind::NotFound);
+    EXPECT_EQ(unknown.errorKind(), ErrorKind::NotFound);
 }
 
 TEST(CustomerTracking, VerifyingWithThePhoneEndingGrantsTheExtendedView)
@@ -227,7 +227,7 @@ TEST(CustomerTracking, VerifyingWithoutAnyProofIsAValidationError)
                   {
                       app.verifyTracking.execute(withPhone("PKG-1002", ""));
                   })
-                  .kind(),
+                  .errorKind(),
               ErrorKind::Validation);
 }
 
@@ -254,7 +254,7 @@ TEST(CustomerTracking, TheTokenOnlyOpensThePackageItWasIssuedFor)
             app.getVerifiedTracking.execute("PKG-9999", access.token);
         });
 
-    EXPECT_EQ(otherPackage.kind(), ErrorKind::Unauthorized);
+    EXPECT_EQ(otherPackage.errorKind(), ErrorKind::Unauthorized);
     for (const auto* pError : {&garbage, &unknownCode})
     {
         EXPECT_EQ(pError->code(), otherPackage.code());
@@ -277,7 +277,7 @@ TEST(CustomerTracking, TheTokenExpiresAfterFifteenMinutes)
                   {
                       app.getVerifiedTracking.execute("PKG-1002", access.token);
                   })
-                  .kind(),
+                  .errorKind(),
               ErrorKind::Unauthorized);
 }
 
@@ -293,7 +293,7 @@ TEST(CustomerTracking, AttemptsAreLimitedPerAddressAndCode)
                       {
                           app.verifyTracking.execute(withPhone("PKG-1002", "0000"));
                       })
-                      .kind(),
+                      .errorKind(),
                   ErrorKind::NotFound);
     }
 
@@ -303,7 +303,7 @@ TEST(CustomerTracking, AttemptsAreLimitedPerAddressAndCode)
             app.verifyTracking.execute(withPhone("PKG-1002", "4410"));
         });
 
-    EXPECT_EQ(blocked.kind(), ErrorKind::RateLimited);
+    EXPECT_EQ(blocked.errorKind(), ErrorKind::RateLimited);
     EXPECT_EQ(blocked.retryAfterSeconds(), 15U * 60U);
     EXPECT_NO_THROW(app.verifyTracking.execute(withPhone("PKG-1002", "4410", "198.51.100.9")));
     EXPECT_NO_THROW(app.verifyTracking.execute(withPhone("PKG-1003", "3391")));
@@ -324,7 +324,7 @@ TEST(CustomerTracking, UnknownCodesAreLimitedTooSoTheLimitIsNoOracle)
                       {
                           app.verifyTracking.execute(withPhone("PKG-9999", "0000"));
                       })
-                      .kind(),
+                      .errorKind(),
                   ErrorKind::NotFound);
     }
 
@@ -333,7 +333,7 @@ TEST(CustomerTracking, UnknownCodesAreLimitedTooSoTheLimitIsNoOracle)
                   {
                       app.verifyTracking.execute(withPhone("PKG-9999", "0000"));
                   })
-                  .kind(),
+                  .errorKind(),
               ErrorKind::RateLimited);
 }
 
@@ -358,7 +358,7 @@ TEST(CustomerTracking, RetryAfterShrinksAsTheWindowMoves)
             app.verifyTracking.execute(withPhone("PKG-9999", "0000"));
         });
 
-    EXPECT_EQ(blocked.kind(), ErrorKind::RateLimited);
+    EXPECT_EQ(blocked.errorKind(), ErrorKind::RateLimited);
     EXPECT_EQ(blocked.retryAfterSeconds(), 14U * 60U);
 }
 
@@ -513,5 +513,5 @@ TEST(CustomerNotices, OnlyAdministratorsListThem)
     EXPECT_EQ(total, 8U);
     ASSERT_EQ(notices.items.size(), 3U);
     EXPECT_EQ(notices.items[0].shipmentCode, "PKG-1008");
-    EXPECT_EQ(forbid.kind(), ErrorKind::Forbidden);
+    EXPECT_EQ(forbid.errorKind(), ErrorKind::Forbidden);
 }

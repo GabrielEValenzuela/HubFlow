@@ -14,12 +14,12 @@ using routing::domain::StopOutcome;
 std::optional<std::size_t> pendingStopOf(const DeliveryRoute& route, const std::string& code)
 {
     std::optional<std::size_t> index;
-    for (std::size_t i = 0; i < route.stops().size() && !index.has_value(); ++i)
+    for (std::size_t stopIndex = 0; stopIndex < route.stops().size() && !index.has_value(); ++stopIndex)
     {
-        const auto& stop = route.stops()[i];
+        const auto& stop = route.stops()[stopIndex];
         if (stop.outcome == StopOutcome::Pending && stop.includes(code))
         {
-            index = i;
+            index = stopIndex;
         }
     }
     return index;

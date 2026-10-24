@@ -38,7 +38,7 @@ protected:
         std::vector<std::string> codes;
         for (std::size_t i = 0; i < batch.size(); ++i)
         {
-            codes.push_back(batch.at(i).code());
+            codes.push_back(batch.shipmentAt(i).code());
         }
         return codes;
     }
@@ -78,14 +78,14 @@ TEST_F(SortingBatchTest, SortsByCodeAndByWeightKeepingReferences)
     EXPECT_EQ(codesOf(batch),
               (std::vector<std::string> {
                   "PKG-1001", "PKG-1002", "PKG-1004", "PKG-1005", "PKG-1007", "PKG-1008", "PKG-1009"}));
-    EXPECT_EQ(&batch.at(0), &catalog.require("PKG-1001"));
+    EXPECT_EQ(&batch.shipmentAt(0), &catalog.require("PKG-1001"));
 
     batch.sort(ShipmentOrdering::of(SortCriteria::WeightDescending));
-    EXPECT_EQ(batch.at(0).code(), "PKG-1007");
+    EXPECT_EQ(batch.shipmentAt(0).code(), "PKG-1007");
     EXPECT_EQ(batch.sortedBy(), SortCriteria::WeightDescending);
     for (std::size_t i = 1; i < batch.size(); ++i)
     {
-        EXPECT_GE(batch.at(i - 1).weightKg(), batch.at(i).weightKg());
+        EXPECT_GE(batch.shipmentAt(i - 1).weightKg(), batch.shipmentAt(i).weightKg());
     }
 }
 
@@ -115,7 +115,7 @@ TEST(SortingBatchEdgeCases, SingleElementBatchSortsTrivially)
     SortingBatch    batch {1, "NORTE", pending};
     const SortStats stats = batch.sort(ShipmentOrdering::of(SortCriteria::WeightDescending));
     EXPECT_EQ(stats.comparisons, 0U);
-    EXPECT_EQ(&batch.at(0), &only);
+    EXPECT_EQ(&batch.shipmentAt(0), &only);
 }
 
 TEST_F(SortingBatchTest, PreparingAgainSkipsPackagesAlreadyLoaded)
@@ -193,7 +193,7 @@ TEST_F(SortingBatchTest, DeskReplacesActiveBatch)
     EXPECT_EQ(second.id(), 2U);
     EXPECT_THROW(desk.require(1), business_error);
     desk.close();
-    EXPECT_EQ(desk.active(), nullptr);
+    EXPECT_EQ(desk.activeBatch(), nullptr);
 }
 
 TEST_F(SortingBatchTest, ReturnProcessedItemOnlyAcceptsTheLastProcessedCode)
@@ -225,7 +225,7 @@ TEST_F(SortingBatchTest, ReturningTheSameItemTwiceFailsWithoutSideEffects)
     }
     catch (const business_error& error)
     {
-        kind = error.kind();
+        kind = error.errorKind();
     }
 
     EXPECT_EQ(kind, ErrorKind::NotFound);

@@ -14,31 +14,31 @@ namespace hubflow::ds
  *
  * push y pop son O(log n); top es O(1). Se usa como frontera de Greedy y A*.
  *
- * @tparam T tipo almacenado.
- * @tparam Less comparador: devuelve true si el primer argumento tiene más prioridad.
+ * @tparam TElement tipo almacenado.
+ * @tparam TPriorityOrder criterio de prioridad: devuelve true si el primer argumento tiene más prioridad.
  */
-template <typename T, typename Less>
+template <typename TElement, typename TPriorityOrder>
 class MinHeap final
 {
 public:
-    explicit MinHeap(Less less = Less {})
-        : m_less {less}
+    explicit MinHeap(TPriorityOrder hasHigherPriority = TPriorityOrder {})
+        : m_hasHigherPriority {hasHigherPriority}
     {
     }
 
-    void push(const T& value)
+    void push(const TElement& value)
     {
         m_items.pushBack(value);
         siftUp(m_items.size() - 1);
     }
 
     /// @throws std::underflow_error si está vacío.
-    T pop()
+    TElement pop()
     {
-        const T best {top()};
+        const TElement best {top()};
         m_items[0] = m_items[m_items.size() - 1];
         m_items.popBack();
-        if (!m_items.empty())
+        if (!m_items.isEmpty())
         {
             siftDown(0);
         }
@@ -46,9 +46,9 @@ public:
     }
 
     /// @throws std::underflow_error si está vacío.
-    const T& top() const
+    const TElement& top() const
     {
-        if (m_items.empty())
+        if (m_items.isEmpty())
         {
             throw std::underflow_error("MinHeap vacío");
         }
@@ -56,8 +56,8 @@ public:
     }
 
     /// @brief Visita el arreglo interno en orden de heap (no ordenado).
-    template <typename Visitor>
-    void forEach(Visitor visit) const
+    template <typename TVisitor>
+    void forEach(TVisitor visit) const
     {
         for (std::size_t i = 0; i < m_items.size(); ++i)
         {
@@ -67,7 +67,7 @@ public:
 
     bool isEmpty() const noexcept
     {
-        return m_items.empty();
+        return m_items.isEmpty();
     }
 
     std::size_t size() const noexcept
@@ -82,7 +82,7 @@ private:
         while (index > 0 && !settled)
         {
             const std::size_t parent {(index - 1) / 2};
-            settled = !m_less(m_items[index], m_items[parent]);
+            settled = !m_hasHigherPriority(m_items[index], m_items[parent]);
             if (!settled)
             {
                 swapAt(index, parent);
@@ -100,11 +100,11 @@ private:
             const std::size_t left {2 * index + 1};
             const std::size_t right {left + 1};
             std::size_t       best {index};
-            if (left < count && m_less(m_items[left], m_items[best]))
+            if (left < count && m_hasHigherPriority(m_items[left], m_items[best]))
             {
                 best = left;
             }
-            if (right < count && m_less(m_items[right], m_items[best]))
+            if (right < count && m_hasHigherPriority(m_items[right], m_items[best]))
             {
                 best = right;
             }
@@ -117,15 +117,15 @@ private:
         }
     }
 
-    void swapAt(const std::size_t a, const std::size_t b)
+    void swapAt(const std::size_t first, const std::size_t second)
     {
-        const T temp {m_items[a]};
-        m_items[a] = m_items[b];
-        m_items[b] = temp;
+        const TElement displaced {m_items[first]};
+        m_items[first]  = m_items[second];
+        m_items[second] = displaced;
     }
 
-    DynamicArray<T> m_items;
-    Less            m_less;
+    DynamicArray<TElement> m_items;
+    TPriorityOrder         m_hasHigherPriority;
 };
 
 } // namespace hubflow::ds

@@ -32,9 +32,9 @@ struct CatalogNouns
  * | adopt     | O(n)        |
  * | find      | O(n)        |
  *
- * @tparam Entry agregado con una función @c code().
+ * @tparam TEntry agregado con una función @c code().
  */
-template <typename Entry>
+template <typename TEntry>
 class ReferenceCatalog final
 {
 public:
@@ -46,7 +46,7 @@ public:
     ~ReferenceCatalog()
     {
         m_entries.forEach(
-            [](Entry* pEntry)
+            [](TEntry* pEntry)
             {
                 delete pEntry;
             });
@@ -59,7 +59,7 @@ public:
      * @brief Toma ownership de @p pEntry.
      * @throws business_error (Conflict) si ya existe uno con ese código; en ese caso libera @p pEntry.
      */
-    Entry& adopt(Entry* pEntry)
+    TEntry& adopt(TEntry* pEntry)
     {
         if (contains(pEntry->code()))
         {
@@ -73,10 +73,10 @@ public:
     }
 
     /// @brief nullptr si no existe.
-    Entry* find(const std::string& code) const
+    TEntry* find(const std::string& code) const
     {
-        Entry* const* ppFound = m_entries.findFirst(
-            [&code](const Entry* pEntry)
+        TEntry* const* ppFound = m_entries.findFirst(
+            [&code](const TEntry* pEntry)
             {
                 return pEntry->code() == code;
             });
@@ -89,9 +89,9 @@ public:
     }
 
     /// @throws business_error (NotFound) si no existe.
-    Entry& require(const std::string& code) const
+    TEntry& require(const std::string& code) const
     {
-        Entry* pEntry = find(code);
+        TEntry* pEntry = find(code);
         if (pEntry == nullptr)
         {
             throw shared::domain::business_error {
@@ -101,11 +101,11 @@ public:
     }
 
     /// @brief Visita los datos en orden de alta.
-    template <typename Visitor>
-    void forEach(Visitor visit) const
+    template <typename TVisitor>
+    void forEach(TVisitor visit) const
     {
         m_entries.forEach(
-            [&visit](Entry* pEntry)
+            [&visit](TEntry* pEntry)
             {
                 visit(*pEntry);
             });
@@ -117,8 +117,8 @@ public:
     }
 
 private:
-    CatalogNouns                 m_nouns;
-    ds::SinglyLinkedList<Entry*> m_entries;
+    CatalogNouns                  m_nouns;
+    ds::SinglyLinkedList<TEntry*> m_entries;
 };
 
 using ZoneCatalog         = ReferenceCatalog<Zone>;

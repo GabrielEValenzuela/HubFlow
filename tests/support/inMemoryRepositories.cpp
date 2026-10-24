@@ -85,11 +85,11 @@ void InMemoryShipmentGroupRepository::add(const logistics::domain::ShipmentGroup
 
 void InMemoryShipmentGroupRepository::remove(const std::string& id)
 {
-    for (auto it = groups.begin(); it != groups.end(); ++it)
+    for (auto groupIterator = groups.begin(); groupIterator != groups.end(); ++groupIterator)
     {
-        if (it->id == id)
+        if (groupIterator->id == id)
         {
-            groups.erase(it);
+            groups.erase(groupIterator);
             break;
         }
     }
@@ -133,9 +133,9 @@ void FixtureRoadMapRepository::loadInto(routing::domain::RoadMap& map) const
     {
         const auto found = changed.find(entry.node.id);
         map.addNode(found == changed.end() ? entry.node : found->second);
-        for (std::size_t i = 0; i < entry.links.size(); ++i)
+        for (std::size_t linkIndex = 0; linkIndex < entry.links.size(); ++linkIndex)
         {
-            map.connect(entry.node.id, entry.links[i].toId, entry.links[i].costKm);
+            map.connect(entry.node.id, entry.links[linkIndex].destinationId, entry.links[linkIndex].costKm);
         }
     }
 }
@@ -298,9 +298,9 @@ void InMemoryAuditLog::forEachRecent(const std::size_t                      limi
                                      const std::size_t                      offset,
                                      audit::application::AuditEntryVisitor& visitor) const
 {
-    for (std::size_t i = offset; i < entries.size() && i < offset + limit; ++i)
+    for (std::size_t entryIndex = offset; entryIndex < entries.size() && entryIndex < offset + limit; ++entryIndex)
     {
-        visitor.visit(entries[entries.size() - 1 - i]);
+        visitor.visit(entries[entries.size() - 1 - entryIndex]);
     }
 }
 

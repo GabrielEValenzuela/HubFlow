@@ -51,7 +51,7 @@ TEST(SortingFlow, RepeatingReturnProcessedItemIsNotFoundAndChangesNothing)
     }
     catch (const business_error& error)
     {
-        kind = error.kind();
+        kind = error.errorKind();
     }
 
     EXPECT_EQ(kind, ErrorKind::NotFound);
@@ -66,8 +66,8 @@ TEST(SortingFlow, SortingTwiceWithTheSameCriteriaKeepsTheSameOrder)
     const auto& batch = app.openSortingBatch.execute(app.operador(), "NORTE");
 
     app.sortSortingBatch.execute(app.operador(), batch.id(), sorting::domain::SortCriteria::WeightDescending);
-    const std::string firstOrder {batch.at(0).code() + batch.at(1).code() + batch.at(2).code()};
+    const std::string firstOrder {batch.shipmentAt(0).code() + batch.shipmentAt(1).code() + batch.shipmentAt(2).code()};
     app.sortSortingBatch.execute(app.operador(), batch.id(), sorting::domain::SortCriteria::WeightDescending);
 
-    EXPECT_EQ(batch.at(0).code() + batch.at(1).code() + batch.at(2).code(), firstOrder);
+    EXPECT_EQ(batch.shipmentAt(0).code() + batch.shipmentAt(1).code() + batch.shipmentAt(2).code(), firstOrder);
 }

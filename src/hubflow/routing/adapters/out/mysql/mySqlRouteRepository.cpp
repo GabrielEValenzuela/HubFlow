@@ -58,15 +58,16 @@ void MySqlRouteRepository::add(const domain::RouteRecord& record)
                           record.courier.name,
                           Vocabulary::name(record.algorithm),
                           std::int64_t {record.createdAt}});
-    for (std::size_t i = 0; i < record.stops.size(); ++i)
+    for (std::size_t stopIndex = 0; stopIndex < record.stops.size(); ++stopIndex)
     {
-        const auto& stop = record.stops[i];
+        const auto& stop = record.stops[stopIndex];
         m_connection.execute(
             INSERT_STOP,
             {record.id, std::uint64_t {stop.order}, stop.shipmentCode, stop.nodeId, Vocabulary::name(stop.outcome)});
-        for (std::size_t j = 0; j < stop.companions.size(); ++j)
+        for (std::size_t companionIndex = 0; companionIndex < stop.companions.size(); ++companionIndex)
         {
-            m_connection.execute(INSERT_COMPANION, {record.id, std::uint64_t {stop.order}, stop.companions[j]});
+            m_connection.execute(INSERT_COMPANION,
+                                 {record.id, std::uint64_t {stop.order}, stop.companions[companionIndex]});
         }
     }
 }

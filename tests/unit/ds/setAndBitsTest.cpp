@@ -31,41 +31,41 @@ hubflow::ds::Set<std::string> setOf(std::initializer_list<const char*> values)
     return set;
 }
 
-struct IntLess
+struct AscendingIntPriority
 {
-    bool operator()(const int a, const int b) const
+    bool operator()(const int first, const int second) const
     {
-        return a < b;
+        return first < second;
     }
 };
 } // namespace
 
-TEST(BitSet, SetResetTestCountAndAny)
+TEST(BitSet, SetUnsetIsSetCountAndAnySet)
 {
     hubflow::ds::BitSet<5> bits;
-    EXPECT_FALSE(bits.any());
-    EXPECT_EQ(bits.count(), 0U);
+    EXPECT_FALSE(bits.isAnySet());
+    EXPECT_EQ(bits.activeCount(), 0U);
     bits.set(0);
     bits.set(1);
     bits.set(2);
-    EXPECT_TRUE(bits.test(2));
-    EXPECT_FALSE(bits.test(3));
-    EXPECT_EQ(bits.count(), 3U);
-    EXPECT_EQ(bits.raw(), 0b00111U);
-    bits.reset(1);
-    EXPECT_EQ(bits.raw(), 0b00101U);
+    EXPECT_TRUE(bits.isSet(2));
+    EXPECT_FALSE(bits.isSet(3));
+    EXPECT_EQ(bits.activeCount(), 3U);
+    EXPECT_EQ(bits.toWord(), 0b00111U);
+    bits.unset(1);
+    EXPECT_EQ(bits.toWord(), 0b00101U);
     EXPECT_THROW(bits.set(5), std::out_of_range);
-    EXPECT_THROW(static_cast<void>(bits.test(7)), std::out_of_range);
+    EXPECT_THROW(static_cast<void>(bits.isSet(7)), std::out_of_range);
 }
 
 TEST(BitSet, BitwiseOperators)
 {
-    const auto a = hubflow::ds::BitSet<5>::fromRaw(0b01111);
-    const auto b = hubflow::ds::BitSet<5>::fromRaw(0b10111);
-    EXPECT_EQ((a & b).raw(), 0b00111U);
-    EXPECT_EQ((a | b).raw(), 0b11111U);
-    EXPECT_EQ((a ^ b).raw(), 0b11000U);
-    EXPECT_EQ(hubflow::ds::BitSet<5>::fromRaw(0xFF).raw(), 0b11111U);
+    const auto first  = hubflow::ds::BitSet<5>::fromWord(0b01111);
+    const auto second = hubflow::ds::BitSet<5>::fromWord(0b10111);
+    EXPECT_EQ((first & second).toWord(), 0b00111U);
+    EXPECT_EQ((first | second).toWord(), 0b11111U);
+    EXPECT_EQ((first ^ second).toWord(), 0b11000U);
+    EXPECT_EQ(hubflow::ds::BitSet<5>::fromWord(0xFF).toWord(), 0b11111U);
 }
 
 TEST(Set, KeepsUniqueSortedElements)
@@ -93,21 +93,21 @@ TEST(Set, UnionIntersectionAndDifference)
 
 TEST(Set, EdgeCasesWithEmptyAndDisjointSets)
 {
-    const hubflow::ds::Set<std::string> empty;
-    const auto                          a = setOf({"PKG-1001", "PKG-1003"});
-    const auto                          b = setOf({"PKG-1002"});
-    EXPECT_EQ(items(a.unite(empty)), items(a));
-    EXPECT_TRUE(a.intersect(b).empty());
-    EXPECT_TRUE(empty.difference(a).empty());
-    hubflow::ds::Set<std::string> copy {a};
+    const hubflow::ds::Set<std::string> emptySet;
+    const auto                          firstSet  = setOf({"PKG-1001", "PKG-1003"});
+    const auto                          secondSet = setOf({"PKG-1002"});
+    EXPECT_EQ(items(firstSet.unite(emptySet)), items(firstSet));
+    EXPECT_TRUE(firstSet.intersect(secondSet).isEmpty());
+    EXPECT_TRUE(emptySet.difference(firstSet).isEmpty());
+    hubflow::ds::Set<std::string> copy {firstSet};
     copy.insert("PKG-1009");
-    EXPECT_EQ(a.size(), 2U);
+    EXPECT_EQ(firstSet.size(), 2U);
     EXPECT_EQ(copy.size(), 3U);
 }
 
 TEST(MinHeap, PopsInPriorityOrder)
 {
-    hubflow::ds::MinHeap<int, IntLess> heap;
+    hubflow::ds::MinHeap<int, AscendingIntPriority> heap;
     for (int value : {5, 1, 4, 2, 3})
     {
         heap.push(value);
@@ -124,26 +124,26 @@ TEST(MinHeap, PopsInPriorityOrder)
 TEST(Graph, StoresUndirectedWeightedEdges)
 {
     hubflow::ds::Graph<std::string> graph;
-    const auto                      a = graph.addVertex("A");
-    const auto                      b = graph.addVertex("B");
-    const auto                      c = graph.addVertex("C");
-    graph.addEdge(a, b, 1.5);
-    graph.addEdge(b, c, 2.0);
+    const auto                      harbor   = graph.addVertex("Harbor");
+    const auto                      junction = graph.addVertex("Junction");
+    const auto                      depot    = graph.addVertex("Depot");
+    graph.addEdge(harbor, junction, 1.5);
+    graph.addEdge(junction, depot, 2.0);
 
     std::vector<std::size_t> neighbours;
-    graph.forEachNeighbor(b,
-                          [&neighbours](std::size_t to, double)
+    graph.forEachNeighbor(junction,
+                          [&neighbours](std::size_t destination, double)
                           {
-                              neighbours.push_back(to);
+                              neighbours.push_back(destination);
                           });
-    EXPECT_EQ(neighbours, (std::vector<std::size_t> {a, c}));
+    EXPECT_EQ(neighbours, (std::vector<std::size_t> {harbor, depot}));
     EXPECT_EQ(graph.edgeCount(), 2U);
     EXPECT_EQ(graph.findVertex(
                   [](const std::string& name)
                   {
-                      return name == "C";
+                      return name == "Depot";
                   }),
-              c);
+              depot);
     EXPECT_FALSE(graph
                      .findVertex(
                          [](const std::string& name)
@@ -151,5 +151,5 @@ TEST(Graph, StoresUndirectedWeightedEdges)
                              return name == "Z";
                          })
                      .has_value());
-    EXPECT_THROW(graph.addEdge(a, a, 1.0), std::invalid_argument);
+    EXPECT_THROW(graph.addEdge(harbor, harbor, 1.0), std::invalid_argument);
 }

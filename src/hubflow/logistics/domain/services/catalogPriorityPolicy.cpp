@@ -14,7 +14,7 @@ unsigned CatalogPriorityPolicy::priorityOf(const Shipment& shipment) const
     return pService == nullptr ? 0 : pService->priority();
 }
 
-unsigned CatalogPriorityPolicy::highest() const
+unsigned CatalogPriorityPolicy::highestPriority() const
 {
     unsigned top {0};
     m_services.forEach(

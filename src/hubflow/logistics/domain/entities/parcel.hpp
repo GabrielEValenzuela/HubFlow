@@ -43,8 +43,8 @@ public:
     const Dimensions&  dimensions() const noexcept;
     double             volumetricWeightKg() const noexcept;
     double             billableWeightKg() const noexcept;
-    bool               delivered() const noexcept;
-    ParcelData         data() const noexcept;
+    bool               isDelivered() const noexcept;
+    ParcelData         details() const noexcept;
 
 private:
     std::string m_label;

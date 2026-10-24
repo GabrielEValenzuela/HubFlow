@@ -230,7 +230,7 @@ TEST(Extensibility, DeactivatingAZoneFollowsTheDomainRules)
     app.updateRoadNode.execute(
         app.admin(), "O2", routing::application::UpdateRoadNodeRequest {std::string {"CENTRO"}, std::nullopt});
     const auto& closed = app.updateZone.execute(app.admin(), "OESTE", close);
-    EXPECT_FALSE(closed.active());
+    EXPECT_FALSE(closed.isActive());
     EXPECT_FALSE(storage.catalogs.zones.back().active);
     EXPECT_TRUE(audited(storage, "zone.changed"));
     EXPECT_TRUE(storage.maps.changed.at("O2").zone == "CENTRO");
@@ -356,7 +356,7 @@ TEST(Extensibility, FeaturesAttachToShipmentsAndArePersisted)
     const auto&              shipment = restored.getShipment.execute(restored.operador(), "PKG-3001");
     EXPECT_TRUE(shipment.hasFeature("FRAGIL"));
     EXPECT_TRUE(shipment.hasFeature("DOCUMENTOS"));
-    EXPECT_FALSE(restored.listShipmentFeatures.execute(restored.admin()).require("FRAGIL").active());
+    EXPECT_FALSE(restored.listShipmentFeatures.execute(restored.admin()).require("FRAGIL").isActive());
 }
 
 TEST(Extensibility, RolePermissionsAreLoadedFromData)

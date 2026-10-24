@@ -13,13 +13,13 @@ PreviewRoute::PreviewRoute(const RoutingModel& model)
 }
 
 domain::SearchTrace PreviewRoute::execute(const shared::application::Principal& principal,
-                                          const std::string&                    fromId,
-                                          const std::string&                    toId,
+                                          const std::string&                    originId,
+                                          const std::string&                    destinationId,
                                           domain::SearchAlgorithm               algorithm) const
 {
     principal.require(identity::domain::Permission::ResolveStops);
     const domain::PumAgent agent {m_model.map, domain::SearchStrategy::of(algorithm)};
-    return agent.travel(m_model.map.require(fromId), m_model.map.require(toId));
+    return agent.travel(m_model.map.require(originId), m_model.map.require(destinationId));
 }
 
 } // namespace hubflow::routing::application

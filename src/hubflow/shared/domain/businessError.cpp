@@ -23,7 +23,7 @@ business_error::business_error(const ErrorKind     kind,
 {
 }
 
-ErrorKind business_error::kind() const noexcept
+ErrorKind business_error::errorKind() const noexcept
 {
     return m_kind;
 }

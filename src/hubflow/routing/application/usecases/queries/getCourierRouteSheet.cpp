@@ -14,13 +14,13 @@ CourierRouteSheet GetCourierRouteSheet::execute(const shared::application::Princ
 {
     const domain::DeliveryRoute& route = m_getRoute.execute(principal, routeId);
     CourierRouteSheet            sheet {route, {}};
-    for (std::size_t i = 0; i < route.stops().size(); ++i)
+    for (std::size_t stopIndex = 0; stopIndex < route.stops().size(); ++stopIndex)
     {
         std::vector<std::optional<StopShipmentDetails>> details;
-        const auto                                      codes = route.stops()[i].shipmentCodes();
-        for (std::size_t j = 0; j < codes.size(); ++j)
+        const auto                                      codes = route.stops()[stopIndex].shipmentCodes();
+        for (std::size_t codeIndex = 0; codeIndex < codes.size(); ++codeIndex)
         {
-            details.push_back(m_directory.detailsOf(codes[j]));
+            details.push_back(m_directory.detailsOf(codes[codeIndex]));
         }
         sheet.stopDetails.push_back(details);
     }

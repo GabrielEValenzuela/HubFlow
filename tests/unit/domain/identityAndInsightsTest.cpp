@@ -131,10 +131,10 @@ TEST(StateComparison, UsesBitwiseOperations)
     pSecond->classify("clasificado", hubflow::test::actor());
 
     const auto comparison = insights::domain::compareStates(*pFirst, *pSecond);
-    EXPECT_EQ(comparison.common.raw(), 0b00001U);
-    EXPECT_EQ(comparison.onlyFirst.raw(), 0b01100U);
-    EXPECT_EQ(comparison.onlySecond.raw(), 0b00010U);
-    EXPECT_EQ(comparison.either.count(), 4U);
+    EXPECT_EQ(comparison.common.toWord(), 0b00001U);
+    EXPECT_EQ(comparison.onlyFirst.toWord(), 0b01100U);
+    EXPECT_EQ(comparison.onlySecond.toWord(), 0b00010U);
+    EXPECT_EQ(comparison.either.activeCount(), 4U);
     delete pFirst;
     delete pSecond;
 }

@@ -213,7 +213,7 @@ TEST_F(PendingShipmentsTest, HandlesEmptyDuplicatedAndSingleElementCases)
     EXPECT_THROW(catalog.adopt(Shipment::receive(draft("PKG-0001", "EXPRESS"), tickets.next(), actor())),
                  business_error);
     EXPECT_EQ(pending.popFront(), &only);
-    EXPECT_TRUE(pending.empty());
+    EXPECT_TRUE(pending.isEmpty());
     receive(draft("PKG-0002", "EXPRESS"));
     EXPECT_EQ(pendingCodes(), (std::vector<std::string> {"PKG-0002"}));
 }
@@ -225,9 +225,9 @@ TEST(Shipment, EnforcesStateMachineAndTracksStateBits)
     EXPECT_THROW(pShipment->deliver("x", actor()), business_error);
     pShipment->dispatch("salida", actor());
     pShipment->reschedule("ausente", tickets.next(), actor());
-    EXPECT_TRUE(pShipment->stateHistory().test(bitOf(ShipmentStatus::Reprogramado)));
-    EXPECT_FALSE(pShipment->stateHistory().test(bitOf(ShipmentStatus::Clasificado)));
-    EXPECT_EQ(pShipment->stateHistory().count(), 3U);
+    EXPECT_TRUE(pShipment->stateHistory().isSet(bitOf(ShipmentStatus::Reprogramado)));
+    EXPECT_FALSE(pShipment->stateHistory().isSet(bitOf(ShipmentStatus::Clasificado)));
+    EXPECT_EQ(pShipment->stateHistory().activeCount(), 3U);
     pShipment->dispatch("segundo intento", actor());
     pShipment->confirmAllParcels(actor());
     pShipment->deliver("ok", actor());

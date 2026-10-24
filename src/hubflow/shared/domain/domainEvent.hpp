@@ -24,7 +24,7 @@ public:
     /// @brief Despacha el evento al método @c on(...) correspondiente del visitante.
     virtual void accept(DomainEventVisitor& visitor) const = 0;
 
-    const ActorContext& context() const noexcept;
+    const ActorContext& actorContext() const noexcept;
 
 private:
     ActorContext m_context;

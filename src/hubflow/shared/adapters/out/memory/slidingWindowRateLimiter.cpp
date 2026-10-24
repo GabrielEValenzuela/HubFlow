@@ -40,15 +40,15 @@ application::RateDecision SlidingWindowRateLimiter::attempt(const std::string& k
 
 void SlidingWindowRateLimiter::discardExpired(const std::int64_t now)
 {
-    for (auto it = m_attempts.begin(); it != m_attempts.end();)
+    for (auto attemptsEntry = m_attempts.begin(); attemptsEntry != m_attempts.end();)
     {
-        if (it->second.empty() || it->second.back() <= now - m_windowSeconds)
+        if (attemptsEntry->second.empty() || attemptsEntry->second.back() <= now - m_windowSeconds)
         {
-            it = m_attempts.erase(it);
+            attemptsEntry = m_attempts.erase(attemptsEntry);
         }
         else
         {
-            ++it;
+            ++attemptsEntry;
         }
     }
 }

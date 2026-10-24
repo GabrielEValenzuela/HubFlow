@@ -70,9 +70,9 @@ MySqlShipmentRepository::MySqlShipmentRepository(platform::MySqlConnection& conn
 void MySqlShipmentRepository::add(const ShipmentState& state)
 {
     double totalKg {0.0};
-    for (std::size_t i = 0; i < state.draft.parcels.size(); ++i)
+    for (std::size_t parcelIndex = 0; parcelIndex < state.draft.parcels.size(); ++parcelIndex)
     {
-        totalKg += state.draft.parcels[i].weightKg;
+        totalKg += state.draft.parcels[parcelIndex].weightKg;
     }
     m_connection.execute(INSERT_SHIPMENT,
                          {state.draft.id,
@@ -88,16 +88,16 @@ void MySqlShipmentRepository::add(const ShipmentState& state)
                           std::uint64_t {state.attempts},
                           std::uint64_t {state.stateBits},
                           state.ticket});
-    for (std::size_t i = 0; i < state.draft.features.size(); ++i)
+    for (std::size_t featureIndex = 0; featureIndex < state.draft.features.size(); ++featureIndex)
     {
-        m_connection.execute(INSERT_FEATURE_LINK, {state.draft.code, state.draft.features[i]});
+        m_connection.execute(INSERT_FEATURE_LINK, {state.draft.code, state.draft.features[featureIndex]});
     }
-    for (std::size_t i = 0; i < state.draft.parcels.size(); ++i)
+    for (std::size_t parcelIndex = 0; parcelIndex < state.draft.parcels.size(); ++parcelIndex)
     {
-        const auto& parcel = state.draft.parcels[i];
+        const auto& parcel = state.draft.parcels[parcelIndex];
         m_connection.execute(INSERT_PARCEL,
                              {state.draft.id,
-                              std::uint64_t {i + 1},
+                              std::uint64_t {parcelIndex + 1},
                               parcel.weightKg,
                               parcel.lengthCm,
                               parcel.widthCm,
@@ -114,11 +114,12 @@ void MySqlShipmentRepository::update(const ShipmentState& state)
                           std::uint64_t {state.stateBits},
                           state.ticket,
                           state.draft.id});
-    for (std::size_t i = 0; i < state.draft.parcels.size(); ++i)
+    for (std::size_t parcelIndex = 0; parcelIndex < state.draft.parcels.size(); ++parcelIndex)
     {
-        m_connection.execute(
-            UPDATE_PARCEL,
-            {std::uint64_t {state.draft.parcels[i].delivered ? 1U : 0U}, state.draft.id, std::uint64_t {i + 1}});
+        m_connection.execute(UPDATE_PARCEL,
+                             {std::uint64_t {state.draft.parcels[parcelIndex].delivered ? 1U : 0U},
+                              state.draft.id,
+                              std::uint64_t {parcelIndex + 1}});
     }
 }
 

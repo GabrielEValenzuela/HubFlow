@@ -61,9 +61,9 @@ const domain::DeliveryRoute& ResolveRouteStop::execute(const shared::application
         const std::string note {request.note.empty() ? fallback : request.note};
         const auto        codes = stop.shipmentCodes();
         ds::DynamicArray<logistics::domain::Shipment*> shipments;
-        for (std::size_t i = 0; i < codes.size(); ++i)
+        for (std::size_t codeIndex = 0; codeIndex < codes.size(); ++codeIndex)
         {
-            logistics::domain::Shipment& shipment = m_logistics.catalog.require(codes[i]);
+            logistics::domain::Shipment& shipment = m_logistics.catalog.require(codes[codeIndex]);
             if (delivered && !request.confirmAllParcels && shipment.pendingParcelCount() > 0)
             {
                 throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
@@ -73,22 +73,23 @@ const domain::DeliveryRoute& ResolveRouteStop::execute(const shared::application
             }
             shipments.pushBack(&shipment);
         }
-        for (std::size_t i = 0; i < shipments.size(); ++i)
+        for (std::size_t shipmentIndex = 0; shipmentIndex < shipments.size(); ++shipmentIndex)
         {
             if (delivered)
             {
-                shipments[i]->confirmAllParcels(context);
-                shipments[i]->deliver(note, context);
+                shipments[shipmentIndex]->confirmAllParcels(context);
+                shipments[shipmentIndex]->deliver(note, context);
             }
             else
             {
-                shipments[i]->reschedule(partialNote(note, *shipments[i]), m_logistics.tickets.next(), context);
+                shipments[shipmentIndex]->reschedule(
+                    partialNote(note, *shipments[shipmentIndex]), m_logistics.tickets.next(), context);
             }
         }
         route.resolveStop(request.order, request.outcome, context);
-        for (std::size_t i = 0; i < shipments.size(); ++i)
+        for (std::size_t shipmentIndex = 0; shipmentIndex < shipments.size(); ++shipmentIndex)
         {
-            shipments[i]->publishEvents(m_bus);
+            shipments[shipmentIndex]->publishEvents(m_bus);
         }
         route.publishEvents(m_bus);
     }

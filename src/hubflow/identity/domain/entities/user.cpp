@@ -140,7 +140,7 @@ Role User::role() const noexcept
     return m_state.role;
 }
 
-bool User::active() const noexcept
+bool User::isActive() const noexcept
 {
     return m_state.active;
 }

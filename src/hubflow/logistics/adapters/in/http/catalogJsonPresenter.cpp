@@ -6,8 +6,8 @@ namespace
 {
 using platform::Json;
 
-template <typename Catalog, typename Presenter>
-Json listOf(const Catalog& catalog, Presenter present)
+template <typename TCatalog, typename TPresenter>
+Json listOf(const TCatalog& catalog, TPresenter present)
 {
     Json items = Json::array();
     catalog.forEach(
@@ -21,7 +21,7 @@ Json listOf(const Catalog& catalog, Presenter present)
 
 Json CatalogJsonPresenter::zone(const domain::Zone& zone)
 {
-    return Json {{"code", zone.code()}, {"name", zone.name()}, {"active", zone.active()}};
+    return Json {{"code", zone.code()}, {"name", zone.name()}, {"active", zone.isActive()}};
 }
 
 Json CatalogJsonPresenter::zones(const domain::ZoneCatalog& zones)
@@ -34,7 +34,7 @@ Json CatalogJsonPresenter::serviceLevel(const domain::ServiceLevel& service)
     return Json {{"code", service.code()},
                  {"name", service.name()},
                  {"priority", service.priority()},
-                 {"active", service.active()}};
+                 {"active", service.isActive()}};
 }
 
 Json CatalogJsonPresenter::serviceLevels(const domain::ServiceLevelCatalog& services)
@@ -44,7 +44,7 @@ Json CatalogJsonPresenter::serviceLevels(const domain::ServiceLevelCatalog& serv
 
 Json CatalogJsonPresenter::feature(const domain::ShipmentFeature& feature)
 {
-    return Json {{"code", feature.code()}, {"name", feature.name()}, {"active", feature.active()}};
+    return Json {{"code", feature.code()}, {"name", feature.name()}, {"active", feature.isActive()}};
 }
 
 Json CatalogJsonPresenter::features(const domain::FeatureCatalog& features)

@@ -34,7 +34,7 @@ Convenciones de rutas (todas bajo `src/hubflow/` salvo que se indique otra cosa)
 | Recursividad | Resumen recursivo por zona sobre los nodos de pendientes (y envío más pesado como desafío) | `logistics/domain/services/zoneReport` (`summarizeZone`, `heaviestInZone`); `logistics/application/usecases/queries/summarizeZone`, `findHeaviestShipment` | `PendingShipmentsTest.RecursiveZoneSummaryCountsWeightAndExpress` |
 | RF10 | Índice BST por código, búsqueda con camino, in-order, altura | `datastructures/binarySearchTree.hpp`, `ShipmentCatalog::bst`; `insights/application/usecases/queries/lookupInBst`, `getBst` | `BinarySearchTree.InsertsRejectsDuplicatesAndTraversesInOrder`, `BinarySearchTree.FindReportsPathAndVisitedNodes`, `BinarySearchTree.HeightConventionAndDegeneration` |
 | RF11 | Índice B+ (orden 4), búsqueda y rango por hojas enlazadas | `datastructures/bPlusTree.hpp`, `ShipmentCatalog::bPlusTree`; `insights/application/usecases/queries/lookupInBPlusTree`, `rangeInBPlusTree`, `getBPlusTree` | `BPlusTree.*` |
-| RF12 | BitSet con los estados por los que pasó cada envío y su comparación | `datastructures/bitSet.hpp`, `logistics/domain/entities/shipment` (`StateHistory`), `insights/domain/services/stateComparison`; `insights/application/usecases/queries/compareShipmentStates` | `BitSet.SetResetTestCountAndAny`, `BitSet.BitwiseOperators`, `StateComparison.UsesBitwiseOperations`, `Shipment.EnforcesStateMachineAndTracksStateBits` |
+| RF12 | BitSet con los estados por los que pasó cada envío y su comparación | `datastructures/bitSet.hpp`, `logistics/domain/entities/shipment` (`StateHistory`), `insights/domain/services/stateComparison`; `insights/application/usecases/queries/compareShipmentStates` | `BitSet.SetUnsetIsSetCountAndAnySet`, `BitSet.BitwiseOperators`, `StateComparison.UsesBitwiseOperations`, `Shipment.EnforcesStateMachineAndTracksStateBits` |
 | RF13 | Set propio y conjuntos por zona/servicio con unión, intersección y diferencia | `datastructures/set.hpp`, `insights/domain/services/codeSet`; `insights/application/usecases/queries/getCodeSet`, `combineCodeSets` | `Set.KeepsUniqueSortedElements`, `Set.UnionIntersectionAndDifference`, `Set.EdgeCasesWithEmptyAndDisjointSets`, `CodeSets.BuildsByZoneAndServiceAndCombines`, `InsightsFlow.CombinesSetsAndResolvesShipmentsThroughBPlus` |
 | RF14 | Consulta avanzada integrada (B+, rango, BitSet, conjuntos) | Casos de uso del contexto `insights` (ver RF10..RF13) | `InsightsFlow.*` |
 
@@ -55,13 +55,34 @@ Convenciones de rutas (todas bajo `src/hubflow/` salvo que se indique otra cosa)
 | 11 Búsqueda lineal y binaria | `BatchSearchTest.LinearAndBinaryReportComparisons` |
 | 12 BST / ABB | `BinarySearchTree.InsertsRejectsDuplicatesAndTraversesInOrder`, `BinarySearchTree.FindReportsPathAndVisitedNodes`, `BinarySearchTree.HeightConventionAndDegeneration`, `ShipmentLookupTest.StrategiesCompareVisitedNodes` |
 
+## Operaciones pedidas por el enunciado -> nombre en el código
+
+| Operación pedida | Nombre en el código |
+|---|---|
+| test(pos) | `BitSet::isSet(position)` |
+| set(pos) / reset(pos) | `BitSet::set(position)` / `BitSet::unset(position)` |
+| count() | `BitSet::activeCount()` |
+| any() / none() | `BitSet::isAnySet()` / `BitSet::isNoneSet()` |
+| Palabra entera del BitSet | `BitSet::toWord()` / `BitSet::fromWord(word)` |
+| unión / intersección / diferencia | `Set::unite(other)` / `Set::intersect(other)` / `Set::difference(other)` |
+| insertar / eliminar / pertenece | `Set::insert` / `Set::remove` / `Set::contains` |
+| vacío (todas las estructuras) | `isEmpty()` |
+| encolar / desencolar / frente / final | `Queue::enqueue` / `dequeue` / `front` / `rear` |
+| apilar / desapilar / tope | `Stack::push` / `pop` / `top` |
+| inserción y búsqueda en BST | `BinarySearchTree::insert(key, pValue)` / `find(key)` |
+| búsqueda por rango en B+ | `BPlusTree::range(from, to, visit)` |
+| arista no dirigida u-v | `Graph::addEdge(origin, destination, weight)` |
+| vecinos de un vértice | `Graph::forEachNeighbor(origin, visit)` |
+| tomar el siguiente de la cola de prioridad | `MinHeap::pop()` (criterio `TPriorityOrder`) |
+| estado de un envío ya cursado | `Shipment::stateHistory()` consultado con `BitSet::isSet` |
+
 ## Casos de prueba de la extensión (B+, BitSet, Set)
 
 | Caso | Tests |
 |---|---|
 | 1 Árbol B+ | `BPlusTree.SplitsLeavesAndInternalNodesKeepingLeavesAtSameDepth`, `BPlusTree.RootSplitsAfterFourthKey` |
 | 2 Búsqueda por rango | `BPlusTree.RangeUsesLeafLinksAndReturnsAscendingKeys` |
-| 3 BitSet | `BitSet.SetResetTestCountAndAny`, `BitSet.BitwiseOperators`, `StateComparison.UsesBitwiseOperations` |
+| 3 BitSet | `BitSet.SetUnsetIsSetCountAndAnySet`, `BitSet.BitwiseOperators`, `StateComparison.UsesBitwiseOperations` |
 | 4 Set | `Set.KeepsUniqueSortedElements`, `Set.UnionIntersectionAndDifference`, `CodeSets.BuildsByZoneAndServiceAndCombines` |
 | 5 Casos límite | `BPlusTree.EmptyTreeQueriesAreSafe`, `Set.EdgeCasesWithEmptyAndDisjointSets` |
 | 6 Integración | `InsightsFlow.NewShipmentIsReachableThroughEveryStructure`, `InsightsFlow.CombinesSetsAndResolvesShipmentsThroughBPlus` |

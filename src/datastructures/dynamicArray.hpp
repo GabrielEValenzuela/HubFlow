@@ -13,17 +13,17 @@ namespace hubflow::ds
  * pushBack y popBack son O(1) amortizado (la capacidad se duplica al llenarse); el acceso por
  * índice es O(1) y valida el rango.
  *
- * @tparam T tipo almacenado (construible por defecto y copiable).
+ * @tparam TElement tipo almacenado (construible por defecto y copiable).
  */
-template <typename T>
+template <typename TElement>
 class DynamicArray final
 {
 public:
     DynamicArray() = default;
 
     /// @brief Crea @p initialSize elementos con el valor @p fill.
-    explicit DynamicArray(const std::size_t initialSize, const T& fill = T {})
-        : m_pData {initialSize > 0 ? new T[initialSize] : nullptr}
+    explicit DynamicArray(const std::size_t initialSize, const TElement& fill = TElement {})
+        : m_pData {initialSize > 0 ? new TElement[initialSize] : nullptr}
         , m_size {initialSize}
         , m_capacity {initialSize}
     {
@@ -39,7 +39,7 @@ public:
     }
 
     DynamicArray(const DynamicArray& other)
-        : m_pData {other.m_capacity > 0 ? new T[other.m_capacity] : nullptr}
+        : m_pData {other.m_capacity > 0 ? new TElement[other.m_capacity] : nullptr}
         , m_size {other.m_size}
         , m_capacity {other.m_capacity}
     {
@@ -84,7 +84,7 @@ public:
         return *this;
     }
 
-    void pushBack(const T& value)
+    void pushBack(const TElement& value)
     {
         if (m_size == m_capacity)
         {
@@ -104,13 +104,13 @@ public:
     }
 
     /// @throws std::out_of_range si @p index >= size().
-    T& operator[](const std::size_t index)
+    TElement& operator[](const std::size_t index)
     {
         return m_pData[checked(index)];
     }
 
     /// @throws std::out_of_range si @p index >= size().
-    const T& operator[](const std::size_t index) const
+    const TElement& operator[](const std::size_t index) const
     {
         return m_pData[checked(index)];
     }
@@ -125,7 +125,7 @@ public:
         return m_size;
     }
 
-    bool empty() const noexcept
+    bool isEmpty() const noexcept
     {
         return m_size == 0;
     }
@@ -145,7 +145,7 @@ private:
     void grow()
     {
         const std::size_t newCapacity {m_capacity == 0 ? INITIAL_CAPACITY : m_capacity * 2};
-        T*                pBigger = new T[newCapacity];
+        TElement*         pBigger = new TElement[newCapacity];
         for (std::size_t i = 0; i < m_size; ++i)
         {
             pBigger[i] = m_pData[i];
@@ -157,7 +157,7 @@ private:
 
     void swap(DynamicArray& other) noexcept
     {
-        T*                pData {m_pData};
+        TElement*         pData {m_pData};
         const std::size_t size {m_size};
         const std::size_t capacity {m_capacity};
         m_pData          = other.m_pData;
@@ -168,7 +168,7 @@ private:
         other.m_capacity = capacity;
     }
 
-    T*          m_pData {nullptr};
+    TElement*   m_pData {nullptr};
     std::size_t m_size {0};
     std::size_t m_capacity {0};
 };

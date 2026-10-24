@@ -13,8 +13,9 @@ class ShipmentOrdering
 public:
     virtual ~ShipmentOrdering() = default;
 
-    /// @brief true si @p a debe quedar antes que @p b.
-    virtual bool precedes(const logistics::domain::Shipment& a, const logistics::domain::Shipment& b) const = 0;
+    /// @brief true si @p candidate debe quedar antes que @p existing.
+    virtual bool precedes(const logistics::domain::Shipment& candidate,
+                          const logistics::domain::Shipment& existing) const = 0;
 
     /// @brief Criterio que representa la estrategia.
     virtual SortCriteria criteria() const noexcept = 0;
@@ -30,7 +31,8 @@ public:
 class CodeAscendingOrdering final : public ShipmentOrdering
 {
 private:
-    bool         precedes(const logistics::domain::Shipment& a, const logistics::domain::Shipment& b) const override;
+    bool         precedes(const logistics::domain::Shipment& candidate,
+                          const logistics::domain::Shipment& existing) const override;
     SortCriteria criteria() const noexcept override;
 };
 
@@ -38,7 +40,8 @@ private:
 class WeightDescendingOrdering final : public ShipmentOrdering
 {
 private:
-    bool         precedes(const logistics::domain::Shipment& a, const logistics::domain::Shipment& b) const override;
+    bool         precedes(const logistics::domain::Shipment& candidate,
+                          const logistics::domain::Shipment& existing) const override;
     SortCriteria criteria() const noexcept override;
 };
 

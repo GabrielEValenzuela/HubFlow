@@ -30,7 +30,7 @@ DeliveryRoute* DeliveryRoute::assign(const std::uint64_t                 id,
                                      const PumAgent&                     agent,
                                      const shared::domain::ActorContext& context)
 {
-    if (stops.empty())
+    if (stops.isEmpty())
     {
         throw shared::domain::business_error {
             shared::domain::ErrorKind::Conflict, "route.no_stops", "La ruta necesita al menos una parada"};
@@ -66,12 +66,12 @@ DeliveryRoute* DeliveryRoute::restore(const RouteRecord& record, const PumAgent&
 
 void DeliveryRoute::plan(const PumAgent& agent)
 {
-    const RoadMap&    map = agent.map();
-    const std::size_t hub {map.hub()};
+    const RoadMap&    roadMap = agent.roadMap();
+    const std::size_t hub {roadMap.hub()};
     std::size_t       current {hub};
-    for (std::size_t i = 0; i <= m_stops.size(); ++i)
+    for (std::size_t stopIndex = 0; stopIndex <= m_stops.size(); ++stopIndex)
     {
-        const std::size_t target {i < m_stops.size() ? map.require(m_stops[i].nodeId) : hub};
+        const std::size_t target {stopIndex < m_stops.size() ? roadMap.require(m_stops[stopIndex].nodeId) : hub};
         SearchTrace*      pTrace = new SearchTrace {agent.travel(current, target)};
         m_segments.pushBack(pTrace);
         if (!pTrace->metrics.solutionFound)
@@ -162,9 +162,9 @@ const ds::DynamicArray<RouteStop>& DeliveryRoute::stops() const noexcept
 RouteStatus DeliveryRoute::status() const noexcept
 {
     bool pending {false};
-    for (std::size_t i = 0; i < m_stops.size() && !pending; ++i)
+    for (std::size_t stopIndex = 0; stopIndex < m_stops.size() && !pending; ++stopIndex)
     {
-        pending = m_stops[i].outcome == StopOutcome::Pending;
+        pending = m_stops[stopIndex].outcome == StopOutcome::Pending;
     }
     return pending ? RouteStatus::InProgress : RouteStatus::Completed;
 }

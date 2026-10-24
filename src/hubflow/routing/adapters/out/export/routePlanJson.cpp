@@ -12,9 +12,9 @@ using shared::application::Vocabulary;
 json idsOf(const domain::RoadMap& map, const ds::DynamicArray<std::size_t>& indexes)
 {
     json ids = json::array();
-    for (std::size_t i = 0; i < indexes.size(); ++i)
+    for (std::size_t pathPosition = 0; pathPosition < indexes.size(); ++pathPosition)
     {
-        ids.push_back(map.node(indexes[i]).id);
+        ids.push_back(map.node(indexes[pathPosition]).id);
     }
     return ids;
 }
@@ -55,9 +55,9 @@ json segmentOf(const domain::RoadMap& map, const domain::SearchTrace& trace)
 json nodesOf(const domain::RoadMap& map)
 {
     json nodes = json::array();
-    for (std::size_t i = 0; i < map.nodeCount(); ++i)
+    for (std::size_t nodeIndex = 0; nodeIndex < map.nodeCount(); ++nodeIndex)
     {
-        const auto& node = map.node(i);
+        const auto& node = map.node(nodeIndex);
         nodes.push_back({{"id", node.id},
                          {"label", node.label},
                          {"zone", node.zone},
@@ -73,9 +73,9 @@ json edgesOf(const domain::RoadMap& map)
 {
     json edges = json::array();
     map.graph().forEachEdge(
-        [&map, &edges](const std::size_t from, const std::size_t to, const double costKm)
+        [&map, &edges](const std::size_t origin, const std::size_t destination, const double costKm)
         {
-            edges.push_back({{"from", map.node(from).id}, {"to", map.node(to).id}, {"costKm", costKm}});
+            edges.push_back({{"from", map.node(origin).id}, {"to", map.node(destination).id}, {"costKm", costKm}});
         });
     return edges;
 }
@@ -83,9 +83,9 @@ json edgesOf(const domain::RoadMap& map)
 json goalsOf(const domain::DeliveryRoute& route)
 {
     json goals = json::array();
-    for (std::size_t i = 0; i < route.stops().size(); ++i)
+    for (std::size_t stopIndex = 0; stopIndex < route.stops().size(); ++stopIndex)
     {
-        goals.push_back(route.stops()[i].nodeId);
+        goals.push_back(route.stops()[stopIndex].nodeId);
     }
     return goals;
 }
@@ -110,9 +110,9 @@ json RoutePlanJson::sequence(const domain::RoadMap& map, const domain::DeliveryR
         [&map, &segments, &fullPath](const domain::SearchTrace& trace)
         {
             segments.push_back(segmentOf(map, trace));
-            for (std::size_t i = fullPath.empty() ? 0 : 1; i < trace.path.size(); ++i)
+            for (std::size_t pathPosition = fullPath.empty() ? 0 : 1; pathPosition < trace.path.size(); ++pathPosition)
             {
-                fullPath.push_back(map.node(trace.path[i]).id);
+                fullPath.push_back(map.node(trace.path[pathPosition]).id);
             }
         });
     return {{"algorithm", Vocabulary::name(route.algorithm())},

@@ -20,7 +20,7 @@ cabecera).
 | | inOrder / height | O(n) | O(n) |
 | Árbol B+ (orden 4) | insert / find | O(log n) | O(log n), hojas a igual profundidad |
 | | range | O(log n) | O(log n + k) por hojas enlazadas |
-| BitSet | set / reset / test / any / none | O(1) | O(1) |
+| BitSet | set / unset / isSet / isAnySet / isNoneSet | O(1) | O(1) |
 | | AND / OR / XOR | O(1) | O(1), sobre la palabra entera |
 | | count | O(k) | O(k), k = bits activos (Kernighan) |
 | Set (lista ordenada) | insert / remove / contains | O(1) | O(n) |

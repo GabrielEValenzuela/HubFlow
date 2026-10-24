@@ -11,7 +11,7 @@ namespace hubflow::ds
  *
  * Mantener el orden permite resolver unión, intersección y diferencia con un único recorrido
  * simultáneo de ambas listas (merge) en O(n + m), en lugar de O(n · m).
- * La igualdad se deduce de operator<: a == b  <=>  !(a < b) && !(b < a).
+ * La igualdad se deduce de operator<: dos elementos son iguales cuando ninguno es menor que el otro.
  *
  * | Operación                | Mejor | Peor     |
  * |--------------------------|-------|----------|
@@ -19,17 +19,17 @@ namespace hubflow::ds
  * | contains                 | O(1)  | O(n)     |
  * | unite / intersect / diff | O(n+m)| O(n+m)   |
  *
- * @tparam T tipo con operator<.
+ * @tparam TElement tipo con operator<.
  */
-template <typename T>
+template <typename TElement>
 class Set final
 {
 public:
     /// @brief Nodo de la lista ordenada.
     struct Node
     {
-        T     value;
-        Node* pNext;
+        TElement value;
+        Node*    pNext;
     };
 
     Set() = default;
@@ -77,7 +77,7 @@ public:
     }
 
     /// @return false si el elemento ya pertenecía (no se duplica).
-    bool insert(const T& value)
+    bool insert(const TElement& value)
     {
         Node**     ppLink = lowerBound(value);
         const bool absent {*ppLink == nullptr || value < (*ppLink)->value};
@@ -90,7 +90,7 @@ public:
     }
 
     /// @return false si el elemento no pertenecía.
-    bool remove(const T& value)
+    bool remove(const TElement& value)
     {
         Node**     ppLink = lowerBound(value);
         const bool present {*ppLink != nullptr && !(value < (*ppLink)->value)};
@@ -104,7 +104,7 @@ public:
         return present;
     }
 
-    bool contains(const T& value) const
+    bool contains(const TElement& value) const
     {
         const Node* pCurrent = m_pHead;
         while (pCurrent != nullptr && pCurrent->value < value)
@@ -114,92 +114,92 @@ public:
         return pCurrent != nullptr && !(value < pCurrent->value);
     }
 
-    /// @brief A ∪ B.
+    /// @brief Unión de este conjunto con @p other.
     Set unite(const Set& other) const
     {
-        Set         result;
-        Node**      ppTail = &result.m_pHead;
-        const Node* pA     = m_pHead;
-        const Node* pB     = other.m_pHead;
-        while (pA != nullptr || pB != nullptr)
+        Set         merged;
+        Node**      ppTail     = &merged.m_pHead;
+        const Node* pLeftNode  = m_pHead;
+        const Node* pRightNode = other.m_pHead;
+        while (pLeftNode != nullptr || pRightNode != nullptr)
         {
-            if (pB == nullptr || (pA != nullptr && pA->value < pB->value))
+            if (pRightNode == nullptr || (pLeftNode != nullptr && pLeftNode->value < pRightNode->value))
             {
-                result.append(ppTail, pA->value);
-                pA = pA->pNext;
+                merged.append(ppTail, pLeftNode->value);
+                pLeftNode = pLeftNode->pNext;
             }
-            else if (pA == nullptr || pB->value < pA->value)
+            else if (pLeftNode == nullptr || pRightNode->value < pLeftNode->value)
             {
-                result.append(ppTail, pB->value);
-                pB = pB->pNext;
+                merged.append(ppTail, pRightNode->value);
+                pRightNode = pRightNode->pNext;
             }
             else
             {
-                result.append(ppTail, pA->value);
-                pA = pA->pNext;
-                pB = pB->pNext;
+                merged.append(ppTail, pLeftNode->value);
+                pLeftNode  = pLeftNode->pNext;
+                pRightNode = pRightNode->pNext;
             }
         }
-        return result;
+        return merged;
     }
 
-    /// @brief A ∩ B.
+    /// @brief Intersección de este conjunto con @p other.
     Set intersect(const Set& other) const
     {
-        Set         result;
-        Node**      ppTail = &result.m_pHead;
-        const Node* pA     = m_pHead;
-        const Node* pB     = other.m_pHead;
-        while (pA != nullptr && pB != nullptr)
+        Set         merged;
+        Node**      ppTail     = &merged.m_pHead;
+        const Node* pLeftNode  = m_pHead;
+        const Node* pRightNode = other.m_pHead;
+        while (pLeftNode != nullptr && pRightNode != nullptr)
         {
-            if (pA->value < pB->value)
+            if (pLeftNode->value < pRightNode->value)
             {
-                pA = pA->pNext;
+                pLeftNode = pLeftNode->pNext;
             }
-            else if (pB->value < pA->value)
+            else if (pRightNode->value < pLeftNode->value)
             {
-                pB = pB->pNext;
+                pRightNode = pRightNode->pNext;
             }
             else
             {
-                result.append(ppTail, pA->value);
-                pA = pA->pNext;
-                pB = pB->pNext;
+                merged.append(ppTail, pLeftNode->value);
+                pLeftNode  = pLeftNode->pNext;
+                pRightNode = pRightNode->pNext;
             }
         }
-        return result;
+        return merged;
     }
 
-    /// @brief A − B.
+    /// @brief Elementos de este conjunto que no están en @p other.
     Set difference(const Set& other) const
     {
-        Set         result;
-        Node**      ppTail = &result.m_pHead;
-        const Node* pA     = m_pHead;
-        const Node* pB     = other.m_pHead;
-        while (pA != nullptr)
+        Set         merged;
+        Node**      ppTail     = &merged.m_pHead;
+        const Node* pLeftNode  = m_pHead;
+        const Node* pRightNode = other.m_pHead;
+        while (pLeftNode != nullptr)
         {
-            if (pB == nullptr || pA->value < pB->value)
+            if (pRightNode == nullptr || pLeftNode->value < pRightNode->value)
             {
-                result.append(ppTail, pA->value);
-                pA = pA->pNext;
+                merged.append(ppTail, pLeftNode->value);
+                pLeftNode = pLeftNode->pNext;
             }
-            else if (pB->value < pA->value)
+            else if (pRightNode->value < pLeftNode->value)
             {
-                pB = pB->pNext;
+                pRightNode = pRightNode->pNext;
             }
             else
             {
-                pA = pA->pNext;
-                pB = pB->pNext;
+                pLeftNode  = pLeftNode->pNext;
+                pRightNode = pRightNode->pNext;
             }
         }
-        return result;
+        return merged;
     }
 
     /// @brief Visita los elementos en orden ascendente.
-    template <typename Visitor>
-    void forEach(Visitor visit) const
+    template <typename TVisitor>
+    void forEach(TVisitor visit) const
     {
         for (const Node* pCurrent = m_pHead; pCurrent != nullptr; pCurrent = pCurrent->pNext)
         {
@@ -223,13 +223,13 @@ public:
         return m_size;
     }
 
-    bool empty() const noexcept
+    bool isEmpty() const noexcept
     {
         return m_pHead == nullptr;
     }
 
 private:
-    Node** lowerBound(const T& value)
+    Node** lowerBound(const TElement& value)
     {
         Node** ppLink = &m_pHead;
         while (*ppLink != nullptr && (*ppLink)->value < value)
@@ -239,7 +239,7 @@ private:
         return ppLink;
     }
 
-    void append(Node**& ppTail, const T& value)
+    void append(Node**& ppTail, const TElement& value)
     {
         *ppTail = new Node {value, nullptr};
         ppTail  = &(*ppTail)->pNext;

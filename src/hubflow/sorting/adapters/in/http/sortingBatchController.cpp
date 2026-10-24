@@ -23,9 +23,9 @@ constexpr std::size_t MAX_CODES {100};
 Json shipmentList(const ds::DynamicArray<logistics::domain::Shipment*>& shipments)
 {
     Json items = Json::array();
-    for (std::size_t i = 0; i < shipments.size(); ++i)
+    for (std::size_t shipmentIndex = 0; shipmentIndex < shipments.size(); ++shipmentIndex)
     {
-        items.push_back(LogisticsJsonPresenter::shipmentSummary(*shipments[i]));
+        items.push_back(LogisticsJsonPresenter::shipmentSummary(*shipments[shipmentIndex]));
     }
     return items;
 }

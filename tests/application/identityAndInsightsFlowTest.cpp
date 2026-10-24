@@ -91,6 +91,6 @@ TEST(InsightsFlow, NewShipmentIsReachableThroughEveryStructure)
     express.service = "EXPRESS";
     EXPECT_TRUE(app.getCodeSet.execute(app.operador(), express).contains("PKG-1009"));
     const auto& shipment = app.getShipment.execute(app.operador(), "PKG-1009");
-    EXPECT_TRUE(shipment.stateHistory().test(0));
-    EXPECT_EQ(shipment.stateHistory().count(), 1U);
+    EXPECT_TRUE(shipment.stateHistory().isSet(0));
+    EXPECT_EQ(shipment.stateHistory().activeCount(), 1U);
 }

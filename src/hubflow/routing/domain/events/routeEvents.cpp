@@ -63,13 +63,13 @@ void RouteStopResolved::accept(shared::domain::DomainEventVisitor& visitor) cons
 }
 
 DeliveryRouteReassigned::DeliveryRouteReassigned(const std::uint64_t          routeId,
-                                                 Courier                      from,
-                                                 Courier                      to,
+                                                 Courier                      previousCourier,
+                                                 Courier                      newCourier,
                                                  shared::domain::ActorContext context)
     : shared::domain::DomainEvent {std::move(context)}
     , m_routeId {routeId}
-    , m_from {std::move(from)}
-    , m_to {std::move(to)}
+    , m_previousCourier {std::move(previousCourier)}
+    , m_newCourier {std::move(newCourier)}
 {
 }
 
@@ -78,14 +78,14 @@ std::uint64_t DeliveryRouteReassigned::routeId() const noexcept
     return m_routeId;
 }
 
-const Courier& DeliveryRouteReassigned::from() const noexcept
+const Courier& DeliveryRouteReassigned::previousCourier() const noexcept
 {
-    return m_from;
+    return m_previousCourier;
 }
 
-const Courier& DeliveryRouteReassigned::to() const noexcept
+const Courier& DeliveryRouteReassigned::newCourier() const noexcept
 {
-    return m_to;
+    return m_newCourier;
 }
 
 void DeliveryRouteReassigned::accept(shared::domain::DomainEventVisitor& visitor) const

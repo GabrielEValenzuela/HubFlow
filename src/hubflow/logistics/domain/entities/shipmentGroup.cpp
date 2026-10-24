@@ -23,9 +23,9 @@ ShipmentGroup::ShipmentGroup(const ShipmentGroupState& state)
                                               "shipment_group.size_invalid",
                                               "Un grupo necesita entre 2 y 20 paquetes"};
     }
-    for (std::size_t i = 0; i < state.codes.size(); ++i)
+    for (std::size_t codeIndex = 0; codeIndex < state.codes.size(); ++codeIndex)
     {
-        const std::string code {TrackingCode {state.codes[i]}.value()};
+        const std::string code {TrackingCode {state.codes[codeIndex]}.value()};
         if (includes(code))
         {
             throw shared::domain::business_error {shared::domain::ErrorKind::Validation,

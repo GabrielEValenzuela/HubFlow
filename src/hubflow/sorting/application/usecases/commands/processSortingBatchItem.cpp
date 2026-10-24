@@ -19,7 +19,7 @@ ProcessSortingBatchItem::execute(const shared::application::Principal& principal
 {
     principal.require(identity::domain::Permission::OperateSortingDesk);
     domain::SortingBatch& batch = m_desk.require(batchId);
-    return codes.empty() ? batch.processNext(m_groups) : batch.process(codes, m_groups);
+    return codes.isEmpty() ? batch.processNext(m_groups) : batch.processByCodes(codes, m_groups);
 }
 
 } // namespace hubflow::sorting::application

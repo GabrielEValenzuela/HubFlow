@@ -20,7 +20,7 @@ enum class BstStep
  * - Claves menores a la izquierda y mayores a la derecha; no admite duplicados.
  * - Inserción iterativa; recorrido in-order y altura recursivos.
  * - Convención de altura: vacío = -1, un nodo = 0, cada nivel adicional suma 1.
- * - El destructor libera los nodos y nunca ejecuta @c delete sobre @c Value*.
+ * - El destructor libera los nodos y nunca ejecuta @c delete sobre @c TValue*.
  *
  * | Operación | Mejor | Esperado (balanceado) | Peor (degenerado) |
  * |-----------|-------|-----------------------|-------------------|
@@ -31,26 +31,26 @@ enum class BstStep
  *
  * Insertar claves ya ordenadas degenera el árbol en una lista (altura n-1).
  *
- * @tparam Key clave con operator<.
- * @tparam Value tipo apuntado (no propietario).
+ * @tparam TKey clave con operator<.
+ * @tparam TValue tipo apuntado (no propietario).
  */
-template <typename Key, typename Value>
+template <typename TKey, typename TValue>
 class BinarySearchTree final
 {
 public:
     /// @brief Nodo con hijos izquierdo y derecho.
     struct Node
     {
-        Key    key;
-        Value* pValue;
-        Node*  pLeft;
-        Node*  pRight;
+        TKey    key;
+        TValue* pValue;
+        Node*   pLeft;
+        Node*   pRight;
     };
 
     /// @brief Resultado de una búsqueda: valor (o nullptr) y nodos visitados.
     struct Lookup
     {
-        Value*      pValue;
+        TValue*     pValue;
         std::size_t visited;
     };
 
@@ -68,7 +68,7 @@ public:
      * @brief Inserción iterativa.
      * @return false si la clave ya existía (rechaza duplicados).
      */
-    bool insert(const Key& key, Value* pValue)
+    bool insert(const TKey& key, TValue* pValue)
     {
         Node** ppLink = &m_pRoot;
         bool   duplicated {false};
@@ -98,10 +98,10 @@ public:
     /**
      * @brief Busca @p key notificando cada nodo visitado y la decisión tomada.
      * @param key clave buscada.
-     * @param onVisit callable (const Key&, BstStep).
+     * @param onVisit callable (const TKey&, BstStep).
      */
-    template <typename Visitor>
-    Lookup find(const Key& key, Visitor onVisit) const
+    template <typename TVisitor>
+    Lookup find(const TKey& key, TVisitor onVisit) const
     {
         Lookup result {nullptr, 0};
         Node*  pCurrent = m_pRoot;
@@ -129,9 +129,9 @@ public:
     }
 
     /// @brief Busca @p key sin observar el recorrido.
-    Lookup find(const Key& key) const
+    Lookup find(const TKey& key) const
     {
-        return find(key, [](const Key&, BstStep) {});
+        return find(key, [](const TKey&, BstStep) {});
     }
 
     /**
@@ -140,8 +140,8 @@ public:
      * Por la propiedad del BST, todo el subárbol izquierdo es menor que el nodo y todo el
      * derecho mayor, por lo que las claves se visitan en orden ascendente.
      */
-    template <typename Visitor>
-    void inOrder(Visitor visit) const
+    template <typename TVisitor>
+    void inOrder(TVisitor visit) const
     {
         inOrder(m_pRoot, visit);
     }
@@ -162,14 +162,14 @@ public:
         return m_size;
     }
 
-    bool empty() const noexcept
+    bool isEmpty() const noexcept
     {
         return m_pRoot == nullptr;
     }
 
 private:
-    template <typename Visitor>
-    static void inOrder(const Node* pNode, Visitor& visit)
+    template <typename TVisitor>
+    static void inOrder(const Node* pNode, TVisitor& visit)
     {
         if (pNode != nullptr)
         {

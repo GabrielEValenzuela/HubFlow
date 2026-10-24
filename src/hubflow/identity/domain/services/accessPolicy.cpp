@@ -16,9 +16,9 @@ void AccessPolicy::grant(const Role role, const Permission permission)
 bool AccessPolicy::allows(const Role role, const Permission permission) const
 {
     bool found {false};
-    for (std::size_t i = 0; i < m_grants.size() && !found; ++i)
+    for (std::size_t grantIndex = 0; grantIndex < m_grants.size() && !found; ++grantIndex)
     {
-        found = m_grants[i].role == role && m_grants[i].permission == permission;
+        found = m_grants[grantIndex].role == role && m_grants[grantIndex].permission == permission;
     }
     return found;
 }

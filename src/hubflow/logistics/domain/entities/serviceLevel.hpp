@@ -54,7 +54,7 @@ public:
     const std::string&       code() const noexcept;
     const std::string&       name() const noexcept;
     unsigned                 priority() const noexcept;
-    bool                     active() const noexcept;
+    bool                     isActive() const noexcept;
     const ServiceLevelState& state() const noexcept;
 
 private:

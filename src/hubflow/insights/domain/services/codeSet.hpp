@@ -55,28 +55,29 @@ class SetOperation
 public:
     virtual ~SetOperation() = default;
 
-    virtual CodeSet apply(const CodeSet& a, const CodeSet& b) const = 0;
+    /// @brief Combina @p first con @p second y devuelve el conjunto resultante.
+    virtual CodeSet apply(const CodeSet& first, const CodeSet& second) const = 0;
 };
 
 /// @brief A ∪ B.
 class UnionOperation final : public SetOperation
 {
 private:
-    CodeSet apply(const CodeSet& a, const CodeSet& b) const override;
+    CodeSet apply(const CodeSet& first, const CodeSet& second) const override;
 };
 
 /// @brief A ∩ B.
 class IntersectionOperation final : public SetOperation
 {
 private:
-    CodeSet apply(const CodeSet& a, const CodeSet& b) const override;
+    CodeSet apply(const CodeSet& first, const CodeSet& second) const override;
 };
 
 /// @brief A − B.
 class DifferenceOperation final : public SetOperation
 {
 private:
-    CodeSet apply(const CodeSet& a, const CodeSet& b) const override;
+    CodeSet apply(const CodeSet& first, const CodeSet& second) const override;
 };
 
 } // namespace hubflow::insights::domain

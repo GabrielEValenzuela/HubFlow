@@ -26,16 +26,16 @@ namespace hubflow::ds
  *
  * Espacio: O(V + E).
  *
- * @tparam VertexData datos de cada vértice (construible por defecto y copiable).
+ * @tparam TVertexData datos de cada vértice (construible por defecto y copiable).
  */
-template <typename VertexData>
+template <typename TVertexData>
 class Graph final
 {
 public:
     /// @brief Arista de la lista de adyacencia.
     struct Edge
     {
-        std::size_t to;
+        std::size_t destination;
         double      weight;
         Edge*       pNext;
     };
@@ -44,9 +44,9 @@ public:
 
     ~Graph()
     {
-        for (std::size_t i = 0; i < m_vertices.size(); ++i)
+        for (std::size_t vertexIndex = 0; vertexIndex < m_vertices.size(); ++vertexIndex)
         {
-            Edge* pEdge = m_vertices[i].pHead;
+            Edge* pEdge = m_vertices[vertexIndex].pHead;
             while (pEdge != nullptr)
             {
                 Edge* pNext = pEdge->pNext;
@@ -60,75 +60,75 @@ public:
     Graph& operator=(const Graph&) = delete;
 
     /// @return índice del nuevo vértice.
-    std::size_t addVertex(const VertexData& data)
+    std::size_t addVertex(const TVertexData& data)
     {
         m_vertices.pushBack(Vertex {data, nullptr, nullptr, 0});
         return m_vertices.size() - 1;
     }
 
     /**
-     * @brief Agrega la arista no dirigida u—v en ambas listas de adyacencia.
-     * @throws std::invalid_argument si u == v.
+     * @brief Agrega la arista no dirigida origin—destination en ambas listas de adyacencia.
+     * @throws std::invalid_argument si origin == destination.
      */
-    void addEdge(const std::size_t u, const std::size_t v, const double weight)
+    void addEdge(const std::size_t origin, const std::size_t destination, const double weight)
     {
-        if (u == v)
+        if (origin == destination)
         {
             throw std::invalid_argument("No se admiten lazos");
         }
-        append(m_vertices[u], v, weight);
-        append(m_vertices[v], u, weight);
+        append(m_vertices[origin], destination, weight);
+        append(m_vertices[destination], origin, weight);
         ++m_edgeCount;
     }
 
-    /// @brief Visita (destino, peso) de cada arista incidente a @p u.
-    template <typename Visitor>
-    void forEachNeighbor(const std::size_t u, Visitor visit) const
+    /// @brief Visita (destino, peso) de cada arista incidente a @p origin.
+    template <typename TVisitor>
+    void forEachNeighbor(const std::size_t origin, TVisitor visit) const
     {
-        for (const Edge* pEdge = m_vertices[u].pHead; pEdge != nullptr; pEdge = pEdge->pNext)
+        for (const Edge* pEdge = m_vertices[origin].pHead; pEdge != nullptr; pEdge = pEdge->pNext)
         {
-            visit(pEdge->to, pEdge->weight);
+            visit(pEdge->destination, pEdge->weight);
         }
     }
 
-    /// @brief Visita (u, v, peso) de cada arista no dirigida una sola vez (u < v).
-    template <typename Visitor>
-    void forEachEdge(Visitor visit) const
+    /// @brief Visita (origin, destination, peso) de cada arista no dirigida una sola vez (origin < destination).
+    template <typename TVisitor>
+    void forEachEdge(TVisitor visit) const
     {
-        for (std::size_t u = 0; u < m_vertices.size(); ++u)
+        for (std::size_t origin = 0; origin < m_vertices.size(); ++origin)
         {
-            for (const Edge* pEdge = m_vertices[u].pHead; pEdge != nullptr; pEdge = pEdge->pNext)
+            for (const Edge* pEdge = m_vertices[origin].pHead; pEdge != nullptr; pEdge = pEdge->pNext)
             {
-                if (u < pEdge->to)
+                if (origin < pEdge->destination)
                 {
-                    visit(u, pEdge->to, pEdge->weight);
+                    visit(origin, pEdge->destination, pEdge->weight);
                 }
             }
         }
     }
 
     /// @brief Búsqueda lineal del primer vértice que cumple @p matches. O(V).
-    template <typename Predicate>
-    std::optional<std::size_t> findVertex(Predicate matches) const
+    template <typename TPredicate>
+    std::optional<std::size_t> findVertex(TPredicate matches) const
     {
         std::optional<std::size_t> found;
-        for (std::size_t i = 0; i < m_vertices.size() && !found.has_value(); ++i)
+        for (std::size_t vertexIndex = 0; vertexIndex < m_vertices.size() && !found.has_value(); ++vertexIndex)
         {
-            if (matches(m_vertices[i].data))
+            if (matches(m_vertices[vertexIndex].data))
             {
-                found = i;
+                found = vertexIndex;
             }
         }
         return found;
     }
 
-    const VertexData& vertex(const std::size_t index) const
+    const TVertexData& vertex(const std::size_t index) const
     {
         return m_vertices[index].data;
     }
 
     /// @brief Reemplaza los datos del vértice sin tocar sus aristas. O(1).
-    void replaceVertex(const std::size_t index, const VertexData& data)
+    void replaceVertex(const std::size_t index, const TVertexData& data)
     {
         m_vertices[index].data = data;
     }
@@ -151,15 +151,15 @@ public:
 private:
     struct Vertex
     {
-        VertexData  data;
+        TVertexData data;
         Edge*       pHead;
         Edge*       pTail;
         std::size_t degree;
     };
 
-    static void append(Vertex& vertex, const std::size_t to, const double weight)
+    static void append(Vertex& vertex, const std::size_t destination, const double weight)
     {
-        Edge* pEdge = new Edge {to, weight, nullptr};
+        Edge* pEdge = new Edge {destination, weight, nullptr};
         if (vertex.pTail == nullptr)
         {
             vertex.pHead = pEdge;

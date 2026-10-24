@@ -10,7 +10,7 @@ DomainEvent::DomainEvent(ActorContext context)
 {
 }
 
-const ActorContext& DomainEvent::context() const noexcept
+const ActorContext& DomainEvent::actorContext() const noexcept
 {
     return m_context;
 }

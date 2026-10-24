@@ -32,8 +32,8 @@ public:
     virtual ~PreviewRouteUseCase() = default;
 
     virtual domain::SearchTrace execute(const shared::application::Principal& principal,
-                                        const std::string&                    fromId,
-                                        const std::string&                    toId,
+                                        const std::string&                    originId,
+                                        const std::string&                    destinationId,
                                         domain::SearchAlgorithm               algorithm) const = 0;
 };
 

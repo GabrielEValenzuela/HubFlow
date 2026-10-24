@@ -114,13 +114,13 @@ std::vector<SqlRow> fetchAll(MYSQL_STMT* pStatement)
         std::vector<std::vector<char>> buffers(columns, std::vector<char>(COLUMN_BUFFER_SIZE));
         std::vector<unsigned long>     lengths(columns);
         auto                           spNulls = std::make_unique<bool[]>(columns);
-        for (unsigned int i = 0; i < columns; ++i)
+        for (unsigned int columnIndex = 0; columnIndex < columns; ++columnIndex)
         {
-            binds[i].buffer_type   = MYSQL_TYPE_STRING;
-            binds[i].buffer        = buffers[i].data();
-            binds[i].buffer_length = COLUMN_BUFFER_SIZE;
-            binds[i].length        = &lengths[i];
-            binds[i].is_null       = &spNulls[i];
+            binds[columnIndex].buffer_type   = MYSQL_TYPE_STRING;
+            binds[columnIndex].buffer        = buffers[columnIndex].data();
+            binds[columnIndex].buffer_length = COLUMN_BUFFER_SIZE;
+            binds[columnIndex].length        = &lengths[columnIndex];
+            binds[columnIndex].is_null       = &spNulls[columnIndex];
         }
         mysql_free_result(pMetadata);
         if (mysql_stmt_bind_result(pStatement, binds.data()) != 0 || mysql_stmt_store_result(pStatement) != 0)
@@ -132,10 +132,11 @@ std::vector<SqlRow> fetchAll(MYSQL_STMT* pStatement)
         {
             SqlRow row;
             row.reserve(columns);
-            for (unsigned int i = 0; i < columns; ++i)
+            for (unsigned int columnIndex = 0; columnIndex < columns; ++columnIndex)
             {
-                row.emplace_back(spNulls[i] ? std::nullopt
-                                            : std::optional<std::string> {std::string {buffers[i].data(), lengths[i]}});
+                row.emplace_back(spNulls[columnIndex] ? std::nullopt
+                                                      : std::optional<std::string> {std::string {
+                                                            buffers[columnIndex].data(), lengths[columnIndex]}});
             }
             rows.emplace_back(std::move(row));
         }

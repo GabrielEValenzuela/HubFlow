@@ -28,17 +28,17 @@ class CustomerTimeline final
 {
 public:
     /// @brief Arma la línea de tiempo con los hitos en el orden recibido.
-    static CustomerTimeline from(const ds::DynamicArray<MilestoneEvent>& events);
+    static CustomerTimeline fromEvents(const ds::DynamicArray<MilestoneEvent>& events);
 
     std::size_t          size() const noexcept;
-    bool                 empty() const noexcept;
-    const TimelineEntry& entry(std::size_t index) const;
+    bool                 isEmpty() const noexcept;
+    const TimelineEntry& entryAt(std::size_t index) const;
 
     /// @brief La situación actual: el último paso. @pre no está vacía.
-    const TimelineEntry& current() const;
+    const TimelineEntry& currentEntry() const;
 
     /// @brief true si el último paso es la entrega.
-    bool finished() const noexcept;
+    bool isFinished() const noexcept;
 
 private:
     ds::DynamicArray<TimelineEntry> m_entries;

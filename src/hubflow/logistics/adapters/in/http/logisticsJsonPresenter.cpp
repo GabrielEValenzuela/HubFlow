@@ -23,7 +23,7 @@ Json stateNames(const domain::StateHistory& history)
     Json states = Json::array();
     for (const auto status : domain::ALL_STATUSES)
     {
-        if (history.test(domain::bitOf(status)))
+        if (history.isSet(domain::bitOf(status)))
         {
             states.push_back(Vocabulary::name(status));
         }
@@ -34,9 +34,9 @@ Json stateNames(const domain::StateHistory& history)
 Json featureCodes(const domain::Shipment& shipment)
 {
     Json codes = Json::array();
-    for (std::size_t i = 0; i < shipment.features().size(); ++i)
+    for (std::size_t featureIndex = 0; featureIndex < shipment.features().size(); ++featureIndex)
     {
-        codes.push_back(shipment.features()[i]);
+        codes.push_back(shipment.features()[featureIndex]);
     }
     return codes;
 }
@@ -46,7 +46,7 @@ std::string binary(const domain::StateHistory& history)
     std::string text;
     for (std::size_t position = domain::STATUS_COUNT; position > 0; --position)
     {
-        text.push_back(history.test(position - 1) ? '1' : '0');
+        text.push_back(history.isSet(position - 1) ? '1' : '0');
     }
     return text;
 }
@@ -76,9 +76,9 @@ Json LogisticsJsonPresenter::shipmentSummary(const domain::Shipment& shipment)
 Json LogisticsJsonPresenter::parcels(const domain::Shipment& shipment)
 {
     Json items = Json::array();
-    for (std::size_t i = 0; i < shipment.parcelCount(); ++i)
+    for (std::size_t parcelIndex = 0; parcelIndex < shipment.parcelCount(); ++parcelIndex)
     {
-        const auto& parcel = shipment.parcel(i);
+        const auto& parcel = shipment.parcel(parcelIndex);
         items.push_back(Json {{"ordinal", parcel.ordinal()},
                               {"label", parcel.label()},
                               {"weightKg", rounded(parcel.weightKg())},
@@ -87,7 +87,7 @@ Json LogisticsJsonPresenter::parcels(const domain::Shipment& shipment)
                               {"heightCm", parcel.dimensions().heightCm()},
                               {"volumetricWeightKg", rounded(parcel.volumetricWeightKg())},
                               {"billableWeightKg", rounded(parcel.billableWeightKg())},
-                              {"delivered", parcel.delivered()}});
+                              {"delivered", parcel.isDelivered()}});
     }
     return items;
 }
@@ -95,9 +95,9 @@ Json LogisticsJsonPresenter::parcels(const domain::Shipment& shipment)
 Json LogisticsJsonPresenter::group(const domain::ShipmentGroup& group)
 {
     Json codes = Json::array();
-    for (std::size_t i = 0; i < group.codes().size(); ++i)
+    for (std::size_t codeIndex = 0; codeIndex < group.codes().size(); ++codeIndex)
     {
-        codes.push_back(group.codes()[i]);
+        codes.push_back(group.codes()[codeIndex]);
     }
     return Json {{"id", group.id()}, {"deliveryPoint", group.deliveryPoint()}, {"codes", codes}};
 }
@@ -109,11 +109,11 @@ Json LogisticsJsonPresenter::groupOf(const domain::Shipment& shipment, const dom
     {
         result                = group(*pGroup);
         result["travelsWith"] = Json::array();
-        for (std::size_t i = 0; i < pGroup->codes().size(); ++i)
+        for (std::size_t codeIndex = 0; codeIndex < pGroup->codes().size(); ++codeIndex)
         {
-            if (pGroup->codes()[i] != shipment.code())
+            if (pGroup->codes()[codeIndex] != shipment.code())
             {
-                result["travelsWith"].push_back(pGroup->codes()[i]);
+                result["travelsWith"].push_back(pGroup->codes()[codeIndex]);
             }
         }
     }
@@ -160,11 +160,11 @@ Json LogisticsJsonPresenter::history(const domain::Shipment& shipment, const boo
 Json LogisticsJsonPresenter::stateHistory(const domain::StateHistory& history)
 {
     return Json {{"bits", binary(history)},
-                 {"value", history.raw()},
+                 {"value", history.toWord()},
                  {"states", stateNames(history)},
-                 {"count", history.count()},
-                 {"any", history.any()},
-                 {"everRescheduled", history.test(domain::bitOf(domain::ShipmentStatus::Reprogramado))}};
+                 {"count", history.activeCount()},
+                 {"any", history.isAnySet()},
+                 {"everRescheduled", history.isSet(domain::bitOf(domain::ShipmentStatus::Reprogramado))}};
 }
 
 Json LogisticsJsonPresenter::zoneSummary(const std::string& zoneCode, const domain::ZoneSummary& summary)
@@ -200,9 +200,9 @@ Json LogisticsJsonPresenter::metrics(const application::OperationsMetrics& metri
 Json LogisticsJsonPresenter::shipments(const ds::DynamicArray<const domain::Shipment*>& shipments)
 {
     Json items = Json::array();
-    for (std::size_t i = 0; i < shipments.size(); ++i)
+    for (std::size_t shipmentIndex = 0; shipmentIndex < shipments.size(); ++shipmentIndex)
     {
-        items.push_back(shipmentSummary(*shipments[i]));
+        items.push_back(shipmentSummary(*shipments[shipmentIndex]));
     }
     return items;
 }

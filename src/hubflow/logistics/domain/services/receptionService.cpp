@@ -36,19 +36,19 @@ Shipment& ReceptionService::receive(const ShipmentDraft& draft, const shared::do
             shared::domain::ErrorKind::Conflict, "shipment.duplicate", "Ya existe un envío con ese código"};
     }
     const Zone* pZone = m_zones.find(draft.zone);
-    if (pZone == nullptr || !pZone->active())
+    if (pZone == nullptr || !pZone->isActive())
     {
         invalid("shipment.zone_unavailable", "La zona no existe o está desactivada");
     }
     const ServiceLevel* pService = m_services.find(draft.service);
-    if (pService == nullptr || !pService->active())
+    if (pService == nullptr || !pService->isActive())
     {
         invalid("shipment.service_unavailable", "El servicio no existe o está desactivado");
     }
-    for (std::size_t i = 0; i < draft.features.size(); ++i)
+    for (std::size_t featureIndex = 0; featureIndex < draft.features.size(); ++featureIndex)
     {
-        const ShipmentFeature* pFeature = m_features.find(draft.features[i]);
-        if (pFeature == nullptr || !pFeature->active())
+        const ShipmentFeature* pFeature = m_features.find(draft.features[featureIndex]);
+        if (pFeature == nullptr || !pFeature->isActive())
         {
             invalid("shipment.feature_unavailable", "Una característica del paquete no existe o está desactivada");
         }

@@ -34,9 +34,9 @@ std::string registerAt(test::ApplicationHarness& app, const std::string& point, 
     shipment.zone                = "NORTE";
     shipment.service             = "ESTANDAR";
     shipment.deliveryPoint       = point;
-    for (std::size_t i = 0; i < parcels; ++i)
+    for (std::size_t parcelIndex = 0; parcelIndex < parcels; ++parcelIndex)
     {
-        shipment.parcels.pushBack(ParcelData {1.0 + static_cast<double>(i), 20.0, 20.0, 10.0});
+        shipment.parcels.pushBack(ParcelData {1.0 + static_cast<double>(parcelIndex), 20.0, 20.0, 10.0});
     }
     return app.registerShipment.execute(app.operador(), shipment).code();
 }
@@ -62,7 +62,7 @@ ErrorKind kindOf(const std::function<void()>& action)
     }
     catch (const business_error& error)
     {
-        kind = error.kind();
+        kind = error.errorKind();
     }
     return kind;
 }
@@ -255,8 +255,8 @@ TEST(ParcelsAndGroupsFlow, PartialDeliveryReschedulesTheGroupAndKeepsDeliveredPa
     test::ApplicationHarness restarted {storage};
     const auto&              restored = restarted.getShipment.execute(restarted.operador(), scenario.first);
     EXPECT_EQ(restored.pendingParcelCount(), 1U);
-    EXPECT_TRUE(restored.parcel(0).delivered());
-    EXPECT_FALSE(restored.parcel(2).delivered());
+    EXPECT_TRUE(restored.parcel(0).isDelivered());
+    EXPECT_FALSE(restored.parcel(2).isDelivered());
     ASSERT_NE(restarted.findShipmentGroupOfShipment.execute(restarted.operador(), scenario.second), nullptr);
     EXPECT_EQ(restarted.listShipmentGroups.execute(restarted.operador()).size(), 1U);
     bool parcelAudited {false};

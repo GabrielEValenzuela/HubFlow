@@ -19,7 +19,7 @@ Json SortingJsonPresenter::sortingBatch(const domain::SortingBatch& batch)
     Json processed   = Json::array();
     for (std::size_t i = 0; i < batch.size(); ++i)
     {
-        items.push_back(LogisticsJsonPresenter::shipmentSummary(batch.at(i)));
+        items.push_back(LogisticsJsonPresenter::shipmentSummary(batch.shipmentAt(i)));
     }
     batch.preparation().forEach(
         [&preparation](const logistics::domain::Shipment* pShipment)
@@ -59,8 +59,9 @@ Json SortingJsonPresenter::batchSearch(const domain::BatchSearchOutcome& outcome
     return Json {{"found", outcome.position.has_value()},
                  {"position", outcome.position.has_value() ? Json(*outcome.position) : Json(nullptr)},
                  {"shipment",
-                  outcome.position.has_value() ? LogisticsJsonPresenter::shipmentSummary(batch.at(*outcome.position))
-                                               : Json(nullptr)},
+                  outcome.position.has_value()
+                      ? LogisticsJsonPresenter::shipmentSummary(batch.shipmentAt(*outcome.position))
+                      : Json(nullptr)},
                  {"comparisons", outcome.comparisons},
                  {"steps", steps}};
 }

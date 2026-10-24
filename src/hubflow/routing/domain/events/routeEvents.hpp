@@ -45,18 +45,21 @@ private:
 class DeliveryRouteReassigned final : public shared::domain::DomainEvent
 {
 public:
-    DeliveryRouteReassigned(std::uint64_t routeId, Courier from, Courier to, shared::domain::ActorContext context);
+    DeliveryRouteReassigned(std::uint64_t                routeId,
+                            Courier                      previousCourier,
+                            Courier                      newCourier,
+                            shared::domain::ActorContext context);
 
     std::uint64_t  routeId() const noexcept;
-    const Courier& from() const noexcept;
-    const Courier& to() const noexcept;
+    const Courier& previousCourier() const noexcept;
+    const Courier& newCourier() const noexcept;
 
 private:
     void accept(shared::domain::DomainEventVisitor& visitor) const override;
 
     std::uint64_t m_routeId;
-    Courier       m_from;
-    Courier       m_to;
+    Courier       m_previousCourier;
+    Courier       m_newCourier;
 };
 
 } // namespace hubflow::routing::domain

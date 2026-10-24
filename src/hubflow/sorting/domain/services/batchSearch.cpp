@@ -11,7 +11,7 @@ BatchSearchOutcome LinearBatchSearch::search(const SortingBatch& batch, const st
     for (std::size_t i = 0; i < batch.size() && !outcome.position.has_value(); ++i)
     {
         ++outcome.comparisons;
-        if (batch.at(i).code() == code)
+        if (batch.shipmentAt(i).code() == code)
         {
             outcome.position = i;
         }
@@ -33,7 +33,7 @@ BatchSearchOutcome BinaryBatchSearch::search(const SortingBatch& batch, const st
     while (left < right && !outcome.position.has_value())
     {
         const std::size_t  middle {left + (right - left) / 2};
-        const std::string& candidate = batch.at(middle).code();
+        const std::string& candidate = batch.shipmentAt(middle).code();
         outcome.steps.pushBack(BinarySearchStep {left, right - 1, middle, candidate});
         ++outcome.comparisons;
         if (candidate == code)

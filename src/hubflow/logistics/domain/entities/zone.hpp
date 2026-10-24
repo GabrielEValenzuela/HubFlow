@@ -47,7 +47,7 @@ public:
 
     const std::string& code() const noexcept;
     const std::string& name() const noexcept;
-    bool               active() const noexcept;
+    bool               isActive() const noexcept;
     const ZoneState&   state() const noexcept;
 
 private:

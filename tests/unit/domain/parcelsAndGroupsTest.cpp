@@ -176,9 +176,9 @@ TEST_F(GroupFixture, PartialDeliveryKeepsDeliveredParcelsRecordedWhenRescheduled
     Shipment*           pRestored = Shipment::restore(state);
 
     EXPECT_EQ(shipment.status(), ShipmentStatus::Reprogramado);
-    EXPECT_TRUE(shipment.parcel(0).delivered());
-    EXPECT_FALSE(shipment.parcel(1).delivered());
-    EXPECT_TRUE(pRestored->parcel(2).delivered());
+    EXPECT_TRUE(shipment.parcel(0).isDelivered());
+    EXPECT_FALSE(shipment.parcel(1).isDelivered());
+    EXPECT_TRUE(pRestored->parcel(2).isDelivered());
     EXPECT_EQ(pRestored->pendingParcelCount(), 1U);
     pRestored->dispatch("segundo intento", actor());
     EXPECT_THROW(pRestored->deliver("x", actor()), business_error);

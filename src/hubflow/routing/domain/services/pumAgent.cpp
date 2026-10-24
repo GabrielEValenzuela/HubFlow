@@ -9,12 +9,12 @@ PumAgent::PumAgent(const RoadMap& map, const SearchStrategy& strategy)
 {
 }
 
-SearchTrace PumAgent::travel(const std::size_t from, const std::size_t to) const
+SearchTrace PumAgent::travel(const std::size_t origin, const std::size_t destination) const
 {
-    return m_strategy.search(m_map, from, to);
+    return m_strategy.search(m_map, origin, destination);
 }
 
-const RoadMap& PumAgent::map() const noexcept
+const RoadMap& PumAgent::roadMap() const noexcept
 {
     return m_map;
 }

@@ -16,7 +16,7 @@ public:
     ZoneChanged(ZoneState state, bool created, shared::domain::ActorContext context);
 
     const ZoneState& state() const noexcept;
-    bool             created() const noexcept;
+    bool             wasCreated() const noexcept;
 
 private:
     void accept(shared::domain::DomainEventVisitor& visitor) const override;
@@ -32,7 +32,7 @@ public:
     ServiceLevelChanged(ServiceLevelState state, bool created, shared::domain::ActorContext context);
 
     const ServiceLevelState& state() const noexcept;
-    bool                     created() const noexcept;
+    bool                     wasCreated() const noexcept;
 
 private:
     void accept(shared::domain::DomainEventVisitor& visitor) const override;
@@ -48,7 +48,7 @@ public:
     ShipmentFeatureChanged(ShipmentFeatureState state, bool created, shared::domain::ActorContext context);
 
     const ShipmentFeatureState& state() const noexcept;
-    bool                        created() const noexcept;
+    bool                        wasCreated() const noexcept;
 
 private:
     void accept(shared::domain::DomainEventVisitor& visitor) const override;

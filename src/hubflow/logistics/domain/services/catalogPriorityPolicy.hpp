@@ -20,7 +20,7 @@ public:
 
 private:
     unsigned priorityOf(const Shipment& shipment) const override;
-    unsigned highest() const override;
+    unsigned highestPriority() const override;
 
     const ServiceLevelCatalog& m_services;
 };

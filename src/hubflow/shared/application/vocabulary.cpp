@@ -13,10 +13,10 @@ using routing::domain::SearchAlgorithm;
 using routing::domain::StopOutcome;
 using sorting::domain::SortCriteria;
 
-template <typename Enum>
+template <typename TEnum>
 struct Term
 {
-    Enum        value;
+    TEnum       value;
     const char* text;
 };
 
@@ -61,8 +61,8 @@ constexpr Term<sorting::domain::SortCriteria> CRITERIA_TERMS[] {
     {sorting::domain::SortCriteria::CodeAscending, "CODE_ASC"},
     {sorting::domain::SortCriteria::WeightDescending, "WEIGHT_DESC"}};
 
-template <typename Enum, std::size_t N>
-std::string textOf(const Term<Enum> (&terms)[N], const Enum value)
+template <typename TEnum, std::size_t TERM_COUNT>
+std::string textOf(const Term<TEnum> (&terms)[TERM_COUNT], const TEnum value)
 {
     std::string text {terms[0].text};
     for (const auto& term : terms)
@@ -75,10 +75,10 @@ std::string textOf(const Term<Enum> (&terms)[N], const Enum value)
     return text;
 }
 
-template <typename Enum, std::size_t N>
-std::optional<Enum> valueOf(const Term<Enum> (&terms)[N], const std::string& text)
+template <typename TEnum, std::size_t TERM_COUNT>
+std::optional<TEnum> valueOf(const Term<TEnum> (&terms)[TERM_COUNT], const std::string& text)
 {
-    std::optional<Enum> value;
+    std::optional<TEnum> value;
     for (const auto& term : terms)
     {
         if (text == term.text)

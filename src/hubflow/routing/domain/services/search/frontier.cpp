@@ -9,9 +9,9 @@ ds::DynamicArray<std::size_t> Frontier::snapshot(const ds::DynamicArray<bool>& e
     collect(nodes);
     ds::DynamicArray<bool>        seen {explored.size(), false};
     ds::DynamicArray<std::size_t> vertices;
-    for (std::size_t i = 0; i < nodes.size(); ++i)
+    for (std::size_t nodeIndex = 0; nodeIndex < nodes.size(); ++nodeIndex)
     {
-        const std::size_t vertex {nodes[i]->vertex};
+        const std::size_t vertex {nodes[nodeIndex]->vertex};
         if (!explored[vertex] && !seen[vertex])
         {
             seen[vertex] = true;

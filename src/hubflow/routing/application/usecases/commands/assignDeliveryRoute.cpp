@@ -32,9 +32,9 @@ ds::DynamicArray<logistics::domain::Shipment*> loadingOrder(const ds::Stack<logi
 bool isLoaded(const ds::DynamicArray<logistics::domain::Shipment*>& load, const std::string& code)
 {
     bool found {false};
-    for (std::size_t i = 0; i < load.size() && !found; ++i)
+    for (std::size_t shipmentIndex = 0; shipmentIndex < load.size() && !found; ++shipmentIndex)
     {
-        found = load[i]->code() == code;
+        found = load[shipmentIndex]->code() == code;
     }
     return found;
 }
@@ -42,9 +42,9 @@ bool isLoaded(const ds::DynamicArray<logistics::domain::Shipment*>& load, const 
 bool isCovered(const ds::DynamicArray<domain::RouteStop>& stops, const std::string& code)
 {
     bool found {false};
-    for (std::size_t i = 0; i < stops.size() && !found; ++i)
+    for (std::size_t stopIndex = 0; stopIndex < stops.size() && !found; ++stopIndex)
     {
-        found = stops[i].includes(code);
+        found = stops[stopIndex].includes(code);
     }
     return found;
 }
@@ -53,30 +53,33 @@ ds::DynamicArray<domain::RouteStop> stopsFrom(const ds::DynamicArray<logistics::
                                               const logistics::domain::ShipmentGroupBook&           groups)
 {
     ds::DynamicArray<domain::RouteStop> stops;
-    for (std::size_t i = 0; i < load.size(); ++i)
+    for (std::size_t shipmentIndex = 0; shipmentIndex < load.size(); ++shipmentIndex)
     {
-        if (!load[i]->isAwaitingDispatch())
+        if (!load[shipmentIndex]->isAwaitingDispatch())
         {
             throw business_error {
                 ErrorKind::Conflict, "route.shipment_not_pending", "Un envío del lote ya no está pendiente"};
         }
-        if (!isCovered(stops, load[i]->code()))
+        if (!isCovered(stops, load[shipmentIndex]->code()))
         {
-            domain::RouteStop stop {
-                stops.size() + 1, load[i]->code(), load[i]->deliveryPoint(), domain::StopOutcome::Pending};
-            const logistics::domain::ShipmentGroup* pGroup = groups.groupOf(load[i]->code());
-            for (std::size_t j = 0; pGroup != nullptr && j < pGroup->codes().size(); ++j)
+            domain::RouteStop                       stop {stops.size() + 1,
+                                    load[shipmentIndex]->code(),
+                                    load[shipmentIndex]->deliveryPoint(),
+                                    domain::StopOutcome::Pending};
+            const logistics::domain::ShipmentGroup* pGroup = groups.groupOf(load[shipmentIndex]->code());
+            for (std::size_t groupCodeIndex = 0; pGroup != nullptr && groupCodeIndex < pGroup->codes().size();
+                 ++groupCodeIndex)
             {
-                if (!isLoaded(load, pGroup->codes()[j]))
+                if (!isLoaded(load, pGroup->codes()[groupCodeIndex]))
                 {
                     throw business_error {ErrorKind::Conflict,
                                           "route.group_incomplete",
-                                          "El paquete " + load[i]->code() + " viaja junto con " + pGroup->codes()[j] +
-                                              ", que no está cargado"};
+                                          "El paquete " + load[shipmentIndex]->code() + " viaja junto con " +
+                                              pGroup->codes()[groupCodeIndex] + ", que no está cargado"};
                 }
-                if (pGroup->codes()[j] != load[i]->code())
+                if (pGroup->codes()[groupCodeIndex] != load[shipmentIndex]->code())
                 {
-                    stop.companions.pushBack(pGroup->codes()[j]);
+                    stop.companions.pushBack(pGroup->codes()[groupCodeIndex]);
                 }
             }
             stops.pushBack(stop);
@@ -118,10 +121,10 @@ const domain::DeliveryRoute& AssignDeliveryRoute::execute(const shared::applicat
     domain::DeliveryRoute& route = m_routing.routes.adopt(domain::DeliveryRoute::assign(
         m_routing.routes.nextIdentity(), courier, stopsFrom(load, m_groups), agent, context));
     const std::string      note {"Ruta #" + std::to_string(route.id()) + " asignada a " + courier.name};
-    for (std::size_t i = 0; i < load.size(); ++i)
+    for (std::size_t shipmentIndex = 0; shipmentIndex < load.size(); ++shipmentIndex)
     {
-        load[i]->dispatch(note, context);
-        load[i]->publishEvents(m_bus);
+        load[shipmentIndex]->dispatch(note, context);
+        load[shipmentIndex]->publishEvents(m_bus);
     }
     route.publishEvents(m_bus);
     batch.unloadProcessed();

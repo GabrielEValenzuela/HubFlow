@@ -58,9 +58,9 @@ void MySqlRoadMapRepository::addNode(const domain::RoadNode& node, const ds::Dyn
 {
     const std::uint64_t position {SqlColumns::unsignedNumber(m_connection.query(NEXT_POSITION).front(), 0)};
     m_connection.execute(INSERT_NODE, {node.id, position, node.label, node.zone, node.x, node.y});
-    for (std::size_t i = 0; i < links.size(); ++i)
+    for (std::size_t linkIndex = 0; linkIndex < links.size(); ++linkIndex)
     {
-        m_connection.execute(INSERT_EDGE, {node.id, links[i].toId, links[i].costKm});
+        m_connection.execute(INSERT_EDGE, {node.id, links[linkIndex].destinationId, links[linkIndex].costKm});
     }
 }
 

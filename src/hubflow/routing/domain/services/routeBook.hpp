@@ -30,8 +30,8 @@ public:
     DeliveryRoute& require(std::uint64_t id) const;
 
     /// @brief Visita las rutas en orden de creación.
-    template <typename Visitor>
-    void forEach(Visitor visit) const
+    template <typename TVisitor>
+    void forEach(TVisitor visit) const
     {
         m_routes.forEach(
             [&visit](DeliveryRoute* pRoute)

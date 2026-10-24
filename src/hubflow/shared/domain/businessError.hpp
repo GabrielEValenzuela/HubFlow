@@ -35,7 +35,7 @@ public:
     /// @brief Error de límite de intentos: informa cuántos segundos esperar antes de reintentar.
     business_error(ErrorKind kind, std::string code, const std::string& message, std::uint32_t retryAfterSeconds);
 
-    ErrorKind kind() const noexcept;
+    ErrorKind errorKind() const noexcept;
 
     const std::string& code() const noexcept;
 

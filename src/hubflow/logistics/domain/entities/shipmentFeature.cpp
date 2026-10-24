@@ -58,7 +58,7 @@ const std::string& ShipmentFeature::name() const noexcept
     return m_state.name;
 }
 
-bool ShipmentFeature::active() const noexcept
+bool ShipmentFeature::isActive() const noexcept
 {
     return m_state.active;
 }

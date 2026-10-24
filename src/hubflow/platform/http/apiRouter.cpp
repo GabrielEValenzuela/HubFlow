@@ -300,7 +300,7 @@ httplib::Server::Handler ApiRouter::wrap(Handler handler, const Access access, c
         }
         catch (const shared::domain::business_error& error)
         {
-            problem(response, statusOf(error.kind()), error.code(), error.what());
+            problem(response, statusOf(error.errorKind()), error.code(), error.what());
             if (error.retryAfterSeconds() > 0)
             {
                 response.set_header(RETRY_AFTER_HEADER, std::to_string(error.retryAfterSeconds()));

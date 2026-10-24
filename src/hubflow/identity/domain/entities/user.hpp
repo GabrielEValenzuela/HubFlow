@@ -70,7 +70,7 @@ public:
     const std::string& email() const noexcept;
     const std::string& name() const noexcept;
     Role               role() const noexcept;
-    bool               active() const noexcept;
+    bool               isActive() const noexcept;
     const UserState&   state() const noexcept;
 
 private:

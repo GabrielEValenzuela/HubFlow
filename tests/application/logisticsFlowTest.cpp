@@ -36,7 +36,7 @@ ErrorKind kindOf(const std::function<void()>& action)
     }
     catch (const business_error& error)
     {
-        kind = error.kind();
+        kind = error.errorKind();
     }
     return kind;
 }

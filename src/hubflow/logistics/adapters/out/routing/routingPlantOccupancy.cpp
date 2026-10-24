@@ -38,9 +38,9 @@ bool RoutingPlantOccupancy::hasRoutesInProgressInZone(const std::string& zoneCod
     m_routing.routes.forEach(
         [this, &found, &zoneCode](const routing::domain::DeliveryRoute& route)
         {
-            for (std::size_t i = 0; i < route.stops().size() && !found; ++i)
+            for (std::size_t stopIndex = 0; stopIndex < route.stops().size() && !found; ++stopIndex)
             {
-                const auto& stop = route.stops()[i];
+                const auto& stop = route.stops()[stopIndex];
                 found            = stop.outcome == routing::domain::StopOutcome::Pending &&
                         m_routing.map.node(m_routing.map.require(stop.nodeId)).zone == zoneCode;
             }
@@ -51,9 +51,9 @@ bool RoutingPlantOccupancy::hasRoutesInProgressInZone(const std::string& zoneCod
 bool RoutingPlantOccupancy::hasActiveMapNodesInZone(const std::string& zoneCode) const
 {
     bool found {false};
-    for (std::size_t i = 0; i < m_routing.map.nodeCount() && !found; ++i)
+    for (std::size_t nodeIndex = 0; nodeIndex < m_routing.map.nodeCount() && !found; ++nodeIndex)
     {
-        const auto& node = m_routing.map.node(i);
+        const auto& node = m_routing.map.node(nodeIndex);
         found            = node.active && node.zone == zoneCode;
     }
     return found;

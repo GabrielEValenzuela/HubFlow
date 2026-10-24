@@ -24,7 +24,7 @@ bool ProofCheck::matches(const VerificationProof& proof,
     const bool phoneOk {proof.phoneLast4.empty() || sameText(proof.phoneLast4, expectedPhoneLast4)};
     const bool postalOk {proof.postalCode.empty() ||
                          sameText(normalizePostalCode(proof.postalCode), normalizePostalCode(expectedPostalCode))};
-    return !proof.empty() && !expectedPhoneLast4.empty() && phoneOk && postalOk;
+    return !proof.isEmpty() && !expectedPhoneLast4.empty() && phoneOk && postalOk;
 }
 
 std::string ProofCheck::normalizePostalCode(const std::string& text)

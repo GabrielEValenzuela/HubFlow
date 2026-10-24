@@ -23,8 +23,8 @@ public:
      * @brief Traduce un nombre del vocabulario a su enumerado.
      * @throws database_error si el valor almacenado no es válido.
      */
-    template <typename Enum>
-    static Enum term(const std::optional<Enum>& parsed, const std::string& column)
+    template <typename TEnum>
+    static TEnum term(const std::optional<TEnum>& parsed, const std::string& column)
     {
         if (!parsed.has_value())
         {

@@ -22,7 +22,7 @@ void RoutePersistenceSubscriber::on(const domain::RouteStopResolved& event)
 
 void RoutePersistenceSubscriber::on(const domain::DeliveryRouteReassigned& event)
 {
-    m_repository.updateCourier(event.routeId(), event.to());
+    m_repository.updateCourier(event.routeId(), event.newCourier());
 }
 
 } // namespace hubflow::routing::application

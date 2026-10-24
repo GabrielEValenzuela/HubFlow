@@ -6,9 +6,9 @@ namespace hubflow::platform
 Json Controller::page(const Json& items, const std::size_t limit, const std::size_t offset)
 {
     Json slice = Json::array();
-    for (std::size_t i = offset; i < items.size() && i < offset + limit; ++i)
+    for (std::size_t itemIndex = offset; itemIndex < items.size() && itemIndex < offset + limit; ++itemIndex)
     {
-        slice.push_back(items.at(i));
+        slice.push_back(items.at(itemIndex));
     }
     return Json {{"items", slice}, {"total", items.size()}, {"limit", limit}, {"offset", offset}};
 }

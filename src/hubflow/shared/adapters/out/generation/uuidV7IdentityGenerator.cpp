@@ -21,14 +21,14 @@ std::uint64_t systemMilliseconds()
 std::string hexText(const std::array<std::uint8_t, UUID_BYTES>& bytes)
 {
     std::string text;
-    for (std::size_t i = 0; i < bytes.size(); ++i)
+    for (std::size_t byteIndex = 0; byteIndex < bytes.size(); ++byteIndex)
     {
-        if (i == 4 || i == 6 || i == 8 || i == 10)
+        if (byteIndex == 4 || byteIndex == 6 || byteIndex == 8 || byteIndex == 10)
         {
             text.push_back('-');
         }
-        text.push_back(HEX_DIGITS[bytes[i] >> 4]);
-        text.push_back(HEX_DIGITS[bytes[i] & 0x0F]);
+        text.push_back(HEX_DIGITS[bytes[byteIndex] >> 4]);
+        text.push_back(HEX_DIGITS[bytes[byteIndex] & 0x0F]);
     }
     return text;
 }

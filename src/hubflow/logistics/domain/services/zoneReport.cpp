@@ -14,7 +14,7 @@ ZoneSummary summarizeZone(const PendingNode* pNode, const std::string& zone, con
         {
             summary.count += 1;
             summary.totalWeightKg += shipment.weightKg();
-            summary.urgentCount += policy.priorityOf(shipment) == policy.highest() ? 1 : 0;
+            summary.urgentCount += policy.priorityOf(shipment) == policy.highestPriority() ? 1 : 0;
         }
     }
     return summary;

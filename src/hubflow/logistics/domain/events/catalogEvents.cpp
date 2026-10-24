@@ -19,7 +19,7 @@ const ZoneState& ZoneChanged::state() const noexcept
     return m_state;
 }
 
-bool ZoneChanged::created() const noexcept
+bool ZoneChanged::wasCreated() const noexcept
 {
     return m_created;
 }
@@ -43,7 +43,7 @@ const ServiceLevelState& ServiceLevelChanged::state() const noexcept
     return m_state;
 }
 
-bool ServiceLevelChanged::created() const noexcept
+bool ServiceLevelChanged::wasCreated() const noexcept
 {
     return m_created;
 }
@@ -67,7 +67,7 @@ const ShipmentFeatureState& ShipmentFeatureChanged::state() const noexcept
     return m_state;
 }
 
-bool ShipmentFeatureChanged::created() const noexcept
+bool ShipmentFeatureChanged::wasCreated() const noexcept
 {
     return m_created;
 }

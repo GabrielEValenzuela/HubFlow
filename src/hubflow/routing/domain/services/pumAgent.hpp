@@ -15,10 +15,10 @@ class PumAgent final
 public:
     PumAgent(const RoadMap& map, const SearchStrategy& strategy);
 
-    /// @brief Resuelve el tramo @p from → @p to y devuelve la traza de la búsqueda.
-    SearchTrace travel(std::size_t from, std::size_t to) const;
+    /// @brief Resuelve el tramo @p origin → @p destination y devuelve la traza de la búsqueda.
+    SearchTrace travel(std::size_t origin, std::size_t destination) const;
 
-    const RoadMap&  map() const noexcept;
+    const RoadMap&  roadMap() const noexcept;
     SearchAlgorithm algorithm() const noexcept;
 
 private:

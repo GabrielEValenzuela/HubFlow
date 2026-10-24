@@ -21,7 +21,7 @@ public:
     virtual unsigned priorityOf(const Shipment& shipment) const = 0;
 
     /// @brief La mayor prioridad que puede tener un envío hoy (0 si no hay ninguna definida).
-    virtual unsigned highest() const = 0;
+    virtual unsigned highestPriority() const = 0;
 };
 
 } // namespace hubflow::logistics::domain

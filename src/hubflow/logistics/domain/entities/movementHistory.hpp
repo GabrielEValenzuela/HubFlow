@@ -24,15 +24,15 @@ public:
     void restore(const Movement& movement);
 
     /// @brief Del más antiguo al más reciente. O(n).
-    template <typename Visitor>
-    void forEachChronological(Visitor visit) const
+    template <typename TVisitor>
+    void forEachChronological(TVisitor visit) const
     {
         m_movements.forEach(visit);
     }
 
     /// @brief Del más reciente al más antiguo, usando los punteros anteriores. O(n).
-    template <typename Visitor>
-    void forEachReverse(Visitor visit) const
+    template <typename TVisitor>
+    void forEachReverse(TVisitor visit) const
     {
         m_movements.forEachReverse(visit);
     }

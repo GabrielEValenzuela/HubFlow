@@ -5,13 +5,14 @@
 namespace hubflow::tracking::domain
 {
 
-CustomerTimeline CustomerTimeline::from(const ds::DynamicArray<MilestoneEvent>& events)
+CustomerTimeline CustomerTimeline::fromEvents(const ds::DynamicArray<MilestoneEvent>& events)
 {
     CustomerTimeline timeline;
-    for (std::size_t i = 0; i < events.size(); ++i)
+    for (std::size_t eventIndex = 0; eventIndex < events.size(); ++eventIndex)
     {
-        timeline.m_entries.pushBack(
-            TimelineEntry {events[i].milestone, CustomerWording::sentence(events[i].milestone), events[i].occurredAt});
+        timeline.m_entries.pushBack(TimelineEntry {events[eventIndex].milestone,
+                                                   CustomerWording::sentence(events[eventIndex].milestone),
+                                                   events[eventIndex].occurredAt});
     }
     return timeline;
 }
@@ -21,24 +22,24 @@ std::size_t CustomerTimeline::size() const noexcept
     return m_entries.size();
 }
 
-bool CustomerTimeline::empty() const noexcept
+bool CustomerTimeline::isEmpty() const noexcept
 {
-    return m_entries.empty();
+    return m_entries.isEmpty();
 }
 
-const TimelineEntry& CustomerTimeline::entry(const std::size_t index) const
+const TimelineEntry& CustomerTimeline::entryAt(const std::size_t index) const
 {
     return m_entries[index];
 }
 
-const TimelineEntry& CustomerTimeline::current() const
+const TimelineEntry& CustomerTimeline::currentEntry() const
 {
     return m_entries[m_entries.size() - 1];
 }
 
-bool CustomerTimeline::finished() const noexcept
+bool CustomerTimeline::isFinished() const noexcept
 {
-    return !m_entries.empty() && m_entries[m_entries.size() - 1].milestone == Milestone::Delivered;
+    return !m_entries.isEmpty() && m_entries[m_entries.size() - 1].milestone == Milestone::Delivered;
 }
 
 } // namespace hubflow::tracking::domain

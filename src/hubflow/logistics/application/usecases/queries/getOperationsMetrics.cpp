@@ -27,7 +27,7 @@ OperationsMetrics GetOperationsMetrics::execute(const shared::application::Princ
             metrics.pendingByZone.pushBack(OperationsMetrics::ZoneEntry {
                 zone.code(),
                 zone.name(),
-                zone.active(),
+                zone.isActive(),
                 domain::summarizeZone(m_model.pending.head(), zone.code(), m_model.priorityPolicy)});
         });
     return metrics;

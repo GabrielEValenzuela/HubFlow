@@ -6,7 +6,7 @@ namespace hubflow::logistics::domain
 LookupResult LinearShipmentLookup::find(const ShipmentCatalog& catalog, const std::string& code) const
 {
     LookupResult result;
-    for (const auto* pNode = catalog.list().head(); pNode != nullptr && result.pShipment == nullptr;
+    for (const auto* pNode = catalog.allShipments().head(); pNode != nullptr && result.pShipment == nullptr;
          pNode             = pNode->pNext)
     {
         ++result.visited;

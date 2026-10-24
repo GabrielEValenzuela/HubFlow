@@ -47,8 +47,8 @@ public:
     Shipment& require(const std::string& code) const;
 
     /// @brief Visita los envíos en orden de alta.
-    template <typename Visitor>
-    void forEach(Visitor visit) const
+    template <typename TVisitor>
+    void forEach(TVisitor visit) const
     {
         m_shipments.forEach(
             [&visit](Shipment* pShipment)
@@ -57,7 +57,7 @@ public:
             });
     }
 
-    const ds::SinglyLinkedList<Shipment*>& list() const noexcept;
+    const ds::SinglyLinkedList<Shipment*>& allShipments() const noexcept;
     const ShipmentBst&                     bst() const noexcept;
     const ShipmentBPlusTree&               bPlusTree() const noexcept;
     std::size_t                            size() const noexcept;

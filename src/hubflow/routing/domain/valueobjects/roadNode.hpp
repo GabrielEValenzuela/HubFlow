@@ -26,7 +26,7 @@ struct RoadNode
 /// @brief Calle que une un punto nuevo con otro ya existente, con su largo en kilómetros.
 struct RoadLink
 {
-    std::string toId;
+    std::string destinationId;
     double      costKm {0.0};
 };
 

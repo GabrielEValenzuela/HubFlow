@@ -44,7 +44,7 @@ Shipment& ShipmentCatalog::require(const std::string& code) const
     return *pShipment;
 }
 
-const ds::SinglyLinkedList<Shipment*>& ShipmentCatalog::list() const noexcept
+const ds::SinglyLinkedList<Shipment*>& ShipmentCatalog::allShipments() const noexcept
 {
     return m_shipments;
 }

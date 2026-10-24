@@ -100,7 +100,7 @@ std::size_t PendingShipments::size() const noexcept
     return m_size;
 }
 
-bool PendingShipments::empty() const noexcept
+bool PendingShipments::isEmpty() const noexcept
 {
     return m_pHead == nullptr;
 }

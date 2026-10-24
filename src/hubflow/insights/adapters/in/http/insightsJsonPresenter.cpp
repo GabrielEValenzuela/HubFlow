@@ -82,9 +82,9 @@ Json InsightsJsonPresenter::bst(const logistics::domain::ShipmentBst& tree)
 Json InsightsJsonPresenter::bstLookup(const application::BstLookup& lookup)
 {
     Json path = Json::array();
-    for (std::size_t i = 0; i < lookup.path.size(); ++i)
+    for (std::size_t pathPosition = 0; pathPosition < lookup.path.size(); ++pathPosition)
     {
-        const auto& visit = lookup.path[i];
+        const auto& visit = lookup.path[pathPosition];
         path.push_back(Json {{"code", visit.code}, {"direction", directionOf(visit.step)}});
     }
     return Json {{"found", lookup.pShipment != nullptr},

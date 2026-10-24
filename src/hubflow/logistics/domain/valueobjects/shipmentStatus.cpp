@@ -14,15 +14,19 @@ bool isAwaitingDispatch(const ShipmentStatus status) noexcept
            status == ShipmentStatus::Reprogramado;
 }
 
-bool canTransition(const ShipmentStatus from, const ShipmentStatus to) noexcept
+bool canTransition(const ShipmentStatus currentStatus, const ShipmentStatus targetStatus) noexcept
 {
-    const bool fromRecibido {from == ShipmentStatus::Recibido &&
-                             (to == ShipmentStatus::Clasificado || to == ShipmentStatus::EnReparto)};
-    const bool fromClasificado {from == ShipmentStatus::Clasificado && to == ShipmentStatus::EnReparto};
-    const bool fromEnReparto {from == ShipmentStatus::EnReparto &&
-                              (to == ShipmentStatus::Entregado || to == ShipmentStatus::Reprogramado)};
-    const bool fromReprogramado {from == ShipmentStatus::Reprogramado &&
-                                 (to == ShipmentStatus::Clasificado || to == ShipmentStatus::EnReparto)};
+    const bool fromRecibido {
+        currentStatus == ShipmentStatus::Recibido &&
+        (targetStatus == ShipmentStatus::Clasificado || targetStatus == ShipmentStatus::EnReparto)};
+    const bool fromClasificado {currentStatus == ShipmentStatus::Clasificado &&
+                                targetStatus == ShipmentStatus::EnReparto};
+    const bool fromEnReparto {
+        currentStatus == ShipmentStatus::EnReparto &&
+        (targetStatus == ShipmentStatus::Entregado || targetStatus == ShipmentStatus::Reprogramado)};
+    const bool fromReprogramado {
+        currentStatus == ShipmentStatus::Reprogramado &&
+        (targetStatus == ShipmentStatus::Clasificado || targetStatus == ShipmentStatus::EnReparto)};
     return fromRecibido || fromClasificado || fromEnReparto || fromReprogramado;
 }
 

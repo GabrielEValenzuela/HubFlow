@@ -127,15 +127,15 @@ TEST(RoutePlanExport, SequenceGoesFromHubThroughEveryStopBackToHub)
     EXPECT_EQ(segments.front().at("from"), "HUB");
     EXPECT_EQ(segments.back().at("to"), "HUB");
     double cost {0.0};
-    for (std::size_t i = 0; i < segments.size(); ++i)
+    for (std::size_t segmentIndex = 0; segmentIndex < segments.size(); ++segmentIndex)
     {
-        const json& segment = segments.at(i);
+        const json& segment = segments.at(segmentIndex);
         EXPECT_EQ(segment.at("path").front(), segment.at("from"));
         EXPECT_EQ(segment.at("path").back(), segment.at("to"));
-        if (i + 1 < segments.size())
+        if (segmentIndex + 1 < segments.size())
         {
-            EXPECT_EQ(segment.at("to"), route.stops()[i].nodeId);
-            EXPECT_EQ(segment.at("to"), segments.at(i + 1).at("from"));
+            EXPECT_EQ(segment.at("to"), route.stops()[segmentIndex].nodeId);
+            EXPECT_EQ(segment.at("to"), segments.at(segmentIndex + 1).at("from"));
         }
         const json& step = segment.at("steps").at(0);
         for (const char* key : {"step", "expanded", "frontier", "explored"})

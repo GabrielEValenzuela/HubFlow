@@ -57,8 +57,8 @@ public:
     /// @brief Quita y destruye el grupo. Antes hay que haber publicado sus eventos.
     void discard(const std::string& id);
 
-    template <typename Visitor>
-    void forEach(Visitor visit) const
+    template <typename TVisitor>
+    void forEach(TVisitor visit) const
     {
         m_groups.forEach(
             [&visit](ShipmentGroup* pGroup)

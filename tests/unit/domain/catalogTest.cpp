@@ -60,7 +60,7 @@ private:
         return shipment.service() == "ESTANDAR" ? 9 : 1;
     }
 
-    unsigned highest() const override
+    unsigned highestPriority() const override
     {
         return 9;
     }
@@ -96,7 +96,7 @@ TEST(ZoneTest, OpensRenamesAndRaisesOneEventPerRealChange)
 {
     Zone* pZone = Zone::open("OESTE", "Oeste", actor());
     EXPECT_EQ(pZone->pendingEvents(), 1U);
-    EXPECT_TRUE(pZone->active());
+    EXPECT_TRUE(pZone->isActive());
 
     const FakeOccupancy free;
     pZone->revise(std::string {"Oeste"}, std::nullopt, free, actor());
@@ -137,17 +137,17 @@ TEST(ZoneTest, DeactivationIsRefusedForEachReasonAndAppliedOnlyWhenFree)
                       pZone->revise(std::nullopt, false, occupancy, actor());
                   }),
               "zone.has_map_nodes");
-    EXPECT_TRUE(pZone->active());
+    EXPECT_TRUE(pZone->isActive());
     EXPECT_EQ(pZone->pendingEvents(), 0U);
 
     occupancy.mapNodes = false;
     pZone->revise(std::nullopt, false, occupancy, actor());
-    EXPECT_FALSE(pZone->active());
+    EXPECT_FALSE(pZone->isActive());
     EXPECT_EQ(pZone->pendingEvents(), 1U);
     pZone->revise(std::nullopt, false, occupancy, actor());
     EXPECT_EQ(pZone->pendingEvents(), 1U);
     pZone->revise(std::nullopt, true, occupancy, actor());
-    EXPECT_TRUE(pZone->active());
+    EXPECT_TRUE(pZone->isActive());
     delete pZone;
 }
 
@@ -179,7 +179,7 @@ TEST(ServiceLevelTest, ValidatesPriorityAndRefusesDeactivationWithShipmentsInPla
               "service_level.has_shipments");
     occupancy.withService = false;
     pService->revise(std::nullopt, false, occupancy, actor());
-    EXPECT_FALSE(pService->active());
+    EXPECT_FALSE(pService->isActive());
     delete pService;
 }
 
@@ -187,7 +187,7 @@ TEST(ShipmentFeatureTest, TogglesWithoutRestrictions)
 {
     ShipmentFeature* pFeature = ShipmentFeature::open("FRAGIL", "Frágil", actor());
     pFeature->revise(std::nullopt, false, actor());
-    EXPECT_FALSE(pFeature->active());
+    EXPECT_FALSE(pFeature->isActive());
     pFeature->revise(std::nullopt, false, actor());
     EXPECT_EQ(pFeature->pendingEvents(), 2U);
     delete pFeature;
@@ -234,7 +234,7 @@ TEST(PriorityPolicyTest, ANewServiceWithHigherPriorityGoesFirstWithoutTouchingTh
         });
     EXPECT_EQ(order, (std::vector<std::string> {"PKG-0003", "PKG-0004", "PKG-0001", "PKG-0002"}));
     const PriorityPolicy& policy = priorities.policy;
-    EXPECT_EQ(policy.highest(), 10U);
+    EXPECT_EQ(policy.highestPriority(), 10U);
 }
 
 TEST(PriorityPolicyTest, ThePendingListObeysWhateverPolicyItIsGiven)

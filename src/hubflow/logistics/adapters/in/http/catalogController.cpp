@@ -14,11 +14,11 @@ using platform::RequestContext;
 constexpr std::size_t MIN_NAME {2};
 constexpr std::size_t MAX_NAME {60};
 
-template <typename Request>
-Request changesOf(const RequestContext& context)
+template <typename TRequest>
+TRequest changesOf(const RequestContext& context)
 {
-    auto    input = InputValidator::body(context.request);
-    Request request;
+    auto     input = InputValidator::body(context.request);
+    TRequest request;
     if (input.has("name"))
     {
         request.name = input.requiredText("name", MIN_NAME, MAX_NAME);

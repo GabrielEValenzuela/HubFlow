@@ -20,9 +20,9 @@ std::string shipmentDetail(const logistics::domain::ShipmentEvent& event)
 std::string joined(const ds::DynamicArray<std::string>& codes)
 {
     std::string text;
-    for (std::size_t i = 0; i < codes.size(); ++i)
+    for (std::size_t codeIndex = 0; codeIndex < codes.size(); ++codeIndex)
     {
-        text += (i == 0 ? "" : ", ") + codes[i];
+        text += (codeIndex == 0 ? "" : ", ") + codes[codeIndex];
     }
     return text;
 }
@@ -100,7 +100,7 @@ void AuditLogSubscriber::on(const logistics::domain::ShipmentGroupDissolved& eve
 void AuditLogSubscriber::on(const logistics::domain::ZoneChanged& event)
 {
     write(event,
-          event.created() ? "zone.created" : "zone.changed",
+          event.wasCreated() ? "zone.created" : "zone.changed",
           event.state().code,
           event.state().name + " · " + availability(event.state().active));
 }
@@ -108,7 +108,7 @@ void AuditLogSubscriber::on(const logistics::domain::ZoneChanged& event)
 void AuditLogSubscriber::on(const logistics::domain::ServiceLevelChanged& event)
 {
     write(event,
-          event.created() ? "service_level.created" : "service_level.changed",
+          event.wasCreated() ? "service_level.created" : "service_level.changed",
           event.state().code,
           event.state().name + " · prioridad " + std::to_string(event.state().priority) + " · " +
               availability(event.state().active));
@@ -117,7 +117,7 @@ void AuditLogSubscriber::on(const logistics::domain::ServiceLevelChanged& event)
 void AuditLogSubscriber::on(const logistics::domain::ShipmentFeatureChanged& event)
 {
     write(event,
-          event.created() ? "feature.created" : "feature.changed",
+          event.wasCreated() ? "feature.created" : "feature.changed",
           event.state().code,
           event.state().name + " · " + availability(event.state().active));
 }
@@ -145,7 +145,7 @@ void AuditLogSubscriber::on(const routing::domain::DeliveryRouteReassigned& even
     write(event,
           "route.reassigned",
           "Ruta #" + std::to_string(event.routeId()),
-          event.from().name + " → " + event.to().name);
+          event.previousCourier().name + " → " + event.newCourier().name);
 }
 
 void AuditLogSubscriber::on(const routing::domain::RoadNodeAdded& event)
@@ -170,7 +170,7 @@ void AuditLogSubscriber::write(const shared::domain::DomainEvent& event,
                                const std::string&                 subject,
                                const std::string&                 detail)
 {
-    const auto& context = event.context();
+    const auto& context = event.actorContext();
     m_trail.append(AuditEntry {0, context.occurredAt, context.userId, context.actorName, type, subject, detail});
 }
 
