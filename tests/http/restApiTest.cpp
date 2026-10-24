@@ -107,6 +107,7 @@ TEST(RestApi, InvalidShipmentListsEveryFieldError)
     std::set<std::string> fields;
     for (const auto& error : body.at("errors"))
     {
+        // cppcheck-suppress useStlAlgorithm
         fields.insert(error.at("field").get<std::string>());
     }
     EXPECT_TRUE(fields.count("recipient") == 1U && fields.count("zone") == 1U && fields.count("parcels") == 1U);
@@ -169,6 +170,7 @@ TEST(RestApi, InvalidParcelsListTheOffendingPosition)
     std::set<std::string> fields;
     for (const auto& error : body.at("errors"))
     {
+        // cppcheck-suppress useStlAlgorithm
         fields.insert(error.at("field").get<std::string>());
     }
     EXPECT_EQ(fields.count("parcels[0].weightKg"), 1U);
