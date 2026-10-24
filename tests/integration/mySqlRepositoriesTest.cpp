@@ -480,7 +480,7 @@ TEST_F(MySqlRepositories, MigrationSeedsTheReferenceCatalogsAndPermissions)
 TEST_F(MySqlRepositories, CatalogChangesAreUpsertedAndKeepTheirOrder)
 {
     logistics::adapters::MySqlCatalogRepository catalogsAdapter {connection()};
-    const logistics::application::CatalogRepository& catalogs = catalogsAdapter;
+    logistics::application::CatalogRepository& catalogs = catalogsAdapter;
     catalogs.saveZone({"OESTE", "Oeste", true});
     catalogs.saveZone({"NORTE", "Zona Norte", false});
     catalogs.saveServiceLevel({"RELAMPAGO", "Relámpago", 10, true});
@@ -519,10 +519,10 @@ TEST_F(MySqlRepositories, ShipmentFeaturesSurviveReload)
 TEST_F(MySqlRepositories, NewMapPointsAndTheirChangesSurviveReload)
 {
     logistics::adapters::MySqlCatalogRepository catalogsAdapter {connection()};
-    const logistics::application::CatalogRepository& catalogs = catalogsAdapter;
+    logistics::application::CatalogRepository& catalogs = catalogsAdapter;
     catalogs.saveZone({"OESTE", "Oeste", true});
     routing::adapters::MySqlRoadMapRepository mapsAdapter {connection()};
-    const routing::application::RoadMapRepository& maps = mapsAdapter;
+    routing::application::RoadMapRepository& maps = mapsAdapter;
     ds::DynamicArray<routing::domain::RoadLink> links;
     links.pushBack({"HUB", 4.5});
     maps.addNode({"O1", "Plaza Oeste", false, "OESTE", 6.0, 10.0, true}, links);
