@@ -118,8 +118,10 @@ namespace hubflow::platform
                 {
                     binds[columnIndex].buffer_type = MYSQL_TYPE_STRING;
                     binds[columnIndex].buffer = buffers[columnIndex].data();
+                    // cppcheck-suppress objectIndex
                     binds[columnIndex].buffer_length = COLUMN_BUFFER_SIZE;
                     binds[columnIndex].length = &lengths[columnIndex];
+                    // cppcheck-suppress objectIndex
                     binds[columnIndex].is_null = &spNulls[columnIndex];
                 }
                 mysql_free_result(pMetadata);
