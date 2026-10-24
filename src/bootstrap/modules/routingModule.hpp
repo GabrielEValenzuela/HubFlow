@@ -32,9 +32,11 @@ namespace hubflow::bootstrap
     /// @brief Lo que ruteo necesita de otros contextos: los envíos de logística, la mesa y los usuarios.
     struct RoutingNeighbours
     {
+        // cppcheck-suppress-begin uninitMemberVarNoCtor
         logistics::application::LogisticsModel& logistics;
         sorting::domain::SortingDesk& desk;
         const identity::application::UserRepository& users;
+        // cppcheck-suppress-end uninitMemberVarNoCtor
     };
 
     /**

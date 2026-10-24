@@ -32,9 +32,11 @@ namespace hubflow::bootstrap
     /// @brief Lo que logística necesita de otros contextos: el mapa de ruteo y quién es quién en el sistema.
     struct LogisticsNeighbours
     {
+        // cppcheck-suppress-begin uninitMemberVarNoCtor
         const routing::application::RoutingModel& routing;
         const identity::application::UserRepository& users;
         const identity::domain::AccessPolicy& policy;
+        // cppcheck-suppress-end uninitMemberVarNoCtor
     };
 
     /**

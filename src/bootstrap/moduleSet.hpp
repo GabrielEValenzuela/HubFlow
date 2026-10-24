@@ -25,6 +25,7 @@ namespace hubflow::bootstrap
         {
             TModule& module = *spModule;
             m_modules.push_back(std::move(spModule));
+            // cppcheck-suppress returnReference
             return module;
         }
 

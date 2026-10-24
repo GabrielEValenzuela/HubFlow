@@ -35,6 +35,7 @@ namespace hubflow::bootstrap
      */
     struct SharedServices
     {
+        // cppcheck-suppress-begin uninitMemberVarNoCtor
         const platform::Settings& settings;
         platform::MySqlConnection& connection;
         const shared::application::Clock& clock;
@@ -42,6 +43,7 @@ namespace hubflow::bootstrap
         shared::application::IdentityGenerator& identities;
         const identity::domain::PasswordHasher& hasher;
         const identity::application::TokenIssuer& tokens;
+        // cppcheck-suppress-end uninitMemberVarNoCtor
     };
 
 } // namespace hubflow::bootstrap
