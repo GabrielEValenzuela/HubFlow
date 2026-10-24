@@ -13,7 +13,7 @@ namespace hubflow::tracking::adapters
     void LogCustomerNotifier::send(const application::CustomerNotice& notice)
     {
         m_out << "[hubflow] aviso al cliente por " << notice.channel << " a " << notice.recipient << ": "
-              << notice.message << std::endl;
+              << notice.message << '\n';
     }
 
 } // namespace hubflow::tracking::adapters
