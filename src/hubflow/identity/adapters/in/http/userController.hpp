@@ -32,7 +32,7 @@ namespace hubflow::identity::adapters
     class UserController final : public platform::Controller
     {
     public:
-        explicit UserController(UserUseCases useCases);
+        explicit UserController(const UserUseCases& useCases);
 
     private:
         void registerRoutes(platform::ApiRouter& router) override;

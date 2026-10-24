@@ -19,7 +19,7 @@ namespace hubflow::identity::adapters
         constexpr std::size_t MAX_NAME {80};
     } // namespace
 
-    UserController::UserController(UserUseCases useCases)
+    UserController::UserController(const UserUseCases& useCases)
         : m_useCases {useCases}
     {
     }
