@@ -24,7 +24,7 @@ namespace hubflow::logistics::adapters
         }
     } // namespace
 
-    ShipmentGroupController::ShipmentGroupController(ShipmentGroupUseCases useCases)
+    ShipmentGroupController::ShipmentGroupController(const ShipmentGroupUseCases& useCases)
         : m_useCases {useCases}
     {
     }

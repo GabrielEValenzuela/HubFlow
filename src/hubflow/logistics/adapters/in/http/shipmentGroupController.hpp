@@ -31,7 +31,7 @@ namespace hubflow::logistics::adapters
     class ShipmentGroupController final : public platform::Controller
     {
     public:
-        explicit ShipmentGroupController(ShipmentGroupUseCases useCases);
+        explicit ShipmentGroupController(const ShipmentGroupUseCases& useCases);
 
     private:
         void registerRoutes(platform::ApiRouter& router) override;

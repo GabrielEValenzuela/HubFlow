@@ -37,7 +37,7 @@ namespace hubflow::logistics::adapters
         }
     } // namespace
 
-    CatalogController::CatalogController(CatalogUseCases useCases)
+    CatalogController::CatalogController(const CatalogUseCases& useCases)
         : m_useCases {useCases}
     {
     }

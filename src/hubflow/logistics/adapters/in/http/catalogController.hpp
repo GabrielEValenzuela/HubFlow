@@ -41,7 +41,7 @@ namespace hubflow::logistics::adapters
     class CatalogController final : public platform::Controller
     {
     public:
-        explicit CatalogController(CatalogUseCases useCases);
+        explicit CatalogController(const CatalogUseCases& useCases);
 
     private:
         void registerRoutes(platform::ApiRouter& router) override;
