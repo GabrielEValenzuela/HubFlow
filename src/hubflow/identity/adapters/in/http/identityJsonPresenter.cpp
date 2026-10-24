@@ -20,12 +20,12 @@ namespace hubflow::identity::adapters
             {"token", session.token}, {"expiresAt", session.expiresAt}, {"user", user(session.user)}};
     }
 
-    platform::Json IdentityJsonPresenter::users(const ds::DynamicArray<domain::UserState>& users)
+    platform::Json IdentityJsonPresenter::users(const ds::DynamicArray<domain::UserState>& userStates)
     {
         platform::Json items = platform::Json::array();
-        for (std::size_t userIndex = 0; userIndex < users.size(); ++userIndex)
+        for (std::size_t userIndex = 0; userIndex < userStates.size(); ++userIndex)
         {
-            items.push_back(user(users[userIndex]));
+            items.push_back(user(userStates[userIndex]));
         }
         return items;
     }

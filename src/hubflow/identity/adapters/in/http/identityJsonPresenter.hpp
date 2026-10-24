@@ -19,7 +19,7 @@ namespace hubflow::identity::adapters
         static platform::Json session(const application::Session& session);
 
         /// @brief Lista de fichas de usuario.
-        static platform::Json users(const ds::DynamicArray<domain::UserState>& users);
+        static platform::Json users(const ds::DynamicArray<domain::UserState>& userStates);
     };
 
 } // namespace hubflow::identity::adapters
