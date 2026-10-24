@@ -1,6 +1,8 @@
 #ifndef HUBFLOW_SHARED_APPLICATION_USE_CASE_HPP
 #define HUBFLOW_SHARED_APPLICATION_USE_CASE_HPP
 
+#include <cstdint>
+
 namespace hubflow::shared::application
 {
 
@@ -11,7 +13,7 @@ namespace hubflow::shared::application
      * NonIdempotent: cada ejecución produce un efecto nuevo (otro recurso, otro movimiento, otro
      * token); el borde HTTP lo protege con un Idempotency-Key cuando el cliente puede reintentar.
      */
-    enum class Idempotency
+    enum class Idempotency : std::uint8_t
     {
         Idempotent,
         NonIdempotent
