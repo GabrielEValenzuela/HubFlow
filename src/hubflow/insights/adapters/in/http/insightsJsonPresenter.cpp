@@ -13,7 +13,7 @@ namespace hubflow::insights::adapters
 
         constexpr std::size_t B_PLUS_ORDER {4};
 
-        Json bstNode(const logistics::domain::ShipmentBst::Node* pNode)
+        Json bstNode(const logistics::domain::ShipmentBst::Node* pNode) // NOLINT(misc-no-recursion)
         {
             Json node = nullptr;
             if (pNode != nullptr)
@@ -23,7 +23,7 @@ namespace hubflow::insights::adapters
             return node;
         }
 
-        Json bPlusNode(const logistics::domain::ShipmentBPlusTree::Node* pNode)
+        Json bPlusNode(const logistics::domain::ShipmentBPlusTree::Node* pNode) // NOLINT(misc-no-recursion)
         {
             Json node = nullptr;
             if (pNode != nullptr)
