@@ -12,44 +12,63 @@ namespace hubflow::bootstrap
 {
 
 /**
- * @brief Datos de arranque para poder usar el sistema desde la primera ejecución.
+ * @brief Usuarios de arranque para poder iniciar sesión desde la primera ejecución.
  *
- * - Si no existe ningún usuario crea admin, operador, pum1 y pum2 (dominio hubflow.local), todos con la contraseña
- *   de arranque configurada.
- * - Si el catálogo de envíos está vacío registra ocho paquetes de ejemplo, uno para cada punto de entrega
- *   C1, N2, S3, C2, N3, S5, C4 y N5, de modo que se pueda armar un lote y una ruta enseguida. Llevan los códigos
- *   fijos PKG-1001 a PKG-1008 del trabajo práctico, sea cual sea el formato de código elegido para los nuevos.
+ * Si no existe ningún usuario crea admin, operador, pum1 y pum2 (dominio hubflow.local), todos con la contraseña
+ * de arranque configurada. Si ya hay usuarios no toca nada, por lo que reiniciar el servicio nunca duplica ni
+ * pisa información.
+ */
+class UserSeeder final
+{
+public:
+    UserSeeder(identity::application::RegisterUser&         registerUser,
+               const identity::application::UserRepository& users,
+               const shared::application::Clock&            clock,
+               std::string                                  seedPassword);
+
+    /// @brief Crea los usuarios iniciales si todavía no hay ninguno.
+    void seedUsers();
+
+private:
+    identity::application::RegisterUser&         m_registerUser;
+    const identity::application::UserRepository& m_users;
+    const shared::application::Clock&            m_clock;
+    std::string                                  m_seedPassword;
+};
+
+/// @brief Colaboradores que necesita el registro del dataset inicial de envíos.
+struct ShipmentSeedCollaborators
+{
+    const identity::application::UserRepository&  users;
+    const identity::domain::AccessPolicy&         policy;
+    const logistics::application::LogisticsModel& logistics;
+    const shared::application::Clock&             clock;
+};
+
+/**
+ * @brief Envíos de ejemplo para poder armar un lote y una ruta enseguida.
+ *
+ * Si el catálogo de envíos está vacío registra ocho paquetes de ejemplo, uno para cada punto de entrega
+ * C1, N2, S3, C2, N3, S5, C4 y N5. Llevan los códigos fijos PKG-1001 a PKG-1008 del trabajo práctico, sea cual
+ * sea el formato de código elegido para los nuevos.
  *
  * Las zonas, niveles de servicio, características y permisos por rol iniciales no se cargan acá: los siembra la
  * migración del esquema, porque son datos de configuración y no del dataset de ejemplo.
  *
- * Si ya hay datos no toca nada, por lo que reiniciar el servicio nunca duplica ni pisa información.
+ * Si ya hay envíos no toca nada.
  */
-class DatasetSeeder final
+class ShipmentSeeder final
 {
 public:
-    DatasetSeeder(identity::application::RegisterUser&             registerUser,
-                  const identity::application::UserRepository&     users,
-                  logistics::application::RegisterShipmentUseCase& registerShipment,
-                  const logistics::application::LogisticsModel&    logistics,
-                  const identity::domain::AccessPolicy&            policy,
-                  const shared::application::Clock&                clock,
-                  std::string                                      seedPassword);
-
-    /// @brief Crea los usuarios iniciales si todavía no hay ninguno.
-    void seedUsers();
+    ShipmentSeeder(logistics::application::RegisterShipmentUseCase& registerShipment,
+                   const ShipmentSeedCollaborators&                 collaborators);
 
     /// @brief Registra el dataset inicial si todavía no hay envíos.
     void seedShipments();
 
 private:
-    identity::application::RegisterUser&             m_registerUser;
-    const identity::application::UserRepository&     m_users;
     logistics::application::RegisterShipmentUseCase& m_registerShipment;
-    const logistics::application::LogisticsModel&    m_logistics;
-    const identity::domain::AccessPolicy&            m_policy;
-    const shared::application::Clock&                m_clock;
-    std::string                                      m_seedPassword;
+    ShipmentSeedCollaborators                        m_collaborators;
 };
 
 } // namespace hubflow::bootstrap

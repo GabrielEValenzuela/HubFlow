@@ -9,14 +9,17 @@ namespace hubflow::bootstrap
 {
 
 /**
- * @brief Raíz de composición: conecta los casos de uso con sus adaptadores y pone el servicio en marcha.
+ * @brief Raíz de composición: conecta los contextos de negocio con la infraestructura y pone el servicio en marcha.
  *
- * Al crearse arma, en este orden: la conexión a MySQL, los adaptadores de salida (repositorios, hash de
- * contraseñas, tokens, reloj, exportación de planes), los modelos en memoria y los casos de uso. Los
- * suscriptores de eventos se registran en el orden en que deben reaccionar: primero las proyecciones del
- * modelo en memoria, después la persistencia, luego la exportación del plan de ruta y al final la
- * auditoría. Después reconstruye el modelo desde la base de datos, carga los datos iniciales si hacen falta
- * y declara los endpoints REST.
+ * Al crearse arma primero la infraestructura compartida y el estado en memoria de la planta, y después un módulo
+ * por contexto (identidad, auditoría, logística, mesa de clasificación, ruteo, análisis y seguimiento), en ese
+ * orden. Los módulos dependen entre sí sólo por los puertos y modelos que reciben al construirse; sumar un
+ * contexto es sumar un módulo a la lista.
+ *
+ * Los suscriptores de eventos se registran por etapas, no por módulo: primero las proyecciones del modelo en
+ * memoria, después la persistencia, luego la exportación del plan de ruta, los avisos al cliente y al final la
+ * auditoría. Después se reconstruye el modelo desde la base de datos, se cargan los datos iniciales si hacen
+ * falta y se declaran los endpoints REST.
  *
  * Al ejecutarse sirve la API bajo @c /api/v1 y los archivos estáticos de la interfaz web en @c / hasta
  * recibir SIGINT o SIGTERM, momento en que termina de atender el pedido en curso y se detiene.

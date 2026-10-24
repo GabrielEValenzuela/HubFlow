@@ -38,6 +38,9 @@ file(GLOB_RECURSE HUBFLOW_APPLICATION_SOURCES CONFIGURE_DEPENDS
 add_library(hubflow_application STATIC ${HUBFLOW_APPLICATION_SOURCES})
 target_link_libraries(hubflow_application PUBLIC hubflow_domain)
 
+add_library(hubflow_composition STATIC src/bootstrap/moduleSet.cpp)
+target_link_libraries(hubflow_composition PUBLIC hubflow_application)
+
 if(HUBFLOW_BUILD_TESTS OR HUBFLOW_BUILD_SERVER)
     file(GLOB_RECURSE HUBFLOW_EXPORT_SOURCES CONFIGURE_DEPENDS
         src/hubflow/routing/adapters/out/export/*.cpp)
@@ -65,8 +68,9 @@ if(HUBFLOW_BUILD_SERVER)
         PRIVATE hubflow_mysql hubflow_sodium OpenSSL::Crypto nlohmann_json::nlohmann_json)
 
     file(GLOB_RECURSE HUBFLOW_BOOTSTRAP_SOURCES CONFIGURE_DEPENDS src/bootstrap/*.cpp)
+    list(FILTER HUBFLOW_BOOTSTRAP_SOURCES EXCLUDE REGEX "moduleSet\\.cpp$")
     add_library(hubflow_bootstrap STATIC ${HUBFLOW_BOOTSTRAP_SOURCES})
-    target_link_libraries(hubflow_bootstrap PUBLIC hubflow_adapters hubflow_http)
+    target_link_libraries(hubflow_bootstrap PUBLIC hubflow_composition hubflow_adapters hubflow_http)
 
     add_executable(hubflow src/main.cpp)
     target_link_libraries(hubflow PRIVATE hubflow_bootstrap)

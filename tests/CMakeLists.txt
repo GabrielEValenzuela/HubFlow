@@ -11,7 +11,7 @@ target_link_libraries(hubflow_test_support PUBLIC hubflow_application)
 
 file(GLOB_RECURSE HUBFLOW_UNIT_TESTS CONFIGURE_DEPENDS unit/*.cpp application/*.cpp adapters/*.cpp)
 add_executable(hubflow_tests ${HUBFLOW_UNIT_TESTS})
-target_link_libraries(hubflow_tests PRIVATE hubflow_test_support hubflow_export GTest::gtest_main)
+target_link_libraries(hubflow_tests PRIVATE hubflow_test_support hubflow_export hubflow_composition GTest::gtest_main)
 gtest_discover_tests(hubflow_tests DISCOVERY_TIMEOUT 30)
 
 file(GLOB_RECURSE HUBFLOW_HTTP_TESTS CONFIGURE_DEPENDS http/*.cpp)

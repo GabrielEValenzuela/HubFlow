@@ -68,24 +68,18 @@ std::vector<ShipmentDraft> initialShipments()
 }
 } // namespace
 
-DatasetSeeder::DatasetSeeder(identity::application::RegisterUser&             registerUser,
-                             const identity::application::UserRepository&     users,
-                             logistics::application::RegisterShipmentUseCase& registerShipment,
-                             const logistics::application::LogisticsModel&    logistics,
-                             const identity::domain::AccessPolicy&            policy,
-                             const shared::application::Clock&                clock,
-                             std::string                                      seedPassword)
+UserSeeder::UserSeeder(identity::application::RegisterUser&         registerUser,
+                       const identity::application::UserRepository& users,
+                       const shared::application::Clock&            clock,
+                       std::string                                  seedPassword)
     : m_registerUser {registerUser}
     , m_users {users}
-    , m_registerShipment {registerShipment}
-    , m_logistics {logistics}
-    , m_policy {policy}
     , m_clock {clock}
     , m_seedPassword {std::move(seedPassword)}
 {
 }
 
-void DatasetSeeder::seedUsers()
+void UserSeeder::seedUsers()
 {
     if (m_users.count() == 0)
     {
@@ -97,13 +91,20 @@ void DatasetSeeder::seedUsers()
     }
 }
 
-void DatasetSeeder::seedShipments()
+ShipmentSeeder::ShipmentSeeder(logistics::application::RegisterShipmentUseCase& registerShipment,
+                               const ShipmentSeedCollaborators&                 collaborators)
+    : m_registerShipment {registerShipment}
+    , m_collaborators {collaborators}
 {
-    if (m_logistics.catalog.size() == 0)
+}
+
+void ShipmentSeeder::seedShipments()
+{
+    if (m_collaborators.logistics.catalog.size() == 0)
     {
-        const auto                           operador = m_users.byEmail(OPERATOR_EMAIL);
+        const auto                           operador = m_collaborators.users.byEmail(OPERATOR_EMAIL);
         const shared::application::Principal author {
-            operador.has_value() ? operador->id : 0, SYSTEM_NAME, Role::Operador, &m_policy};
+            operador.has_value() ? operador->id : 0, SYSTEM_NAME, Role::Operador, &m_collaborators.policy};
         for (const auto& draft : initialShipments())
         {
             m_registerShipment.execute(author, draft);
