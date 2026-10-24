@@ -1,11 +1,13 @@
 #ifndef HUBFLOW_ROUTING_DOMAIN_VALUEOBJECTS_SEARCH_ALGORITHM_HPP
 #define HUBFLOW_ROUTING_DOMAIN_VALUEOBJECTS_SEARCH_ALGORITHM_HPP
 
+#include <cstdint>
+
 namespace hubflow::routing::domain
 {
 
     /// @brief Algoritmo de búsqueda que usa el agente PUM.
-    enum class SearchAlgorithm
+    enum class SearchAlgorithm : std::uint8_t
     {
         BreadthFirst,
         DepthFirst,
