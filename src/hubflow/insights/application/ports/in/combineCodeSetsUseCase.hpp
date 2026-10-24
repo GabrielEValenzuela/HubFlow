@@ -7,12 +7,13 @@
 #include "hubflow/logistics/domain/entities/shipment.hpp"
 #include "hubflow/shared/application/principal.hpp"
 #include "hubflow/shared/application/useCase.hpp"
+#include <cstdint>
 
 namespace hubflow::insights::application
 {
 
     /// @brief Operación entre conjuntos de códigos.
-    enum class SetOperationKind
+    enum class SetOperationKind : std::uint8_t
     {
         Union,
         Intersection,

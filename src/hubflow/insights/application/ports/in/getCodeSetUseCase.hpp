@@ -5,6 +5,7 @@
 #include "hubflow/logistics/domain/entities/shipment.hpp"
 #include "hubflow/shared/application/principal.hpp"
 #include "hubflow/shared/application/useCase.hpp"
+#include <cstdint>
 
 namespace hubflow::insights::application
 {
@@ -12,7 +13,7 @@ namespace hubflow::insights::application
     /// @brief Criterio de pertenencia pedido por el operador: una zona o un nivel de servicio, por su código.
     struct SetSelector
     {
-        enum class Kind
+        enum class Kind : std::uint8_t
         {
             Zone,
             Service
