@@ -17,7 +17,7 @@ namespace hubflow::shared::application
         struct Term
         {
             TEnum value;
-            const char* text;
+            const char* text {nullptr};
         };
 
         constexpr Term<logistics::domain::ShipmentStatus> STATUS_TERMS[] {
@@ -61,8 +61,8 @@ namespace hubflow::shared::application
             {sorting::domain::SortCriteria::CodeAscending, "CODE_ASC"},
             {sorting::domain::SortCriteria::WeightDescending, "WEIGHT_DESC"}};
 
-        template<typename TEnum, std::size_t TERM_COUNT>
-        std::string textOf(const Term<TEnum> (&terms)[TERM_COUNT], const TEnum value)
+        template<typename TEnum, std::size_t TTermCount>
+        std::string textOf(const Term<TEnum> (&terms)[TTermCount], const TEnum value)
         {
             std::string text {terms[0].text};
             for (const auto& term : terms)
@@ -75,8 +75,8 @@ namespace hubflow::shared::application
             return text;
         }
 
-        template<typename TEnum, std::size_t TERM_COUNT>
-        std::optional<TEnum> valueOf(const Term<TEnum> (&terms)[TERM_COUNT], const std::string& text)
+        template<typename TEnum, std::size_t TTermCount>
+        std::optional<TEnum> valueOf(const Term<TEnum> (&terms)[TTermCount], const std::string& text)
         {
             std::optional<TEnum> value;
             for (const auto& term : terms)
@@ -95,14 +95,14 @@ namespace hubflow::shared::application
         return textOf(STATUS_TERMS, status);
     }
 
-    std::string Vocabulary::name(const identity::domain::Role role)
+    std::string Vocabulary::name(const identity::domain::Role userRole)
     {
-        return textOf(ROLE_TERMS, role);
+        return textOf(ROLE_TERMS, userRole);
     }
 
-    std::string Vocabulary::name(const identity::domain::Permission permission)
+    std::string Vocabulary::name(const identity::domain::Permission grantedPermission)
     {
-        return textOf(PERMISSION_TERMS, permission);
+        return textOf(PERMISSION_TERMS, grantedPermission);
     }
 
     std::string Vocabulary::name(const routing::domain::SearchAlgorithm algorithm)

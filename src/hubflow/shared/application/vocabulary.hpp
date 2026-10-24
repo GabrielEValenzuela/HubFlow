@@ -24,8 +24,8 @@ namespace hubflow::shared::application
     {
     public:
         static std::string name(logistics::domain::ShipmentStatus status);
-        static std::string name(identity::domain::Role role);
-        static std::string name(identity::domain::Permission permission);
+        static std::string name(identity::domain::Role userRole);
+        static std::string name(identity::domain::Permission grantedPermission);
         static std::string name(routing::domain::SearchAlgorithm algorithm);
         static std::string name(routing::domain::StopOutcome outcome);
         static std::string name(routing::domain::RouteStatus status);
