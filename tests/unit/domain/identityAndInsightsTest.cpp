@@ -49,10 +49,10 @@ TEST(User, RegistersValidatesAndAuthenticates)
     EXPECT_THROW(
         identity::domain::User::registerNew(
             5, "mal-email", "Nombre", identity::domain::Role::Pum, "secreta123", hasher, hubflow::test::actor()),
-        business_error);
+        BusinessError);
     EXPECT_THROW(identity::domain::User::registerNew(
                      5, "a@b.co", "Nombre", identity::domain::Role::Pum, "corta", hasher, hubflow::test::actor()),
-                 business_error);
+                 BusinessError);
 }
 
 TEST(User, CannotDeactivateItself)
@@ -60,7 +60,7 @@ TEST(User, CannotDeactivateItself)
     identity::domain::User* pUser = identity::domain::User::restore(
         identity::domain::UserState {1, "a@b.co", "Admin", identity::domain::Role::Admin, "", true});
     const test::IdleCouriers idleCouriers;
-    EXPECT_THROW(pUser->activate(false, idleCouriers, hubflow::test::actor()), business_error);
+    EXPECT_THROW(pUser->activate(false, idleCouriers, hubflow::test::actor()), BusinessError);
     delete pUser;
 }
 
@@ -81,7 +81,7 @@ TEST(AccessPolicy, GrantsComeFromData)
     EXPECT_TRUE(policy.allows(Role::Operador, Permission::AssignRoutes));
     EXPECT_TRUE(policy.allows(Role::Pum, Permission::ResolveStops));
     EXPECT_FALSE(policy.allows(Role::Pum, Permission::OperateShipments));
-    EXPECT_THROW(policy.require(Role::Pum, Permission::ViewAudit), business_error);
+    EXPECT_THROW(policy.require(Role::Pum, Permission::ViewAudit), BusinessError);
 
     policy.grant(Role::Pum, Permission::ViewAudit);
     policy.grant(Role::Pum, Permission::ViewAudit);

@@ -14,34 +14,34 @@ namespace hubflow::routing::domain
         constexpr std::size_t MAX_LABEL_LENGTH {80};
     } // namespace
 
-    std::size_t RoadMap::addNode(const RoadNode& node)
+    std::size_t RoadMap::addNode(const RoadNode& roadNode)
     {
-        if (node.id.empty() || indexOf(node.id).has_value())
+        if (roadNode.id.empty() || indexOf(roadNode.id).has_value())
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Conflict, "road_node.invalid", "Nodo vacío o duplicado en el mapa"};
         }
-        return m_graph.addVertex(node);
+        return m_graph.addVertex(roadNode);
     }
 
-    std::size_t RoadMap::declareNode(const RoadNode& node,
+    std::size_t RoadMap::declareNode(const RoadNode& roadNode,
                                      const ds::DynamicArray<RoadLink>& links,
                                      const shared::domain::ActorContext& context)
     {
-        if (node.id.empty() || node.id.size() > MAX_ID_LENGTH || node.label.empty() ||
-            node.label.size() > MAX_LABEL_LENGTH)
+        if (roadNode.id.empty() || roadNode.id.size() > MAX_ID_LENGTH || roadNode.label.empty() ||
+            roadNode.label.size() > MAX_LABEL_LENGTH)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "road_node.invalid_data",
-                                                  "El punto necesita un código de hasta 16 caracteres y un nombre"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "road_node.invalid_data",
+                                                 "El punto necesita un código de hasta 16 caracteres y un nombre"};
         }
         if (links.isEmpty())
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "road_node.unconnected",
-                                                  "El punto nuevo debe unirse al menos con una calle"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "road_node.unconnected",
+                                                 "El punto nuevo debe unirse al menos con una calle"};
         }
-        RoadNode created {node};
+        RoadNode created {roadNode};
         created.isHub = false;
         created.active = true;
         for (std::size_t linkIndex = 0; linkIndex < links.size(); ++linkIndex)
@@ -52,16 +52,16 @@ namespace hubflow::routing::domain
             {
                 if (links[earlierLinkIndex].destinationId == links[linkIndex].destinationId)
                 {
-                    throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                          "road_edge.duplicate",
-                                                          "Hay dos calles hacia el mismo punto"};
+                    throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                         "road_edge.duplicate",
+                                                         "Hay dos calles hacia el mismo punto"};
                 }
             }
             if (links[linkIndex].costKm + COST_TOLERANCE < straight)
             {
-                throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                      "road_edge.inadmissible",
-                                                      "La calle no puede ser más corta que la línea recta"};
+                throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                     "road_edge.inadmissible",
+                                                     "La calle no puede ser más corta que la línea recta"};
             }
         }
         const std::size_t index {addNode(created)};
@@ -88,9 +88,9 @@ namespace hubflow::routing::domain
         {
             if (!*active && next.isHub)
             {
-                throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
-                                                      "road_node.hub_required",
-                                                      "El centro de distribución no se puede desactivar"};
+                throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict,
+                                                     "road_node.hub_required",
+                                                     "El centro de distribución no se puede desactivar"};
             }
             next.active = *active;
         }
@@ -108,7 +108,7 @@ namespace hubflow::routing::domain
         const std::size_t destination {require(destinationId)};
         if (origin == destination || costKm + COST_TOLERANCE < straightLine(origin, destination))
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Validation,
                 "road_edge.inadmissible",
                 "La arista es un lazo o su costo es menor que la distancia en línea recta"};
@@ -126,7 +126,7 @@ namespace hubflow::routing::domain
         const auto index = indexOf(id);
         if (!index.has_value())
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::NotFound, "road_node.not_found", "El nodo no existe en el mapa"};
         }
         return *index;
@@ -137,7 +137,7 @@ namespace hubflow::routing::domain
         const auto index = m_graph.findVertex([](const RoadNode& node) { return node.isHub; });
         if (!index.has_value())
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::InvalidState, "road_map.no_hub", "El mapa no tiene centro de distribución"};
         }
         return *index;

@@ -34,7 +34,7 @@ namespace hubflow::logistics::adapters
     class MovementController final : public platform::Controller
     {
     public:
-        explicit MovementController(MovementUseCases useCases);
+        explicit MovementController(const MovementUseCases& useCases);
 
     private:
         using Transition = std::function<const domain::Shipment&(

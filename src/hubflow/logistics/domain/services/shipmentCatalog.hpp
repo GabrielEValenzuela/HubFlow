@@ -33,7 +33,7 @@ namespace hubflow::logistics::domain
 
         /**
          * @brief Toma ownership de @p pShipment y lo indexa en la lista, el BST y el B+.
-         * @throws business_error (Conflict) si el código ya existe; en ese caso libera @p pShipment.
+         * @throws BusinessError (Conflict) si el código ya existe; en ese caso libera @p pShipment.
          */
         Shipment& adopt(Shipment* pShipment);
 
@@ -42,7 +42,7 @@ namespace hubflow::logistics::domain
 
         /**
          * @brief Envío por código usando el B+. O(log n).
-         * @throws business_error (NotFound) si no existe.
+         * @throws BusinessError (NotFound) si no existe.
          */
         Shipment& require(const std::string& code) const;
 

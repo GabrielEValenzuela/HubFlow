@@ -30,7 +30,7 @@ namespace hubflow::logistics::domain
     public:
         /**
          * @brief Alta de un nivel de servicio activo. Ownership del resultado al llamador.
-         * @throws business_error (Validation) si el código, el nombre o la prioridad (1 a 1000) son inválidos.
+         * @throws BusinessError (Validation) si el código, el nombre o la prioridad (1 a 1000) son inválidos.
          */
         static ServiceLevel* open(const std::string& code,
                                   const std::string& name,
@@ -43,10 +43,10 @@ namespace hubflow::logistics::domain
         /**
          * @brief Aplica los cambios pedidos (nombre y/o habilitación) como una sola operación: o se aplican todos o
          * ninguno. Si no cambia nada no registra eventos, por lo que repetir el pedido deja todo igual.
-         * @throws business_error (Validation) si el nombre es inválido.
-         * @throws business_error (Conflict) al desactivar si hay paquetes en la planta con este servicio.
+         * @throws BusinessError (Validation) si el nombre es inválido.
+         * @throws BusinessError (Conflict) al desactivar si hay paquetes en la planta con este servicio.
          */
-        void revise(const std::optional<std::string>& name,
+        void revise(const std::optional<std::string>& newName,
                     const std::optional<bool>& active,
                     const PlantOccupancy& occupancy,
                     const shared::domain::ActorContext& context);

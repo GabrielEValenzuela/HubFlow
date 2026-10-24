@@ -36,9 +36,9 @@ namespace hubflow::logistics::adapters
         }
         if (code.empty())
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
-                                                  "tracking_code.exhausted",
-                                                  "No se pudo generar un código de seguimiento libre"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict,
+                                                 "tracking_code.exhausted",
+                                                 "No se pudo generar un código de seguimiento libre"};
         }
         return code;
     }

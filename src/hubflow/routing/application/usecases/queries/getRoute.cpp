@@ -18,7 +18,7 @@ namespace hubflow::routing::application
         const domain::DeliveryRoute& found = m_model.routes.require(routeId);
         if (principal.role == identity::domain::Role::Pum && found.courier().id != principal.userId)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Forbidden, "route.not_owner", "La hoja de ruta pertenece a otro PUM"};
         }
         return found;

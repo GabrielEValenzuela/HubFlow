@@ -7,7 +7,7 @@
 #include <vector>
 
 using namespace hubflow;
-using shared::domain::business_error;
+using shared::domain::BusinessError;
 
 namespace
 {
@@ -66,7 +66,7 @@ TEST(RoutingFlow, CourierResolvesOnlyOwnStops)
     EXPECT_THROW(app.resolveRouteStop.execute(app.pum(otherId),
                                               routing::application::ResolveStopRequest {
                                                   route.id(), 1, routing::domain::StopOutcome::Delivered, "", true}),
-                 business_error);
+                 BusinessError);
     app.resolveRouteStop.execute(
         app.pum(courierId),
         routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Delivered, "", true});
@@ -116,12 +116,12 @@ TEST(RoutingFlow, AssignmentRequiresProcessedLoadAndActiveCourier)
     const auto& batch = app.openSortingBatch.execute(app.operador(), "SUR");
     EXPECT_THROW(app.assignDeliveryRoute.execute(app.operador(),
                                                  routing::application::AssignRouteRequest {batch.id(), courierId, {}}),
-                 business_error);
+                 BusinessError);
     app.prepareSortingBatch.execute(app.operador(), batch.id());
     app.processSortingBatchItem.execute(app.operador(), batch.id(), {});
     EXPECT_THROW(
         app.assignDeliveryRoute.execute(app.operador(), routing::application::AssignRouteRequest {batch.id(), 999, {}}),
-        business_error);
+        BusinessError);
 }
 
 TEST(RoutingFlow, ResolvingAStopWithTheSameOutcomeChangesNothing)
@@ -163,7 +163,7 @@ TEST(RoutingFlow, ResolvingAStopWithADifferentOutcomeIsAConflict)
             app.pum(courierId),
             routing::application::ResolveStopRequest {route.id(), 1, routing::domain::StopOutcome::Rescheduled, ""});
     }
-    catch (const business_error& error)
+    catch (const BusinessError& error)
     {
         kind = error.errorKind();
     }

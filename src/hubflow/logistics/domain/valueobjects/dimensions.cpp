@@ -19,9 +19,9 @@ namespace hubflow::logistics::domain
     {
         if (!isMeasure(lengthCm) || !isMeasure(widthCm) || !isMeasure(heightCm))
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "dimensions.invalid",
-                                                  "Largo, ancho y alto deben ser mayores a 0 y como máximo 300 cm"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "dimensions.invalid",
+                                                 "Largo, ancho y alto deben ser mayores a 0 y como máximo 300 cm"};
         }
     }
 

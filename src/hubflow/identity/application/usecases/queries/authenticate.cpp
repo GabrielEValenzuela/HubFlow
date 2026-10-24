@@ -22,7 +22,7 @@ namespace hubflow::identity::application
         const auto user = claims.has_value() ? m_users.byId(claims->userId) : std::nullopt;
         if (!user.has_value() || !user->active)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Unauthorized, "auth.invalid_token", "Sesión inválida o expirada"};
         }
         return shared::application::Principal {user->id, user->name, user->role, &m_policy};

@@ -35,9 +35,9 @@ namespace hubflow::logistics::adapters
         }
         if (code.empty())
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
-                                                  "tracking_code.exhausted",
-                                                  "Se agotaron los códigos de seguimiento correlativos"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict,
+                                                 "tracking_code.exhausted",
+                                                 "Se agotaron los códigos de seguimiento correlativos"};
         }
         return code;
     }

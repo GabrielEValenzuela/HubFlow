@@ -9,7 +9,7 @@ namespace hubflow::routing::application
 
     /**
      * @brief Busca al repartidor que va a llevar una ruta.
-     * @throws business_error (Validation) si el usuario no existe, está inactivo o no es un PUM.
+     * @throws BusinessError (Validation) si el usuario no existe, está inactivo o no es un PUM.
      */
     domain::Courier requireCourier(const identity::application::UserRepository& users, std::uint64_t courierId);
 

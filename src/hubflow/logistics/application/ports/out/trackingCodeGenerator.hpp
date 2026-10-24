@@ -21,7 +21,7 @@ namespace hubflow::logistics::application
 
         /**
          * @brief Devuelve un código válido que no usa ningún envío de @p catalog.
-         * @throws business_error (Conflict) si no quedan códigos disponibles.
+         * @throws BusinessError (Conflict) si no quedan códigos disponibles.
          */
         virtual std::string next(const domain::ShipmentCatalog& catalog) = 0;
     };

@@ -10,7 +10,7 @@ namespace hubflow::logistics::domain
     public:
         static constexpr double MAX_KILOGRAMS {50.0};
 
-        /// @throws business_error (Validation) si está fuera de rango.
+        /// @throws BusinessError (Validation) si está fuera de rango.
         explicit Weight(double kilograms);
 
         double kilograms() const noexcept;

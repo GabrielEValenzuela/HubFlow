@@ -10,7 +10,7 @@ namespace hubflow::logistics::domain
     class ShipmentGroupId final
     {
     public:
-        /// @throws business_error (Validation) si @p value no es un UUID versión 7.
+        /// @throws BusinessError (Validation) si @p value no es un UUID versión 7.
         explicit ShipmentGroupId(const std::string& value);
 
         static bool isValid(const std::string& value);

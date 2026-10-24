@@ -15,9 +15,9 @@ namespace hubflow::logistics::domain
     {
         if (value.size() < MIN_NAME_LENGTH || value.size() > MAX_NAME_LENGTH)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "catalog_name.invalid",
-                                                  "El nombre debe tener entre 2 y 60 caracteres"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "catalog_name.invalid",
+                                                 "El nombre debe tener entre 2 y 60 caracteres"};
         }
     }
 

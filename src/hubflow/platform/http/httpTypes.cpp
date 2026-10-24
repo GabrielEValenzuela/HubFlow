@@ -30,19 +30,19 @@ namespace hubflow::platform
         return *principal;
     }
 
-    validation_error::validation_error(const HttpStatus status, std::vector<FieldError> errors)
+    ValidationError::ValidationError(const HttpStatus status, std::vector<FieldError> errors)
         : std::runtime_error {"Invalid input"}
         , m_status {status}
         , m_errors {std::move(errors)}
     {
     }
 
-    HttpStatus validation_error::status() const noexcept
+    HttpStatus ValidationError::status() const noexcept
     {
         return m_status;
     }
 
-    const std::vector<FieldError>& validation_error::errors() const noexcept
+    const std::vector<FieldError>& ValidationError::errors() const noexcept
     {
         return m_errors;
     }

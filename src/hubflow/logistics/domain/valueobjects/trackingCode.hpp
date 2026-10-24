@@ -26,7 +26,7 @@ namespace hubflow::logistics::domain
         static constexpr const char* PUBLIC_PREFIX {"HF-"};
         static constexpr const char* SEQUENTIAL_PREFIX {"PKG-"};
 
-        /// @throws business_error (Validation) si el formato es inválido o el verificador no coincide.
+        /// @throws BusinessError (Validation) si el formato es inválido o el verificador no coincide.
         explicit TrackingCode(const std::string& value);
 
         /// @brief Indica si @p value respeta alguno de los formatos sin construir el objeto.

@@ -10,7 +10,7 @@ namespace hubflow::routing::application
         const auto user = users.byId(courierId);
         if (!user.has_value() || !user->active || user->role != identity::domain::Role::Pum)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Validation, "route.courier_invalid", "El repartidor no es un PUM activo"};
         }
         return domain::Courier {user->id, user->name};

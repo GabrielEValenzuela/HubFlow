@@ -23,9 +23,9 @@ namespace hubflow::sorting::domain
     {
         if (batch.sortedBy() != SortCriteria::CodeAscending)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::InvalidState,
-                                                  "sorting.binary_requires_code_order",
-                                                  "La búsqueda binaria requiere el lote ordenado por código"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::InvalidState,
+                                                 "sorting.binary_requires_code_order",
+                                                 "La búsqueda binaria requiere el lote ordenado por código"};
         }
         BatchSearchOutcome outcome;
         std::size_t left {0};

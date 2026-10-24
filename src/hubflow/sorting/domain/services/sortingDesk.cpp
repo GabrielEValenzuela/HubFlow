@@ -12,7 +12,7 @@ namespace hubflow::sorting::domain
 
     SortingBatch& SortingDesk::open(const std::string& zone, const logistics::domain::PendingShipments& pending)
     {
-        SortingBatch* pBatch = new SortingBatch {m_lastId + 1, zone, pending};
+        auto* pBatch = new SortingBatch {m_lastId + 1, zone, pending};
         close();
         m_pActive = pBatch;
         ++m_lastId;
@@ -23,7 +23,7 @@ namespace hubflow::sorting::domain
     {
         if (m_pActive == nullptr || m_pActive->id() != id)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::NotFound, "sorting.batch_not_found", "El lote no existe o ya fue cerrado"};
         }
         return *m_pActive;

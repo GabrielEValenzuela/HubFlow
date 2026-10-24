@@ -16,10 +16,9 @@ namespace hubflow::logistics::domain
     {
         if (!isValid(value))
         {
-            throw shared::domain::business_error {
-                shared::domain::ErrorKind::Validation,
-                "tracking_code.invalid",
-                "El código de seguimiento no es válido: revisá que esté bien escrito"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "tracking_code.invalid",
+                                                 "El código de seguimiento no es válido: revisá que esté bien escrito"};
         }
     }
 

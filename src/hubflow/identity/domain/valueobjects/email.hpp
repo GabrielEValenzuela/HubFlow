@@ -10,7 +10,7 @@ namespace hubflow::identity::domain
     class Email final
     {
     public:
-        /// @throws business_error (Validation) si el formato es inválido.
+        /// @throws BusinessError (Validation) si el formato es inválido.
         explicit Email(const std::string& value);
 
         const std::string& value() const noexcept;

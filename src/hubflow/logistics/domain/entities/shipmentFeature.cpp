@@ -17,7 +17,7 @@ namespace hubflow::logistics::domain
     ShipmentFeature*
     ShipmentFeature::open(const std::string& code, const std::string& name, const shared::domain::ActorContext& context)
     {
-        ShipmentFeature* pFeature =
+        auto* pFeature =
             new ShipmentFeature {ShipmentFeatureState {CatalogCode {code}.value(), CatalogName {name}.value(), true}};
         pFeature->raise(new ShipmentFeatureChanged {pFeature->m_state, true, context});
         return pFeature;
@@ -28,14 +28,14 @@ namespace hubflow::logistics::domain
         return new ShipmentFeature {state};
     }
 
-    void ShipmentFeature::revise(const std::optional<std::string>& name,
+    void ShipmentFeature::revise(const std::optional<std::string>& newName,
                                  const std::optional<bool>& active,
                                  const shared::domain::ActorContext& context)
     {
         ShipmentFeatureState next {m_state};
-        if (name.has_value())
+        if (newName.has_value())
         {
-            next.name = CatalogName {*name}.value();
+            next.name = CatalogName {*newName}.value();
         }
         if (active.has_value())
         {

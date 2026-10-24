@@ -9,7 +9,7 @@
 #include <vector>
 
 using namespace hubflow;
-using shared::domain::business_error;
+using shared::domain::BusinessError;
 using shared::domain::ErrorKind;
 using tracking::application::VerificationRequest;
 
@@ -35,17 +35,17 @@ namespace
     }
 
     template<typename TAction>
-    business_error failureOf(TAction action)
+    BusinessError failureOf(TAction action)
     {
         try
         {
             action();
         }
-        catch (const business_error& error)
+        catch (const BusinessError& error)
         {
             return error;
         }
-        return business_error {ErrorKind::Validation, "none", "no falló"};
+        return BusinessError {ErrorKind::Validation, "none", "no falló"};
     }
 
     std::uint64_t createCourier(test::ApplicationHarness& app)
@@ -83,7 +83,7 @@ namespace
         }
     };
 
-    std::vector<std::string> messagesFor(test::Storage& storage, const std::string& code)
+    std::vector<std::string> messagesFor(const test::Storage& storage, const std::string& code)
     {
         std::vector<std::string> messages;
         for (const auto& notice : storage.notices.notices)

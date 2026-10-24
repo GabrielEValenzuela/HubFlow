@@ -10,7 +10,7 @@ namespace hubflow::logistics::domain
     class CatalogName final
     {
     public:
-        /// @throws business_error (Validation) si el nombre es demasiado corto o largo.
+        /// @throws BusinessError (Validation) si el nombre es demasiado corto o largo.
         explicit CatalogName(const std::string& value);
 
         const std::string& value() const noexcept;

@@ -14,7 +14,7 @@ namespace hubflow::sorting::domain
     {
         if (criteria == SortCriteria::None)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Validation, "sorting.criteria_invalid", "Criterio de orden inválido"};
         }
         return criteria == SortCriteria::CodeAscending ? static_cast<const ShipmentOrdering&>(gs_codeAscending)

@@ -13,7 +13,7 @@ namespace hubflow::logistics::domain
     {
         [[noreturn]] void refuse(const char* reason, const char* message)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Conflict, reason, message};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict, reason, message};
         }
     } // namespace
 
@@ -24,7 +24,7 @@ namespace hubflow::logistics::domain
 
     Zone* Zone::open(const std::string& code, const std::string& name, const shared::domain::ActorContext& context)
     {
-        Zone* pZone = new Zone {ZoneState {CatalogCode {code}.value(), CatalogName {name}.value(), true}};
+        auto* pZone = new Zone {ZoneState {CatalogCode {code}.value(), CatalogName {name}.value(), true}};
         pZone->raise(new ZoneChanged {pZone->m_state, true, context});
         return pZone;
     }
@@ -34,15 +34,15 @@ namespace hubflow::logistics::domain
         return new Zone {state};
     }
 
-    void Zone::revise(const std::optional<std::string>& name,
+    void Zone::revise(const std::optional<std::string>& newName,
                       const std::optional<bool>& active,
                       const PlantOccupancy& occupancy,
                       const shared::domain::ActorContext& context)
     {
         ZoneState next {m_state};
-        if (name.has_value())
+        if (newName.has_value())
         {
-            next.name = CatalogName {*name}.value();
+            next.name = CatalogName {*newName}.value();
         }
         if (active.has_value() && *active != m_state.active)
         {

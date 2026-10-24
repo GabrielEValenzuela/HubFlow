@@ -74,7 +74,7 @@ namespace hubflow::logistics::domain
         /**
          * @brief Fábrica: recibe un paquete en el centro (estado RECIBIDO) y registra ShipmentRegistered.
          * @return objeto creado con @c new; el llamador debe transferir su ownership al catálogo.
-         * @throws business_error (Validation) si algún dato es inválido.
+         * @throws BusinessError (Validation) si algún dato es inválido.
          */
         static Shipment*
         receive(const ShipmentDraft& draft, QueueTicket ticket, const shared::domain::ActorContext& context);
@@ -89,17 +89,18 @@ namespace hubflow::logistics::domain
         void dispatch(const std::string& note, const shared::domain::ActorContext& context);
 
         /// @brief EN_REPARTO → REPROGRAMADO, suma un intento y toma un nuevo ticket de llegada.
-        void reschedule(const std::string& reason, QueueTicket ticket, const shared::domain::ActorContext& context);
+        void
+        reschedule(const std::string& reason, QueueTicket queueTicket, const shared::domain::ActorContext& context);
 
         /**
          * @brief EN_REPARTO → ENTREGADO (estado final).
-         * @throws business_error (Conflict) si queda algún bulto sin confirmar.
+         * @throws BusinessError (Conflict) si queda algún bulto sin confirmar.
          */
         void deliver(const std::string& note, const shared::domain::ActorContext& context);
 
         /**
          * @brief Confirma que el bulto número @p ordinal (desde 1) llegó a destino. Repetirlo no hace nada.
-         * @throws business_error InvalidState (el envío no está en reparto) o NotFound (el bulto no existe).
+         * @throws BusinessError InvalidState (el envío no está en reparto) o NotFound (el bulto no existe).
          */
         void confirmParcel(std::size_t ordinal, const shared::domain::ActorContext& context);
 
@@ -134,7 +135,7 @@ namespace hubflow::logistics::domain
         std::size_t pendingParcelCount() const noexcept;
         const std::string& service() const noexcept;
         const ds::DynamicArray<std::string>& features() const noexcept;
-        bool hasFeature(const std::string& code) const noexcept;
+        bool hasFeature(const std::string& featureCode) const noexcept;
         ShipmentStatus status() const noexcept;
         std::uint32_t attempts() const noexcept;
         const std::string& deliveryPoint() const noexcept;

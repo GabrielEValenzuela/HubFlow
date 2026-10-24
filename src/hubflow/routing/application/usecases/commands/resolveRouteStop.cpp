@@ -37,22 +37,22 @@ namespace hubflow::routing::application
         principal.require(identity::domain::Permission::ResolveStops);
         if (request.outcome == domain::StopOutcome::Pending)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "route.outcome_invalid",
-                                                  "El resultado debe ser ENTREGADO o REPROGRAMADO"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "route.outcome_invalid",
+                                                 "El resultado debe ser ENTREGADO o REPROGRAMADO"};
         }
         domain::DeliveryRoute& route = m_routing.routes.require(request.routeId);
         if (principal.role == identity::domain::Role::Pum && route.courier().id != principal.userId)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Forbidden, "route.not_owner", "La hoja de ruta pertenece a otro PUM"};
         }
         const auto& stop = route.stop(request.order);
         if (stop.outcome != domain::StopOutcome::Pending && stop.outcome != request.outcome)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
-                                                  "route.stop_closed",
-                                                  "La parada ya tiene otro resultado registrado"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict,
+                                                 "route.stop_closed",
+                                                 "La parada ya tiene otro resultado registrado"};
         }
         if (stop.outcome == domain::StopOutcome::Pending)
         {
@@ -67,10 +67,10 @@ namespace hubflow::routing::application
                 logistics::domain::Shipment& shipment = m_logistics.catalog.require(codes[codeIndex]);
                 if (delivered && !request.confirmAllParcels && shipment.pendingParcelCount() > 0)
                 {
-                    throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
-                                                          "shipment.parcels_pending",
-                                                          "Faltan confirmar bultos del paquete " + shipment.code() +
-                                                              ": confirmalos o entregá todo"};
+                    throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict,
+                                                         "shipment.parcels_pending",
+                                                         "Faltan confirmar bultos del paquete " + shipment.code() +
+                                                             ": confirmalos o entregá todo"};
                 }
                 shipments.pushBack(&shipment);
             }

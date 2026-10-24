@@ -40,9 +40,9 @@ namespace hubflow::logistics::domain
     {
         if (!extractDigits(text, m_digits))
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "recipient.phone_invalid",
-                                                  "El teléfono debe tener entre 8 y 15 dígitos"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "recipient.phone_invalid",
+                                                 "El teléfono debe tener entre 8 y 15 dígitos"};
         }
     }
 

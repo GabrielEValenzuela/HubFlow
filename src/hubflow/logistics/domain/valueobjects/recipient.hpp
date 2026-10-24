@@ -18,7 +18,7 @@ namespace hubflow::logistics::domain
     class Recipient final
     {
     public:
-        /// @throws business_error (Validation) si el nombre, el teléfono o el código postal no son válidos.
+        /// @throws BusinessError (Validation) si el nombre, el teléfono o el código postal no son válidos.
         Recipient(const std::string& name, const std::string& phone, const std::string& postalCode);
 
         const std::string& name() const noexcept;

@@ -23,9 +23,9 @@ namespace hubflow::routing::application
         principal.require(identity::domain::Permission::ManageCatalogs);
         if (!m_zones.isActive(request.zone))
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "road_node.zone_unavailable",
-                                                  "La zona no existe o está desactivada"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "road_node.zone_unavailable",
+                                                 "La zona no existe o está desactivada"};
         }
         const domain::RoadNode node {request.id, request.label, false, request.zone, request.x, request.y, true};
         const std::size_t index {m_routing.map.declareNode(node, request.links, principal.contextAt(m_clock))};

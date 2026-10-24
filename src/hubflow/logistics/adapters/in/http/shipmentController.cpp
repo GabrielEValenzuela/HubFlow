@@ -51,7 +51,7 @@ namespace hubflow::logistics::adapters
         }
     } // namespace
 
-    ShipmentController::ShipmentController(ShipmentUseCases useCases)
+    ShipmentController::ShipmentController(const ShipmentUseCases& useCases)
         : m_useCases {useCases}
     {
     }
@@ -123,7 +123,7 @@ namespace hubflow::logistics::adapters
         const auto result = m_useCases.findShipment.execute(context.user(), code, index);
         if (result.pShipment == nullptr)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::NotFound, "shipment.not_found", "Envío no encontrado."};
         }
         Json body = LogisticsJsonPresenter::shipment(*result.pShipment);

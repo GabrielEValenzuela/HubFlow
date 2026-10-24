@@ -48,17 +48,17 @@ namespace hubflow::identity::domain
         /// @brief true si está activo y la contraseña coincide.
         bool authenticates(const std::string& plainPassword, const PasswordHasher& hasher) const;
 
-        void rename(const std::string& name, const shared::domain::ActorContext& context);
+        void rename(const std::string& newName, const shared::domain::ActorContext& context);
 
         /**
          * @brief Cambia el rol.
-         * @throws business_error (Conflict) si es un chofer con un reparto en curso y el nuevo rol deja de ser chofer.
+         * @throws BusinessError (Conflict) si es un chofer con un reparto en curso y el nuevo rol deja de ser chofer.
          */
-        void assignRole(Role role, const CourierWorkload& workload, const shared::domain::ActorContext& context);
+        void assignRole(Role newRole, const CourierWorkload& workload, const shared::domain::ActorContext& context);
 
         /**
          * @brief Habilita o desactiva al usuario.
-         * @throws business_error (Conflict) si se desactiva a sí mismo, o si es un chofer con un reparto en curso:
+         * @throws BusinessError (Conflict) si se desactiva a sí mismo, o si es un chofer con un reparto en curso:
          * primero hay que pasar su ruta a otro chofer.
          */
         void activate(bool active, const CourierWorkload& workload, const shared::domain::ActorContext& context);

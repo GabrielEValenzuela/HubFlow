@@ -32,9 +32,9 @@ namespace hubflow::logistics::domain
     {
         if (m_name.size() < MIN_NAME_LENGTH || m_name.size() > MAX_NAME_LENGTH)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "recipient.invalid",
-                                                  "El destinatario debe tener entre 2 y 80 caracteres"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "recipient.invalid",
+                                                 "El destinatario debe tener entre 2 y 80 caracteres"};
         }
     }
 

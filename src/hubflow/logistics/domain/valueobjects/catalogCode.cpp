@@ -20,7 +20,7 @@ namespace hubflow::logistics::domain
     {
         if (!isValid(value))
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Validation,
                 "catalog_code.invalid",
                 "El código debe tener entre 2 y 16 caracteres: mayúsculas, números o guion bajo"};

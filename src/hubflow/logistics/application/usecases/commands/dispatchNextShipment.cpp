@@ -25,7 +25,7 @@ namespace hubflow::logistics::application
         principal.require(identity::domain::Permission::OperateShipments);
         if (m_model.pending.isEmpty())
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Conflict, "pending.empty", "No hay envíos pendientes"};
         }
         domain::Shipment& shipment = *m_model.pending.head()->pShipment;

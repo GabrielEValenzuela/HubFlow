@@ -34,7 +34,7 @@ namespace hubflow::identity::domain
 
         bool allows(Role role, Permission permission) const;
 
-        /// @throws business_error (Forbidden) si @p role no tiene @p permission.
+        /// @throws BusinessError (Forbidden) si @p role no tiene @p permission.
         void require(Role role, Permission permission) const;
 
         std::size_t grantCount() const noexcept;

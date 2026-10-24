@@ -48,7 +48,7 @@ namespace hubflow::sorting::adapters
     class SortingBatchController final : public platform::Controller
     {
     public:
-        explicit SortingBatchController(SortingUseCases useCases);
+        explicit SortingBatchController(const SortingUseCases& useCases);
 
     private:
         void registerRoutes(platform::ApiRouter& router) override;

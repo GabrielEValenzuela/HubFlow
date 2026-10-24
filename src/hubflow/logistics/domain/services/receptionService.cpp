@@ -9,7 +9,7 @@ namespace hubflow::logistics::domain
     {
         [[noreturn]] void invalid(const char* reason, const char* message)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation, reason, message};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation, reason, message};
         }
     } // namespace
 
@@ -32,7 +32,7 @@ namespace hubflow::logistics::domain
     {
         if (m_catalog.contains(draft.code))
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Conflict, "shipment.duplicate", "Ya existe un envío con ese código"};
         }
         const Zone* pZone = m_zones.find(draft.zone);
@@ -55,9 +55,9 @@ namespace hubflow::logistics::domain
         }
         if (!m_deliveryPoints.isServiceable(draft.deliveryPoint, draft.zone))
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "delivery_point.out_of_zone",
-                                                  "El punto de entrega no existe en el mapa o no pertenece a la zona"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "delivery_point.out_of_zone",
+                                                 "El punto de entrega no existe en el mapa o no pertenece a la zona"};
         }
         return m_catalog.adopt(Shipment::receive(draft, m_dispenser.next(), context));
     }

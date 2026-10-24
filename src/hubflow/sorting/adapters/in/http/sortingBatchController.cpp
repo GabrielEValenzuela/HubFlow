@@ -1,4 +1,5 @@
 #include "hubflow/sorting/adapters/in/http/sortingBatchController.hpp"
+#include <cstdint>
 
 #include "hubflow/logistics/adapters/in/http/logisticsJsonPresenter.hpp"
 #include "hubflow/platform/http/inputValidator.hpp"
@@ -30,7 +31,7 @@ namespace hubflow::sorting::adapters
             return items;
         }
 
-        enum class SearchMode
+        enum class SearchMode : std::uint8_t
         {
             Linear,
             Binary,
@@ -74,7 +75,7 @@ namespace hubflow::sorting::adapters
         }
     } // namespace
 
-    SortingBatchController::SortingBatchController(SortingUseCases useCases)
+    SortingBatchController::SortingBatchController(const SortingUseCases& useCases)
         : m_useCases {useCases}
     {
     }
@@ -99,7 +100,7 @@ namespace hubflow::sorting::adapters
                        const auto* pBatch = m_useCases.active.execute(context.user());
                        if (pBatch == nullptr)
                        {
-                           throw shared::domain::business_error {
+                           throw shared::domain::BusinessError {
                                shared::domain::ErrorKind::NotFound, "sorting.no_batch", "No hay un lote abierto"};
                        }
                        return platform::HttpResponse::ok(SortingJsonPresenter::sortingBatch(*pBatch));

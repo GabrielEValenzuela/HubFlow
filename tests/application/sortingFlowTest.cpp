@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 using namespace hubflow;
-using shared::domain::business_error;
+using shared::domain::BusinessError;
 using shared::domain::ErrorKind;
 
 namespace
@@ -49,7 +49,7 @@ TEST(SortingFlow, RepeatingReturnProcessedItemIsNotFoundAndChangesNothing)
     {
         app.returnProcessedItem.execute(app.operador(), batchId, code);
     }
-    catch (const business_error& error)
+    catch (const BusinessError& error)
     {
         kind = error.errorKind();
     }

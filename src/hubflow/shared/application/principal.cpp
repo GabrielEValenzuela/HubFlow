@@ -9,7 +9,7 @@ namespace hubflow::shared::application
     {
         if (pPolicy == nullptr)
         {
-            throw domain::business_error {
+            throw domain::BusinessError {
                 domain::ErrorKind::Forbidden, "auth.forbidden", "No tenés permiso para esta operación"};
         }
         pPolicy->require(role, permission);

@@ -2,6 +2,7 @@
 #define HUBFLOW_PLATFORM_HTTP_HTTP_TYPES_HPP
 
 #include "hubflow/shared/application/principal.hpp"
+#include <cstdint>
 
 #include <functional>
 #include <httplib.h>
@@ -18,7 +19,7 @@ namespace hubflow::platform
     using Json = nlohmann::json;
 
     /// @brief Códigos de estado HTTP que usa la API.
-    enum class HttpStatus
+    enum class HttpStatus : std::uint16_t
     {
         Ok = 200,
         Created = 201,
@@ -55,7 +56,9 @@ namespace hubflow::platform
     /// @brief Pedido ya autenticado que recibe un endpoint.
     struct RequestContext
     {
+        // cppcheck-suppress-begin uninitMemberVarNoCtor
         const httplib::Request& request;
+        // cppcheck-suppress-end uninitMemberVarNoCtor
         std::optional<shared::application::Principal> principal;
 
         /// @brief Usuario autenticado; los endpoints protegidos siempre lo tienen.
@@ -70,10 +73,10 @@ namespace hubflow::platform
     };
 
     /// @brief Entrada inválida: se responde 422 (o 400 si el cuerpo no es JSON) detallando cada campo.
-    class validation_error final : public std::runtime_error
+    class ValidationError final : public std::runtime_error
     {
     public:
-        validation_error(HttpStatus status, std::vector<FieldError> errors);
+        ValidationError(HttpStatus status, std::vector<FieldError> errors);
 
         HttpStatus status() const noexcept;
 

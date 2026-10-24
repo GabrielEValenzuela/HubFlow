@@ -32,7 +32,7 @@ namespace hubflow::logistics::domain
     public:
         /**
          * @brief Fábrica: crea el grupo y registra ShipmentGroupFormed.
-         * @throws business_error (Validation) si el identificador es inválido, hay menos de dos envíos o hay códigos
+         * @throws BusinessError (Validation) si el identificador es inválido, hay menos de dos envíos o hay códigos
          * repetidos.
          */
         static ShipmentGroup* form(const ShipmentGroupState& state, const shared::domain::ActorContext& context);

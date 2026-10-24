@@ -28,9 +28,9 @@ namespace hubflow::sorting::domain
     {
         if (m_size == 0)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
-                                                  "sorting.empty_zone",
-                                                  "No hay envíos pendientes para la zona seleccionada."};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict,
+                                                 "sorting.empty_zone",
+                                                 "No hay envíos pendientes para la zona seleccionada."};
         }
         m_ppItems = new logistics::domain::Shipment*[m_size];
         std::size_t index {0};
@@ -80,7 +80,7 @@ namespace hubflow::sorting::domain
     {
         if (m_preparation.isEmpty())
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Conflict, "sorting.queue_empty", "La cola de preparación está vacía"};
         }
         ds::DynamicArray<logistics::domain::Shipment*> selection;
@@ -112,10 +112,10 @@ namespace hubflow::sorting::domain
                                   { pFound = pQueued->code() == codes[codeIndex] ? pQueued : pFound; });
             if (pFound == nullptr)
             {
-                throw shared::domain::business_error {shared::domain::ErrorKind::NotFound,
-                                                      "sorting.not_in_queue",
-                                                      "El paquete " + codes[codeIndex] +
-                                                          " no está en la lista por cargar"};
+                throw shared::domain::BusinessError {shared::domain::ErrorKind::NotFound,
+                                                     "sorting.not_in_queue",
+                                                     "El paquete " + codes[codeIndex] +
+                                                         " no está en la lista por cargar"};
             }
             bool repeated {false};
             for (std::size_t selectedIndex = 0; selectedIndex < selection.size(); ++selectedIndex)
@@ -136,7 +136,7 @@ namespace hubflow::sorting::domain
     {
         if (selection.isEmpty())
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Validation, "sorting.nothing_selected", "Indicá qué paquetes cargar"};
         }
         for (std::size_t requestedIndex = 0; requestedIndex < selection.size(); ++requestedIndex)
@@ -152,11 +152,11 @@ namespace hubflow::sorting::domain
                 }
                 if (!selected)
                 {
-                    throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
-                                                          "sorting.group_incomplete",
-                                                          "El paquete " + selection[requestedIndex]->code() +
-                                                              " viaja junto con " + pGroup->codes()[groupCodeIndex] +
-                                                              ": hay que cargarlos todos juntos"};
+                    throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict,
+                                                         "sorting.group_incomplete",
+                                                         "El paquete " + selection[requestedIndex]->code() +
+                                                             " viaja junto con " + pGroup->codes()[groupCodeIndex] +
+                                                             ": hay que cargarlos todos juntos"};
                 }
             }
         }
@@ -189,9 +189,9 @@ namespace hubflow::sorting::domain
     {
         if (m_processed.isEmpty() || m_processed.top()->code() != code)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::NotFound,
-                                                  "sorting.not_last_processed",
-                                                  "El envío no es el último procesado del lote"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::NotFound,
+                                                 "sorting.not_last_processed",
+                                                 "El envío no es el último procesado del lote"};
         }
         ds::DynamicArray<logistics::domain::Shipment*> returned;
         returned.pushBack(m_processed.pop());

@@ -39,7 +39,7 @@ namespace hubflow::insights::adapters
     class InsightController final : public platform::Controller
     {
     public:
-        explicit InsightController(InsightUseCases useCases);
+        explicit InsightController(const InsightUseCases& useCases);
 
     private:
         void registerRoutes(platform::ApiRouter& router) override;

@@ -30,9 +30,9 @@ namespace hubflow::tracking::application
         const domain::VerificationProof proof {request.phoneLast4, request.postalCode};
         if (proof.isEmpty())
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "tracking.proof_missing",
-                                                  "Indicá los últimos 4 dígitos del teléfono o el código postal"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "tracking.proof_missing",
+                                                 "Indicá los últimos 4 dígitos del teléfono o el código postal"};
         }
         const auto shipment =
             TrackingViewBuilder::looksLikeCode(code) ? m_directory.find(code) : std::optional<TrackedShipment> {};

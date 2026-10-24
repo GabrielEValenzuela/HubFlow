@@ -28,7 +28,7 @@ namespace hubflow::identity::application
         const auto state = m_users.byId(userId);
         if (!state.has_value())
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::NotFound, "user.not_found", "Usuario inexistente"};
         }
         const auto context = principal.contextAt(m_clock);

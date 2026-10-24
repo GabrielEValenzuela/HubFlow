@@ -41,9 +41,9 @@ namespace hubflow::logistics::domain
     {
         if (parcels.isEmpty() || parcels.size() > MAX_PARCELS)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "shipment.parcels_invalid",
-                                                  "El envío debe tener entre 1 y 20 bultos"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "shipment.parcels_invalid",
+                                                 "El envío debe tener entre 1 y 20 bultos"};
         }
         try
         {
@@ -66,7 +66,7 @@ namespace hubflow::logistics::domain
     Shipment*
     Shipment::receive(const ShipmentDraft& draft, const QueueTicket ticket, const shared::domain::ActorContext& context)
     {
-        Shipment* pShipment = new Shipment {draft, ticket};
+        auto* pShipment = new Shipment {draft, ticket};
         pShipment->m_stateHistory.set(bitOf(ShipmentStatus::Recibido));
         const Movement& movement = pShipment->m_history.record(ShipmentStatus::Recibido, RECEPTION_NOTE, context);
         pShipment->raise(new ShipmentRegistered {pShipment->state(), movement, context});
@@ -75,7 +75,7 @@ namespace hubflow::logistics::domain
 
     Shipment* Shipment::restore(const ShipmentState& state)
     {
-        Shipment* pShipment = new Shipment {state.draft, QueueTicket {state.ticket}};
+        auto* pShipment = new Shipment {state.draft, QueueTicket {state.ticket}};
         pShipment->m_status = state.status;
         pShipment->m_attempts = state.attempts;
         pShipment->m_stateHistory = StateHistory::fromWord(state.stateBits);
@@ -95,12 +95,12 @@ namespace hubflow::logistics::domain
     }
 
     void Shipment::reschedule(const std::string& reason,
-                              const QueueTicket ticket,
+                              const QueueTicket queueTicket,
                               const shared::domain::ActorContext& context)
     {
         const Movement& movement = transition(ShipmentStatus::Reprogramado, reason, context);
         ++m_attempts;
-        m_ticket = ticket;
+        m_ticket = queueTicket;
         raise(new ShipmentRescheduled {state(), movement, context});
     }
 
@@ -108,10 +108,10 @@ namespace hubflow::logistics::domain
     {
         if (m_status == ShipmentStatus::EnReparto && pendingParcelCount() > 0)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
-                                                  "shipment.parcels_pending",
-                                                  "Faltan confirmar " + std::to_string(pendingParcelCount()) +
-                                                      " bultos antes de dar el paquete por entregado"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict,
+                                                 "shipment.parcels_pending",
+                                                 "Faltan confirmar " + std::to_string(pendingParcelCount()) +
+                                                     " bultos antes de dar el paquete por entregado"};
         }
         const Movement& movement = transition(ShipmentStatus::Entregado, note, context);
         raise(new ShipmentDelivered {state(), movement, context});
@@ -121,13 +121,13 @@ namespace hubflow::logistics::domain
     {
         if (m_status != ShipmentStatus::EnReparto)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::InvalidState,
-                                                  "shipment.not_in_delivery",
-                                                  "Sólo se pueden confirmar bultos de un paquete que está en reparto"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::InvalidState,
+                                                 "shipment.not_in_delivery",
+                                                 "Sólo se pueden confirmar bultos de un paquete que está en reparto"};
         }
         if (ordinal == 0 || ordinal > m_parcels.size())
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::NotFound, "parcel.not_found", "El bulto no existe en este paquete"};
         }
         Parcel* pParcel = m_parcels[ordinal - 1];
@@ -157,14 +157,14 @@ namespace hubflow::logistics::domain
     {
         if (m_status == ShipmentStatus::Entregado)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::InvalidState, "shipment.already_delivered", "El envío ya fue entregado"};
         }
         if (!canTransition(m_status, target))
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::InvalidState,
-                                                  "shipment.invalid_transition",
-                                                  "La transición de estado solicitada no está permitida"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::InvalidState,
+                                                 "shipment.invalid_transition",
+                                                 "La transición de estado solicitada no está permitida"};
         }
         m_status = target;
         m_stateHistory.set(bitOf(target));
@@ -251,12 +251,12 @@ namespace hubflow::logistics::domain
         return m_features;
     }
 
-    bool Shipment::hasFeature(const std::string& code) const noexcept
+    bool Shipment::hasFeature(const std::string& featureCode) const noexcept
     {
         bool found {false};
         for (std::size_t i = 0; i < m_features.size() && !found; ++i)
         {
-            found = m_features[i] == code;
+            found = m_features[i] == featureCode;
         }
         return found;
     }

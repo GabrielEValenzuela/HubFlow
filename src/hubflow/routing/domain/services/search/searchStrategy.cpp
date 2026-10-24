@@ -82,7 +82,7 @@ namespace hubflow::routing::domain
         const std::size_t vertexCount {map.nodeCount()};
         if (start >= vertexCount || goal >= vertexCount)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Validation, "route.invalid_endpoints", "Origen o destino inexistente"};
         }
         SearchTrace trace;

@@ -27,7 +27,7 @@ namespace hubflow::sorting::domain
     public:
         /**
          * @brief Copia las referencias de los pendientes de la zona con código @p zone a un arreglo dinámico.
-         * @throws business_error (Conflict) si la zona no tiene pendientes.
+         * @throws BusinessError (Conflict) si la zona no tiene pendientes.
          */
         SortingBatch(std::uint64_t id, const std::string& zone, const logistics::domain::PendingShipments& pending);
 
@@ -53,7 +53,7 @@ namespace hubflow::sorting::domain
          * Si el envío viaja junto con otros, se cargan todos los del grupo a la vez, uno detrás de otro, para que
          * queden juntos en el vehículo.
          * @return los envíos cargados, en el orden en que quedaron apilados.
-         * @throws business_error (Conflict) si la cola está vacía o falta cargable algún envío de su grupo.
+         * @throws BusinessError (Conflict) si la cola está vacía o falta cargable algún envío de su grupo.
          */
         ds::DynamicArray<logistics::domain::Shipment*> processNext(const logistics::domain::ShipmentGroupBook& groups);
 
@@ -62,7 +62,7 @@ namespace hubflow::sorting::domain
          *
          * La mesa no carga un envío de un grupo sin los demás: si falta alguno de sus compañeros en @p codes se rechaza
          * todo sin cargar nada.
-         * @throws business_error NotFound (un código no está por cargar) o Conflict (grupo incompleto).
+         * @throws BusinessError NotFound (un código no está por cargar) o Conflict (grupo incompleto).
          */
         ds::DynamicArray<logistics::domain::Shipment*>
         processByCodes(const ds::DynamicArray<std::string>& codes, const logistics::domain::ShipmentGroupBook& groups);
@@ -73,7 +73,7 @@ namespace hubflow::sorting::domain
          *
          * Repetir la operación es seguro: una vez devuelto el envío ya no está en el tope y el
          * segundo intento falla sin modificar el lote.
-         * @throws business_error (NotFound) si @p code no es el tope de la pila de procesados.
+         * @throws BusinessError (NotFound) si @p code no es el tope de la pila de procesados.
          */
         ds::DynamicArray<logistics::domain::Shipment*>
         returnProcessed(const std::string& code, const logistics::domain::ShipmentGroupBook& groups);

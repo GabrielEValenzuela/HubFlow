@@ -18,9 +18,9 @@ namespace hubflow::logistics::domain
         {
             if (priority < MIN_PRIORITY || priority > MAX_PRIORITY)
             {
-                throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                      "service_level.priority_invalid",
-                                                      "La prioridad debe estar entre 1 y 1000"};
+                throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                     "service_level.priority_invalid",
+                                                     "La prioridad debe estar entre 1 y 1000"};
             }
             return priority;
         }
@@ -36,7 +36,7 @@ namespace hubflow::logistics::domain
                                      const unsigned priority,
                                      const shared::domain::ActorContext& context)
     {
-        ServiceLevel* pService = new ServiceLevel {
+        auto* pService = new ServiceLevel {
             ServiceLevelState {CatalogCode {code}.value(), CatalogName {name}.value(), validPriority(priority), true}};
         pService->raise(new ServiceLevelChanged {pService->m_state, true, context});
         return pService;
@@ -47,21 +47,21 @@ namespace hubflow::logistics::domain
         return new ServiceLevel {state};
     }
 
-    void ServiceLevel::revise(const std::optional<std::string>& name,
+    void ServiceLevel::revise(const std::optional<std::string>& newName,
                               const std::optional<bool>& active,
                               const PlantOccupancy& occupancy,
                               const shared::domain::ActorContext& context)
     {
         ServiceLevelState next {m_state};
-        if (name.has_value())
+        if (newName.has_value())
         {
-            next.name = CatalogName {*name}.value();
+            next.name = CatalogName {*newName}.value();
         }
         if (active.has_value() && *active != m_state.active)
         {
             if (!*active && occupancy.hasShipmentsWithService(m_state.code))
             {
-                throw shared::domain::business_error {
+                throw shared::domain::BusinessError {
                     shared::domain::ErrorKind::Conflict,
                     "service_level.has_shipments",
                     "Hay paquetes en la planta con este servicio: despachalos antes de desactivarlo"};

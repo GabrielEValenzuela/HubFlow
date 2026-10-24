@@ -17,7 +17,7 @@
 
 using namespace hubflow;
 using namespace hubflow::logistics::domain;
-using hubflow::shared::domain::business_error;
+using hubflow::shared::domain::BusinessError;
 using hubflow::test::actor;
 
 namespace
@@ -73,7 +73,7 @@ namespace
         {
             action();
         }
-        catch (const business_error& error)
+        catch (const BusinessError& error)
         {
             code = error.code();
         }
@@ -89,7 +89,7 @@ TEST(CatalogCodeTest, AcceptsUppercaseDigitsAndUnderscoreOnly)
     EXPECT_FALSE(CatalogCode::isValid("O"));
     EXPECT_FALSE(CatalogCode::isValid("UNA_ZONA_MUY_LARGA"));
     EXPECT_FALSE(CatalogCode::isValid("CON ESPACIO"));
-    EXPECT_THROW(CatalogCode {"mal"}, business_error);
+    EXPECT_THROW(CatalogCode {"mal"}, BusinessError);
 }
 
 TEST(ZoneTest, OpensRenamesAndRaisesOneEventPerRealChange)
@@ -104,7 +104,7 @@ TEST(ZoneTest, OpensRenamesAndRaisesOneEventPerRealChange)
     pZone->revise(std::string {"Zona Oeste"}, std::nullopt, free, actor());
     EXPECT_EQ(pZone->pendingEvents(), 2U);
     EXPECT_EQ(pZone->name(), "Zona Oeste");
-    EXPECT_THROW(pZone->revise(std::string {"x"}, std::nullopt, free, actor()), business_error);
+    EXPECT_THROW(pZone->revise(std::string {"x"}, std::nullopt, free, actor()), BusinessError);
     EXPECT_EQ(pZone->name(), "Zona Oeste");
     delete pZone;
 }
@@ -141,7 +141,7 @@ TEST(ZoneTest, RenameAndDeactivateTogetherAreAllOrNothing)
     Zone* pZone = Zone::restore({"OESTE", "Oeste", true});
     FakeOccupancy occupancy;
     occupancy.shipments = true;
-    EXPECT_THROW(pZone->revise(std::string {"Otro nombre"}, false, occupancy, actor()), business_error);
+    EXPECT_THROW(pZone->revise(std::string {"Otro nombre"}, false, occupancy, actor()), BusinessError);
     EXPECT_EQ(pZone->name(), "Oeste");
     EXPECT_EQ(pZone->pendingEvents(), 0U);
     delete pZone;
@@ -149,8 +149,8 @@ TEST(ZoneTest, RenameAndDeactivateTogetherAreAllOrNothing)
 
 TEST(ServiceLevelTest, ValidatesPriorityAndRefusesDeactivationWithShipmentsInPlant)
 {
-    EXPECT_THROW(ServiceLevel::open("RAPIDO", "Rápido", 0, actor()), business_error);
-    EXPECT_THROW(ServiceLevel::open("RAPIDO", "Rápido", 1001, actor()), business_error);
+    EXPECT_THROW(ServiceLevel::open("RAPIDO", "Rápido", 0, actor()), BusinessError);
+    EXPECT_THROW(ServiceLevel::open("RAPIDO", "Rápido", 1001, actor()), BusinessError);
 
     ServiceLevel* pService = ServiceLevel::open("RAPIDO", "Rápido", 5, actor());
     EXPECT_EQ(pService->priority(), 5U);
@@ -256,7 +256,7 @@ TEST(RoadMapGrowthTest, ANewPointJoinsTheNetworkAtomically)
     EXPECT_EQ(map.graph().degree(map.require("HUB")), 5U);
 
     const auto nodes = map.nodeCount();
-    EXPECT_THROW(map.declareNode(west, links, actor()), business_error);
+    EXPECT_THROW(map.declareNode(west, links, actor()), BusinessError);
     ds::DynamicArray<routing::domain::RoadLink> shortcut;
     shortcut.pushBack({"HUB", 1.0});
     EXPECT_EQ(
@@ -266,8 +266,7 @@ TEST(RoadMapGrowthTest, ANewPointJoinsTheNetworkAtomically)
               "road_node.unconnected");
     ds::DynamicArray<routing::domain::RoadLink> toNowhere;
     toNowhere.pushBack({"ZZZ", 50.0});
-    EXPECT_THROW(map.declareNode({"O4", "Perdido", false, "OESTE", 0.0, 0.0, true}, toNowhere, actor()),
-                 business_error);
+    EXPECT_THROW(map.declareNode({"O4", "Perdido", false, "OESTE", 0.0, 0.0, true}, toNowhere, actor()), BusinessError);
     EXPECT_EQ(map.nodeCount(), nodes);
 }
 
@@ -282,5 +281,5 @@ TEST(RoadMapGrowthTest, ZoneAndAvailabilityChangesAreIdempotentAndTheHubStays)
     map.reviseNode("N1", std::string {"CENTRO"}, false, actor());
     EXPECT_EQ(map.pendingEvents(), 1U);
     EXPECT_EQ(codeOfFailure([&] { map.reviseNode("HUB", std::nullopt, false, actor()); }), "road_node.hub_required");
-    EXPECT_THROW(map.reviseNode("NOPE", std::nullopt, false, actor()), business_error);
+    EXPECT_THROW(map.reviseNode("NOPE", std::nullopt, false, actor()), BusinessError);
 }

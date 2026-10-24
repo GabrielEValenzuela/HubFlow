@@ -29,9 +29,9 @@ namespace hubflow::routing::application
         const bool reactivates {request.active.value_or(false) && !m_routing.map.node(index).active};
         if ((zoneChanges || reactivates) && becomesActive && !m_zones.isActive(targetZone))
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "road_node.zone_unavailable",
-                                                  "La zona no existe o está desactivada"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "road_node.zone_unavailable",
+                                                 "La zona no existe o está desactivada"};
         }
         m_routing.map.reviseNode(nodeId, request.zone, request.active, principal.contextAt(m_clock));
         m_routing.map.publishEvents(m_bus);

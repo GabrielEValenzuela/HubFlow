@@ -24,19 +24,19 @@ namespace hubflow::routing::application
         domain::DeliveryRoute& route = m_routing.routes.require(request.routeId);
         if (principal.role == identity::domain::Role::Pum && route.courier().id != principal.userId)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Forbidden, "route.not_owner", "La hoja de ruta pertenece a otro PUM"};
         }
         const auto& stop = route.stop(request.order);
         if (!stop.includes(request.shipmentCode))
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::NotFound,
-                                                  "route.shipment_not_in_stop",
-                                                  "El paquete no pertenece a esta parada"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::NotFound,
+                                                 "route.shipment_not_in_stop",
+                                                 "El paquete no pertenece a esta parada"};
         }
         if (stop.outcome != domain::StopOutcome::Pending)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Conflict, "route.stop_closed", "La parada ya tiene un resultado registrado"};
         }
         logistics::domain::Shipment& shipment = m_logistics.catalog.require(request.shipmentCode);

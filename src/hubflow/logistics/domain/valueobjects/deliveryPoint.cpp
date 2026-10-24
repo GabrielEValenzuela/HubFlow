@@ -14,7 +14,7 @@ namespace hubflow::logistics::domain
     {
         if (nodeId.empty() || nodeId.size() > MAX_NODE_ID_LENGTH)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Validation, "delivery_point.invalid", "Punto de entrega inválido"};
         }
     }

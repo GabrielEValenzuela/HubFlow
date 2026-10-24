@@ -20,7 +20,7 @@ namespace hubflow::logistics::domain
         static constexpr std::size_t MAX_DIGITS {15};
         static constexpr std::size_t PROOF_DIGITS {4};
 
-        /// @throws business_error (Validation) si no tiene entre 8 y 15 dígitos o trae caracteres que no son de un
+        /// @throws BusinessError (Validation) si no tiene entre 8 y 15 dígitos o trae caracteres que no son de un
         /// teléfono.
         explicit Phone(const std::string& text);
 

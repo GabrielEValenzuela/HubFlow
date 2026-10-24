@@ -21,16 +21,16 @@ namespace hubflow::logistics::domain
             const Shipment& shipment = catalog.require(codes[codeIndex]);
             if (groupOf(shipment.code()) != nullptr)
             {
-                throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
-                                                      "shipment_group.already_grouped",
-                                                      "El paquete " + shipment.code() + " ya viaja junto con otros"};
+                throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict,
+                                                     "shipment_group.already_grouped",
+                                                     "El paquete " + shipment.code() + " ya viaja junto con otros"};
             }
             if (!shipment.isAwaitingDispatch())
             {
-                throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
-                                                      "shipment_group.not_awaiting",
-                                                      "El paquete " + shipment.code() +
-                                                          " ya salió a reparto o se entregó"};
+                throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict,
+                                                     "shipment_group.not_awaiting",
+                                                     "El paquete " + shipment.code() +
+                                                         " ya salió a reparto o se entregó"};
             }
             if (codeIndex == 0)
             {
@@ -38,9 +38,9 @@ namespace hubflow::logistics::domain
             }
             else if (shipment.deliveryPoint() != deliveryPoint)
             {
-                throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                      "shipment_group.different_destination",
-                                                      "Los paquetes de un grupo deben entregarse en el mismo punto"};
+                throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                     "shipment_group.different_destination",
+                                                     "Los paquetes de un grupo deben entregarse en el mismo punto"};
             }
         }
         return adopt(ShipmentGroup::form(ShipmentGroupState {id, codes, deliveryPoint}, context));
@@ -58,7 +58,7 @@ namespace hubflow::logistics::domain
         m_groups.forEach([&pFound, &id](ShipmentGroup* pGroup) { pFound = pGroup->id() == id ? pGroup : pFound; });
         if (pFound == nullptr)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::NotFound, "shipment_group.not_found", "El grupo de paquetes no existe"};
         }
         return *pFound;
@@ -72,16 +72,15 @@ namespace hubflow::logistics::domain
         return pFound;
     }
 
-    void ShipmentGroupBook::ensureDissolvable(const ShipmentGroup& group, const ShipmentCatalog& catalog) const
+    void ShipmentGroupBook::ensureDissolvable(const ShipmentGroup& group, const ShipmentCatalog& catalog)
     {
         for (std::size_t codeIndex = 0; codeIndex < group.codes().size(); ++codeIndex)
         {
             if (catalog.require(group.codes()[codeIndex]).status() == ShipmentStatus::EnReparto)
             {
-                throw shared::domain::business_error {
-                    shared::domain::ErrorKind::Conflict,
-                    "shipment_group.in_delivery",
-                    "El grupo está en reparto: no se puede deshacer hasta que vuelva"};
+                throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict,
+                                                     "shipment_group.in_delivery",
+                                                     "El grupo está en reparto: no se puede deshacer hasta que vuelva"};
             }
         }
     }

@@ -34,7 +34,7 @@ namespace hubflow::logistics::domain
 
         /**
          * @brief Verifica las reglas, crea el grupo con identidad @p id y lo incorpora.
-         * @throws business_error NotFound (código inexistente), Conflict (ya agrupado, no espera despacho) o Validation
+         * @throws BusinessError NotFound (código inexistente), Conflict (ya agrupado, no espera despacho) o Validation
          * (punto de entrega distinto, menos de dos envíos).
          */
         ShipmentGroup& form(const std::string& id,
@@ -45,14 +45,14 @@ namespace hubflow::logistics::domain
         /// @brief Incorpora un grupo ya persistido. Toma ownership.
         ShipmentGroup& adopt(ShipmentGroup* pGroup);
 
-        /// @throws business_error (NotFound) si no existe el grupo.
+        /// @throws BusinessError (NotFound) si no existe el grupo.
         ShipmentGroup& require(const std::string& id) const;
 
         /// @brief Grupo al que pertenece el envío con código @p code, o nullptr.
         ShipmentGroup* groupOf(const std::string& code) const;
 
-        /// @throws business_error (Conflict) si algún envío del grupo está en reparto.
-        void ensureDissolvable(const ShipmentGroup& group, const ShipmentCatalog& catalog) const;
+        /// @throws BusinessError (Conflict) si algún envío del grupo está en reparto.
+        static void ensureDissolvable(const ShipmentGroup& group, const ShipmentCatalog& catalog);
 
         /// @brief Quita y destruye el grupo. Antes hay que haber publicado sus eventos.
         void discard(const std::string& id);

@@ -8,7 +8,7 @@
 #include <vector>
 
 using namespace hubflow;
-using shared::domain::business_error;
+using shared::domain::BusinessError;
 
 TEST(IdentityFlow, SignInAuthenticateAndPermissions)
 {
@@ -21,8 +21,8 @@ TEST(IdentityFlow, SignInAuthenticateAndPermissions)
     const auto principal = app.authenticate.execute(session.token);
     EXPECT_EQ(principal.userId, admin.id);
     EXPECT_EQ(principal.role, identity::domain::Role::Admin);
-    EXPECT_THROW(app.signIn.execute("admin@hubflow.local", "incorrecta"), business_error);
-    EXPECT_THROW(app.authenticate.execute("basura"), business_error);
+    EXPECT_THROW(app.signIn.execute("admin@hubflow.local", "incorrecta"), BusinessError);
+    EXPECT_THROW(app.authenticate.execute("basura"), BusinessError);
 
     const auto operador =
         app.registerUser.execute(principal,
@@ -31,17 +31,17 @@ TEST(IdentityFlow, SignInAuthenticateAndPermissions)
     EXPECT_THROW(app.registerUser.execute(
                      shared::application::Principal {operador.id, "Operador", operador.role, &app.policy},
                      identity::application::RegisterUserRequest {"x@hubflow.local", "X", {}, "operador123"}),
-                 business_error);
+                 BusinessError);
 
     identity::application::UpdateUserRequest deactivate;
     deactivate.active = false;
     app.updateUser.execute(principal, operador.id, deactivate);
-    EXPECT_THROW(app.signIn.execute("op@hubflow.local", "operador123"), business_error);
+    EXPECT_THROW(app.signIn.execute("op@hubflow.local", "operador123"), BusinessError);
     EXPECT_EQ(storage.users.users.size(), 2U);
     EXPECT_EQ(storage.audit.entries.back().type, "user.changed");
 
     app.clock.advance(identity::application::SignIn::SESSION_SECONDS + 1);
-    EXPECT_THROW(app.authenticate.execute(session.token), business_error);
+    EXPECT_THROW(app.authenticate.execute(session.token), BusinessError);
 }
 
 TEST(InsightsFlow, CombinesSetsAndResolvesShipmentsThroughBPlus)
@@ -73,7 +73,7 @@ TEST(InsightsFlow, CombinesSetsAndResolvesShipmentsThroughBPlus)
     const auto lookup = app.lookupInBst.execute(app.operador(), "PKG-1005");
     EXPECT_EQ(lookup.visited, 5U);
     EXPECT_EQ(lookup.path.size(), 5U);
-    EXPECT_THROW(app.lookupInBst.execute(app.pum(3), "PKG-1005"), business_error);
+    EXPECT_THROW(app.lookupInBst.execute(app.pum(3), "PKG-1005"), BusinessError);
 }
 
 TEST(InsightsFlow, NewShipmentIsReachableThroughEveryStructure)

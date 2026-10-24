@@ -16,7 +16,7 @@ namespace hubflow::logistics::domain
     class PostalCode final
     {
     public:
-        /// @throws business_error (Validation) si no tiene ninguno de los dos formatos.
+        /// @throws BusinessError (Validation) si no tiene ninguno de los dos formatos.
         explicit PostalCode(const std::string& text);
 
         /// @brief true si @p text es un código postal aceptable.

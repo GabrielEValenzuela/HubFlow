@@ -5,17 +5,17 @@
 namespace hubflow::shared::domain
 {
 
-    business_error::business_error(const ErrorKind kind, std::string code, const std::string& message)
+    BusinessError::BusinessError(const ErrorKind kind, std::string code, const std::string& message)
         : std::runtime_error {message}
         , m_kind {kind}
         , m_code {std::move(code)}
     {
     }
 
-    business_error::business_error(const ErrorKind kind,
-                                   std::string code,
-                                   const std::string& message,
-                                   const std::uint32_t retryAfterSeconds)
+    BusinessError::BusinessError(const ErrorKind kind,
+                                 std::string code,
+                                 const std::string& message,
+                                 const std::uint32_t retryAfterSeconds)
         : std::runtime_error {message}
         , m_kind {kind}
         , m_code {std::move(code)}
@@ -23,17 +23,17 @@ namespace hubflow::shared::domain
     {
     }
 
-    ErrorKind business_error::errorKind() const noexcept
+    ErrorKind BusinessError::errorKind() const noexcept
     {
         return m_kind;
     }
 
-    const std::string& business_error::code() const noexcept
+    const std::string& BusinessError::code() const noexcept
     {
         return m_code;
     }
 
-    std::uint32_t business_error::retryAfterSeconds() const noexcept
+    std::uint32_t BusinessError::retryAfterSeconds() const noexcept
     {
         return m_retryAfterSeconds;
     }

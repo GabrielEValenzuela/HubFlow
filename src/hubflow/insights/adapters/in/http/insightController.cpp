@@ -67,7 +67,7 @@ namespace hubflow::insights::adapters
         }
     } // namespace
 
-    InsightController::InsightController(InsightUseCases useCases)
+    InsightController::InsightController(const InsightUseCases& useCases)
         : m_useCases {useCases}
     {
     }
@@ -155,8 +155,8 @@ namespace hubflow::insights::adapters
         }
         if (!chosen.has_value())
         {
-            throw platform::validation_error {platform::HttpStatus::UnprocessableEntity,
-                                              {{"zone|service", "Indicá exactamente uno: zone o service válido"}}};
+            throw platform::ValidationError {platform::HttpStatus::UnprocessableEntity,
+                                             {{"zone|service", "Indicá exactamente uno: zone o service válido"}}};
         }
         Json body = InsightsJsonPresenter::codeSet(m_useCases.getCodeSet.execute(context.user(), *chosen));
         body["criteria"] = InsightsJsonPresenter::selector(*chosen);

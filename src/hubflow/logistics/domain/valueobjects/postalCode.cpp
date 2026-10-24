@@ -49,7 +49,7 @@ namespace hubflow::logistics::domain
     {
         if (!isNumeric(m_value) && !isCpa(m_value))
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Validation,
                 "recipient.postal_code_invalid",
                 "El código postal debe tener 4 dígitos (1425) o formato CPA (C1425ABC)"};

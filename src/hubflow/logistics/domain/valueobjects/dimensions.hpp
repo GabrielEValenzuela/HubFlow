@@ -16,7 +16,7 @@ namespace hubflow::logistics::domain
         static constexpr double MAX_CENTIMETERS {300.0};
         static constexpr double VOLUMETRIC_DIVISOR {5000.0};
 
-        /// @throws business_error (Validation) si alguna medida está fuera de rango.
+        /// @throws BusinessError (Validation) si alguna medida está fuera de rango.
         Dimensions(double lengthCm, double widthCm, double heightCm);
 
         double lengthCm() const noexcept;

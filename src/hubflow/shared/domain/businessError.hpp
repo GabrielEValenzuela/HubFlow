@@ -9,7 +9,7 @@ namespace hubflow::shared::domain
 {
 
     /// @brief Categoría de una violación de regla de negocio, independiente del transporte.
-    enum class ErrorKind
+    enum class ErrorKind : std::uint8_t
     {
         Validation,
         NotFound,
@@ -27,13 +27,13 @@ namespace hubflow::shared::domain
      * @c what() el mensaje legible en español. Un error de tipo RateLimited indica además cuántos segundos hay que
      * esperar antes de volver a intentar.
      */
-    class business_error final : public std::runtime_error
+    class BusinessError final : public std::runtime_error
     {
     public:
-        business_error(ErrorKind kind, std::string code, const std::string& message);
+        BusinessError(ErrorKind kind, std::string code, const std::string& message);
 
         /// @brief Error de límite de intentos: informa cuántos segundos esperar antes de reintentar.
-        business_error(ErrorKind kind, std::string code, const std::string& message, std::uint32_t retryAfterSeconds);
+        BusinessError(ErrorKind kind, std::string code, const std::string& message, std::uint32_t retryAfterSeconds);
 
         ErrorKind errorKind() const noexcept;
 

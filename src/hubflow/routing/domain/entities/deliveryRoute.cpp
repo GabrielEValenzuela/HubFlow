@@ -28,11 +28,10 @@ namespace hubflow::routing::domain
     {
         if (stops.isEmpty())
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Conflict, "route.no_stops", "La ruta necesita al menos una parada"};
         }
-        DeliveryRoute* pRoute =
-            new DeliveryRoute {RouteRecord {id, courier, agent.algorithm(), context.occurredAt, stops}};
+        auto* pRoute = new DeliveryRoute {RouteRecord {id, courier, agent.algorithm(), context.occurredAt, stops}};
         try
         {
             pRoute->plan(agent);
@@ -48,7 +47,7 @@ namespace hubflow::routing::domain
 
     DeliveryRoute* DeliveryRoute::restore(const RouteRecord& record, const PumAgent& agent)
     {
-        DeliveryRoute* pRoute = new DeliveryRoute {record};
+        auto* pRoute = new DeliveryRoute {record};
         try
         {
             pRoute->plan(agent);
@@ -69,13 +68,13 @@ namespace hubflow::routing::domain
         for (std::size_t stopIndex = 0; stopIndex <= m_stops.size(); ++stopIndex)
         {
             const std::size_t target {stopIndex < m_stops.size() ? roadMap.require(m_stops[stopIndex].nodeId) : hub};
-            SearchTrace* pTrace = new SearchTrace {agent.travel(current, target)};
+            auto* pTrace = new SearchTrace {agent.travel(current, target)};
             m_segments.pushBack(pTrace);
             if (!pTrace->metrics.solutionFound)
             {
-                throw shared::domain::business_error {shared::domain::ErrorKind::InvalidState,
-                                                      "route.unreachable",
-                                                      "El PUM no encontró camino a una parada"};
+                throw shared::domain::BusinessError {shared::domain::ErrorKind::InvalidState,
+                                                     "route.unreachable",
+                                                     "El PUM no encontró camino a una parada"};
             }
             current = target;
         }
@@ -87,9 +86,9 @@ namespace hubflow::routing::domain
     {
         if (outcome == StopOutcome::Pending)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "route.outcome_invalid",
-                                                  "El resultado de una parada no puede ser Pendiente"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "route.outcome_invalid",
+                                                 "El resultado de una parada no puede ser Pendiente"};
         }
         RouteStop& target = m_stops[stop(order).order - 1];
         if (target.outcome == outcome)
@@ -98,27 +97,27 @@ namespace hubflow::routing::domain
         }
         if (target.outcome != StopOutcome::Pending)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
-                                                  "route.stop_closed",
-                                                  "La parada ya tiene otro resultado registrado"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict,
+                                                 "route.stop_closed",
+                                                 "La parada ya tiene otro resultado registrado"};
         }
         target.outcome = outcome;
         raise(new RouteStopResolved {m_id, target, status() == RouteStatus::Completed, context});
         return target;
     }
 
-    void DeliveryRoute::reassign(const Courier& courier, const shared::domain::ActorContext& context)
+    void DeliveryRoute::reassign(const Courier& newCourier, const shared::domain::ActorContext& context)
     {
-        if (courier.id != m_courier.id)
+        if (newCourier.id != m_courier.id)
         {
             if (status() == RouteStatus::Completed)
             {
-                throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
-                                                      "route.completed",
-                                                      "El reparto ya terminó: no se puede pasar a otro chofer"};
+                throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict,
+                                                     "route.completed",
+                                                     "El reparto ya terminó: no se puede pasar a otro chofer"};
             }
             const Courier previous {m_courier};
-            m_courier = courier;
+            m_courier = newCourier;
             raise(new DeliveryRouteReassigned {m_id, previous, m_courier, context});
         }
     }
@@ -127,7 +126,7 @@ namespace hubflow::routing::domain
     {
         if (order == 0 || order > m_stops.size())
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::NotFound, "route.stop_not_found", "Parada inexistente"};
         }
         return m_stops[order - 1];

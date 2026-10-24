@@ -197,12 +197,12 @@ TEST_F(PendingShipmentsTest, RecursiveZoneSummaryCountsWeightAndExpress)
 TEST_F(PendingShipmentsTest, HandlesEmptyDuplicatedAndSingleElementCases)
 {
     EXPECT_EQ(pending.popFront(), nullptr);
-    EXPECT_THROW(catalog.require("PKG-9999"), business_error);
+    EXPECT_THROW(catalog.require("PKG-9999"), BusinessError);
 
     Shipment& only = receive(draft("PKG-0001", "ESTANDAR"));
     EXPECT_EQ(only.history().size(), 1U);
     EXPECT_THROW(catalog.adopt(Shipment::receive(draft("PKG-0001", "EXPRESS"), tickets.next(), actor())),
-                 business_error);
+                 BusinessError);
     EXPECT_EQ(pending.popFront(), &only);
     EXPECT_TRUE(pending.isEmpty());
     receive(draft("PKG-0002", "EXPRESS"));
@@ -213,7 +213,7 @@ TEST(Shipment, EnforcesStateMachineAndTracksStateBits)
 {
     TicketDispenser tickets;
     Shipment* pShipment = Shipment::receive(draft("PKG-0001", "EXPRESS"), tickets.next(), actor());
-    EXPECT_THROW(pShipment->deliver("x", actor()), business_error);
+    EXPECT_THROW(pShipment->deliver("x", actor()), BusinessError);
     pShipment->dispatch("salida", actor());
     pShipment->reschedule("ausente", tickets.next(), actor());
     EXPECT_TRUE(pShipment->stateHistory().isSet(bitOf(ShipmentStatus::Reprogramado)));
@@ -222,7 +222,7 @@ TEST(Shipment, EnforcesStateMachineAndTracksStateBits)
     pShipment->dispatch("segundo intento", actor());
     pShipment->confirmAllParcels(actor());
     pShipment->deliver("ok", actor());
-    EXPECT_THROW(pShipment->reschedule("otra vez", tickets.next(), actor()), business_error);
+    EXPECT_THROW(pShipment->reschedule("otra vez", tickets.next(), actor()), BusinessError);
     delete pShipment;
 }
 
@@ -248,11 +248,10 @@ TEST(Shipment, RaisesOneEventPerBehaviour)
 TEST(Shipment, ValidatesValueObjects)
 {
     TicketDispenser tickets;
-    EXPECT_THROW(Shipment::receive(draft("PKG-1", "EXPRESS"), tickets.next(), actor()), business_error);
-    EXPECT_THROW(Shipment::receive(draft("PKG-0001", "EXPRESS", "NORTE", 0.0), tickets.next(), actor()),
-                 business_error);
+    EXPECT_THROW(Shipment::receive(draft("PKG-1", "EXPRESS"), tickets.next(), actor()), BusinessError);
+    EXPECT_THROW(Shipment::receive(draft("PKG-0001", "EXPRESS", "NORTE", 0.0), tickets.next(), actor()), BusinessError);
     EXPECT_THROW(Shipment::receive(draft("PKG-0001", "EXPRESS", "NORTE", 51.0), tickets.next(), actor()),
-                 business_error);
+                 BusinessError);
 }
 
 TEST_F(ShipmentLookupTest, StrategiesCompareVisitedNodes)

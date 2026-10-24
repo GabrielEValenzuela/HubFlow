@@ -25,7 +25,7 @@ namespace hubflow::sorting::domain
         /// @brief Abre un lote para @p zone reemplazando al activo.
         SortingBatch& open(const std::string& zone, const logistics::domain::PendingShipments& pending);
 
-        /// @throws business_error (NotFound) si @p id no es el lote activo.
+        /// @throws BusinessError (NotFound) si @p id no es el lote activo.
         SortingBatch& require(std::uint64_t id) const;
 
         /// @brief Lote activo o nullptr.

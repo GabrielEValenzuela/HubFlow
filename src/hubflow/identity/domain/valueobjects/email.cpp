@@ -1,4 +1,5 @@
 #include "hubflow/identity/domain/valueobjects/email.hpp"
+#include <algorithm>
 
 #include "hubflow/shared/domain/businessError.hpp"
 
@@ -11,13 +12,14 @@ namespace hubflow::identity::domain
         std::string lowercase(const std::string& text)
         {
             std::string result {text};
-            for (auto& character : result)
-            {
-                if (character >= 'A' && character <= 'Z')
-                {
-                    character = static_cast<char>(character - 'A' + 'a');
-                }
-            }
+            std::transform(result.begin(),
+                           result.end(),
+                           result.begin(),
+                           [](const char character)
+                           {
+                               return character >= 'A' && character <= 'Z' ? static_cast<char>(character - 'A' + 'a')
+                                                                           : character;
+                           });
             return result;
         }
 
@@ -36,7 +38,7 @@ namespace hubflow::identity::domain
     {
         if (!isWellFormed(m_value))
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Validation, "email.invalid", "Email inválido"};
         }
     }

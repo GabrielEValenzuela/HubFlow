@@ -53,16 +53,16 @@ namespace hubflow::logistics::domain
 
         /**
          * @brief Toma ownership de @p pEntry.
-         * @throws business_error (Conflict) si ya existe uno con ese código; en ese caso libera @p pEntry.
+         * @throws BusinessError (Conflict) si ya existe uno con ese código; en ese caso libera @p pEntry.
          */
         TEntry& adopt(TEntry* pEntry)
         {
             if (contains(pEntry->code()))
             {
                 delete pEntry;
-                throw shared::domain::business_error {shared::domain::ErrorKind::Conflict,
-                                                      m_nouns.kind + ".duplicate",
-                                                      "Ya existe " + m_nouns.indefinite + " con ese código"};
+                throw shared::domain::BusinessError {shared::domain::ErrorKind::Conflict,
+                                                     m_nouns.kind + ".duplicate",
+                                                     "Ya existe " + m_nouns.indefinite + " con ese código"};
             }
             m_entries.pushBack(pEntry);
             return *pEntry;
@@ -81,13 +81,13 @@ namespace hubflow::logistics::domain
             return find(code) != nullptr;
         }
 
-        /// @throws business_error (NotFound) si no existe.
+        /// @throws BusinessError (NotFound) si no existe.
         TEntry& require(const std::string& code) const
         {
             TEntry* pEntry = find(code);
             if (pEntry == nullptr)
             {
-                throw shared::domain::business_error {
+                throw shared::domain::BusinessError {
                     shared::domain::ErrorKind::NotFound, m_nouns.kind + ".not_found", "No existe " + m_nouns.definite};
             }
             return *pEntry;

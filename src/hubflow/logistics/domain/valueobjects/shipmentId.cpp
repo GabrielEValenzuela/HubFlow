@@ -11,9 +11,9 @@ namespace hubflow::logistics::domain
     {
         if (!isValid(value))
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "shipment_id.invalid",
-                                                  "La identidad interna no es un UUID válido"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "shipment_id.invalid",
+                                                 "La identidad interna no es un UUID válido"};
         }
     }
 

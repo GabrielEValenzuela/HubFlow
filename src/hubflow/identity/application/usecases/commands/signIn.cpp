@@ -8,9 +8,9 @@ namespace hubflow::identity::application
 {
     namespace
     {
-        shared::domain::business_error invalidCredentials()
+        shared::domain::BusinessError invalidCredentials()
         {
-            return shared::domain::business_error {
+            return shared::domain::BusinessError {
                 shared::domain::ErrorKind::Unauthorized, "auth.invalid_credentials", "Email o contraseña incorrectos"};
         }
     } // namespace

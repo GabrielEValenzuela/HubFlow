@@ -15,7 +15,7 @@ namespace hubflow::logistics::domain
     class CatalogCode final
     {
     public:
-        /// @throws business_error (Validation) si el código no cumple el formato.
+        /// @throws BusinessError (Validation) si el código no cumple el formato.
         explicit CatalogCode(const std::string& value);
 
         const std::string& value() const noexcept;

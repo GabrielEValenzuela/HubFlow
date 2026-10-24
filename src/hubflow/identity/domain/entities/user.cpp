@@ -28,7 +28,7 @@ namespace hubflow::identity::domain
                             const PasswordHasher& hasher,
                             const shared::domain::ActorContext& context)
     {
-        User* pUser = new User {UserState {
+        auto* pUser = new User {UserState {
             id, Email {email}.value(), validName(name), role, hasher.hash(validPassword(plainPassword)), true}};
         pUser->raise(new UserRegistered {pUser->m_state, context});
         return pUser;
@@ -44,19 +44,20 @@ namespace hubflow::identity::domain
         return m_state.active && hasher.verify(plainPassword, m_state.passwordHash);
     }
 
-    void User::rename(const std::string& name, const shared::domain::ActorContext& context)
+    void User::rename(const std::string& newName, const shared::domain::ActorContext& context)
     {
-        m_state.name = validName(name);
+        m_state.name = validName(newName);
         announceChange(context);
     }
 
-    void User::assignRole(const Role role, const CourierWorkload& workload, const shared::domain::ActorContext& context)
+    void
+    User::assignRole(const Role newRole, const CourierWorkload& workload, const shared::domain::ActorContext& context)
     {
-        if (role != Role::Pum)
+        if (newRole != Role::Pum)
         {
             ensureNoRouteInProgress(workload);
         }
-        m_state.role = role;
+        m_state.role = newRole;
         announceChange(context);
     }
 
@@ -64,7 +65,7 @@ namespace hubflow::identity::domain
     {
         if (!active && context.userId == m_state.id)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Conflict, "user.self_deactivation", "No podés desactivar tu propio usuario"};
         }
         if (!active)
@@ -87,7 +88,7 @@ namespace hubflow::identity::domain
     {
         if (m_state.role == Role::Pum && workload.hasRouteInProgress(m_state.id))
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Conflict,
                 "user.has_route_in_progress",
                 "Tiene un reparto en curso: pasá su ruta a otro chofer antes de desactivarlo o cambiarle el puesto"};
@@ -98,9 +99,9 @@ namespace hubflow::identity::domain
     {
         if (name.size() < MIN_NAME_LENGTH || name.size() > MAX_NAME_LENGTH)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "user.name_invalid",
-                                                  "El nombre debe tener entre 2 y 80 caracteres"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "user.name_invalid",
+                                                 "El nombre debe tener entre 2 y 80 caracteres"};
         }
         return name;
     }
@@ -109,9 +110,9 @@ namespace hubflow::identity::domain
     {
         if (plainPassword.size() < MIN_PASSWORD_LENGTH || plainPassword.size() > MAX_PASSWORD_LENGTH)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "user.password_invalid",
-                                                  "La contraseña debe tener entre 8 y 72 caracteres"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "user.password_invalid",
+                                                 "La contraseña debe tener entre 8 y 72 caracteres"};
         }
         return plainPassword;
     }

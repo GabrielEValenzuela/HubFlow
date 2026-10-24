@@ -15,7 +15,7 @@ namespace hubflow::routing::application
 {
     namespace
     {
-        using shared::domain::business_error;
+        using shared::domain::BusinessError;
         using shared::domain::ErrorKind;
 
         ds::DynamicArray<logistics::domain::Shipment*>
@@ -54,7 +54,7 @@ namespace hubflow::routing::application
             {
                 if (!load[shipmentIndex]->isAwaitingDispatch())
                 {
-                    throw business_error {
+                    throw BusinessError {
                         ErrorKind::Conflict, "route.shipment_not_pending", "Un envío del lote ya no está pendiente"};
                 }
                 if (!isCovered(stops, load[shipmentIndex]->code()))
@@ -69,10 +69,10 @@ namespace hubflow::routing::application
                     {
                         if (!isLoaded(load, pGroup->codes()[groupCodeIndex]))
                         {
-                            throw business_error {ErrorKind::Conflict,
-                                                  "route.group_incomplete",
-                                                  "El paquete " + load[shipmentIndex]->code() + " viaja junto con " +
-                                                      pGroup->codes()[groupCodeIndex] + ", que no está cargado"};
+                            throw BusinessError {ErrorKind::Conflict,
+                                                 "route.group_incomplete",
+                                                 "El paquete " + load[shipmentIndex]->code() + " viaja junto con " +
+                                                     pGroup->codes()[groupCodeIndex] + ", que no está cargado"};
                         }
                         if (pGroup->codes()[groupCodeIndex] != load[shipmentIndex]->code())
                         {
@@ -109,7 +109,7 @@ namespace hubflow::routing::application
         sorting::domain::SortingBatch& batch = m_desk.require(request.batchId);
         if (batch.processed().isEmpty())
         {
-            throw business_error {
+            throw BusinessError {
                 ErrorKind::Conflict, "route.empty_load", "Procesá al menos un envío del lote antes de asignar la ruta"};
         }
         const auto context = principal.contextAt(m_clock);

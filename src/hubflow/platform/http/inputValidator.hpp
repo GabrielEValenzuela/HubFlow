@@ -21,7 +21,7 @@ namespace hubflow::platform
     class InputValidator final
     {
     public:
-        /// @brief Valida el cuerpo JSON del pedido. @throws validation_error (400) si no es un objeto JSON.
+        /// @brief Valida el cuerpo JSON del pedido. @throws ValidationError (400) si no es un objeto JSON.
         static InputValidator body(const httplib::Request& request);
 
         /// @brief Valida los parámetros de query y de ruta del pedido.
@@ -103,7 +103,7 @@ namespace hubflow::platform
 
         bool has(const std::string& field) const;
 
-        /// @throws validation_error (422) si se acumuló algún error.
+        /// @throws ValidationError (422) si se acumuló algún error.
         void validate() const;
 
     private:

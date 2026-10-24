@@ -20,7 +20,7 @@ namespace hubflow::shared::application
         /// @brief Política con la que se evalúan los permisos; debe sobrevivir al Principal.
         const identity::domain::AccessPolicy* pPolicy {nullptr};
 
-        /// @throws business_error (Forbidden) si el rol no tiene @p permission según la política (o si no hay
+        /// @throws BusinessError (Forbidden) si el rol no tiene @p permission según la política (o si no hay
         /// política).
         void require(identity::domain::Permission permission) const;
 

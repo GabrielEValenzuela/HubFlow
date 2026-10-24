@@ -78,7 +78,7 @@ namespace hubflow::routing::domain
     public:
         /**
          * @brief Fábrica: crea y planifica la ruta registrando DeliveryRouteAssigned.
-         * @throws business_error si no hay paradas o algún tramo no tiene camino.
+         * @throws BusinessError si no hay paradas o algún tramo no tiene camino.
          */
         static DeliveryRoute* assign(std::uint64_t id,
                                      const Courier& courier,
@@ -96,7 +96,7 @@ namespace hubflow::routing::domain
          *
          * Es idempotente: informar el mismo resultado que ya está registrado no cambia nada ni emite
          * eventos. Informar un resultado distinto sobre una parada ya resuelta es un conflicto.
-         * @throws business_error NotFound (parada inexistente), Validation (resultado Pendiente) o
+         * @throws BusinessError NotFound (parada inexistente), Validation (resultado Pendiente) o
          * Conflict (la parada ya tiene otro resultado).
          */
         const RouteStop&
@@ -105,9 +105,9 @@ namespace hubflow::routing::domain
         /**
          * @brief Pasa la ruta a otro repartidor y registra DeliveryRouteReassigned. Si ya es de ese repartidor no hace
          * nada.
-         * @throws business_error (Conflict) si la ruta ya está completada.
+         * @throws BusinessError (Conflict) si la ruta ya está completada.
          */
-        void reassign(const Courier& courier, const shared::domain::ActorContext& context);
+        void reassign(const Courier& newCourier, const shared::domain::ActorContext& context);
 
         const RouteStop& stop(std::size_t order) const;
 

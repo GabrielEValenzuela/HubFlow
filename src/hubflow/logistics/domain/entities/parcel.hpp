@@ -31,7 +31,7 @@ namespace hubflow::logistics::domain
     class Parcel final
     {
     public:
-        /// @throws business_error (Validation) si el peso o las medidas son inválidos.
+        /// @throws BusinessError (Validation) si el peso o las medidas son inválidos.
         Parcel(const std::string& trackingCode, std::size_t ordinal, std::size_t total, const ParcelData& data);
 
         /// @brief Marca el bulto como entregado.

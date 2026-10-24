@@ -10,7 +10,7 @@
 #include <vector>
 
 using namespace hubflow;
-using shared::domain::business_error;
+using shared::domain::BusinessError;
 using shared::domain::ErrorKind;
 
 namespace
@@ -22,7 +22,7 @@ namespace
         {
             action();
         }
-        catch (const business_error& error)
+        catch (const BusinessError& error)
         {
             code = error.code();
         }
@@ -166,7 +166,7 @@ TEST(Extensibility, DuplicateZoneAndInvalidMapPointsAreRejected)
     EXPECT_EQ(codeOfFailure([&] { app.addRoadNode.execute(app.admin(), unknownZone); }), "road_node.zone_unavailable");
     routing::application::AddRoadNodeRequest repeated {"O1", "Repetido", "OESTE", 6.0, 11.0, {}};
     repeated.links.pushBack({"HUB", 5.0});
-    EXPECT_THROW(app.addRoadNode.execute(app.admin(), repeated), business_error);
+    EXPECT_THROW(app.addRoadNode.execute(app.admin(), repeated), BusinessError);
     EXPECT_EQ(app.getRoadMap.execute().nodeCount(), 17U);
 }
 

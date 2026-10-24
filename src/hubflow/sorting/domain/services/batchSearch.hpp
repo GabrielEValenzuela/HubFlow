@@ -13,9 +13,9 @@ namespace hubflow::sorting::domain
     /// @brief Estado de los límites en una iteración de la búsqueda binaria.
     struct BinarySearchStep
     {
-        std::size_t left;
-        std::size_t right;
-        std::size_t middle;
+        std::size_t left {0};
+        std::size_t right {0};
+        std::size_t middle {0};
         std::string codeAtMiddle;
     };
 
@@ -49,7 +49,7 @@ namespace hubflow::sorting::domain
      *
      * mid = izq + (der - izq) / 2; si el código del medio es menor se descarta la mitad izquierda,
      * si es mayor la derecha; termina al encontrar o cuando izq > der. Mejor O(1), peor O(log n).
-     * @throws business_error (InvalidState) si el lote no está ordenado por código.
+     * @throws BusinessError (InvalidState) si el lote no está ordenado por código.
      */
     class BinaryBatchSearch final : public BatchSearch
     {

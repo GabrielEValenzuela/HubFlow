@@ -37,11 +37,11 @@ namespace hubflow::logistics::domain
         /**
          * @brief Aplica los cambios pedidos (nombre y/o habilitación) como una sola operación: o se aplican todos o
          * ninguno. Si no cambia nada no registra eventos, por lo que repetir el pedido deja todo igual.
-         * @throws business_error (Validation) si el nombre es inválido.
-         * @throws business_error (Conflict) al desactivar si hay paquetes en planta para la zona, repartos en curso que
+         * @throws BusinessError (Validation) si el nombre es inválido.
+         * @throws BusinessError (Conflict) al desactivar si hay paquetes en planta para la zona, repartos en curso que
          * pasan por ella o puntos activos del mapa asignados a ella.
          */
-        void revise(const std::optional<std::string>& name,
+        void revise(const std::optional<std::string>& newName,
                     const std::optional<bool>& active,
                     const PlantOccupancy& occupancy,
                     const shared::domain::ActorContext& context);

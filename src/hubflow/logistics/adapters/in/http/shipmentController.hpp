@@ -35,7 +35,7 @@ namespace hubflow::logistics::adapters
     class ShipmentController final : public platform::Controller
     {
     public:
-        explicit ShipmentController(ShipmentUseCases useCases);
+        explicit ShipmentController(const ShipmentUseCases& useCases);
 
     private:
         void registerRoutes(platform::ApiRouter& router) override;

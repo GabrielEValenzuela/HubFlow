@@ -20,7 +20,7 @@ namespace hubflow::logistics::adapters
         }
     } // namespace
 
-    OperationsController::OperationsController(OperationsUseCases useCases)
+    OperationsController::OperationsController(const OperationsUseCases& useCases)
         : m_useCases {useCases}
     {
     }
@@ -41,9 +41,9 @@ namespace hubflow::logistics::adapters
                        const auto* pShipment = m_useCases.findHeaviest.execute(context.user(), zone);
                        if (pShipment == nullptr)
                        {
-                           throw shared::domain::business_error {shared::domain::ErrorKind::NotFound,
-                                                                 "zone.empty",
-                                                                 "No hay envíos pendientes para la zona seleccionada."};
+                           throw shared::domain::BusinessError {shared::domain::ErrorKind::NotFound,
+                                                                "zone.empty",
+                                                                "No hay envíos pendientes para la zona seleccionada."};
                        }
                        return platform::HttpResponse::ok(LogisticsJsonPresenter::shipmentSummary(*pShipment));
                    });

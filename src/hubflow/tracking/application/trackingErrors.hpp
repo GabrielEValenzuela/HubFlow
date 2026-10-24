@@ -16,14 +16,14 @@ namespace hubflow::tracking::application
     {
     public:
         /// @brief "No encontramos un paquete con esos datos": para código inexistente y verificación fallida por igual.
-        static shared::domain::business_error notFound();
+        static shared::domain::BusinessError notFound();
 
         /// @brief Hace falta verificar antes de ver el detalle: falta la constancia, es inválida, venció o es de otro
         /// paquete.
-        static shared::domain::business_error verificationRequired();
+        static shared::domain::BusinessError verificationRequired();
 
         /// @brief Demasiados intentos; conviene esperar @p retryAfterSeconds.
-        static shared::domain::business_error tooManyAttempts(std::uint32_t retryAfterSeconds);
+        static shared::domain::BusinessError tooManyAttempts(std::uint32_t retryAfterSeconds);
     };
 
 } // namespace hubflow::tracking::application

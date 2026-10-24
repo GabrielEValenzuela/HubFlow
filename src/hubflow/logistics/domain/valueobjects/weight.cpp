@@ -10,9 +10,9 @@ namespace hubflow::logistics::domain
     {
         if (!(kilograms > 0.0) || kilograms > MAX_KILOGRAMS)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "weight.invalid",
-                                                  "El peso debe ser mayor a 0 y como máximo 50 kg"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "weight.invalid",
+                                                 "El peso debe ser mayor a 0 y como máximo 50 kg"};
         }
     }
 

@@ -22,7 +22,7 @@ namespace hubflow::sorting::domain
 
         /**
          * @brief Estrategia correspondiente a @p criteria.
-         * @throws business_error (Validation) si @p criteria es None.
+         * @throws BusinessError (Validation) si @p criteria es None.
          */
         static const ShipmentOrdering& of(SortCriteria criteria);
     };

@@ -28,7 +28,7 @@ namespace hubflow::logistics::domain
 
         /**
          * @brief Recibe el paquete y lo incorpora al catálogo.
-         * @throws business_error Conflict (código repetido) o Validation (datos inválidos, zona, servicio o
+         * @throws BusinessError Conflict (código repetido) o Validation (datos inválidos, zona, servicio o
          * característica inexistente o desactivada, punto inválido).
          */
         Shipment& receive(const ShipmentDraft& draft, const shared::domain::ActorContext& context);

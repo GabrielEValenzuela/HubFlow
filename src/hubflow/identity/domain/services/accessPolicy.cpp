@@ -27,7 +27,7 @@ namespace hubflow::identity::domain
     {
         if (!allows(role, permission))
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Forbidden, "auth.forbidden", "No tenés permiso para esta operación"};
         }
     }

@@ -24,7 +24,7 @@ namespace hubflow::logistics::adapters
         }
     } // namespace
 
-    MovementController::MovementController(MovementUseCases useCases)
+    MovementController::MovementController(const MovementUseCases& useCases)
         : m_useCases {useCases}
         , m_transitions {
               {ShipmentStatus::Clasificado,
@@ -71,7 +71,7 @@ namespace hubflow::logistics::adapters
         const auto transition = m_transitions.find(status);
         if (transition == m_transitions.end())
         {
-            throw platform::validation_error {
+            throw platform::ValidationError {
                 platform::HttpStatus::UnprocessableEntity,
                 {{"status", "Usá POST /dispatches o una hoja de ruta para EN_REPARTO; RECIBIDO es inicial"}}};
         }

@@ -37,7 +37,7 @@ namespace hubflow::identity::application
     {
         if (m_users.byEmail(domain::Email {request.email}.value()).has_value())
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Conflict, "user.duplicate_email", "El email ya está registrado"};
         }
         const UserHolder holder {domain::User::registerNew(

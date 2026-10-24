@@ -19,18 +19,18 @@ namespace hubflow::logistics::domain
     {
         if (state.codes.size() < MIN_MEMBERS || state.codes.size() > MAX_MEMBERS)
         {
-            throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                  "shipment_group.size_invalid",
-                                                  "Un grupo necesita entre 2 y 20 paquetes"};
+            throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                 "shipment_group.size_invalid",
+                                                 "Un grupo necesita entre 2 y 20 paquetes"};
         }
         for (std::size_t codeIndex = 0; codeIndex < state.codes.size(); ++codeIndex)
         {
             const std::string code {TrackingCode {state.codes[codeIndex]}.value()};
             if (includes(code))
             {
-                throw shared::domain::business_error {shared::domain::ErrorKind::Validation,
-                                                      "shipment_group.duplicate_member",
-                                                      "Un paquete no puede estar dos veces en el mismo grupo"};
+                throw shared::domain::BusinessError {shared::domain::ErrorKind::Validation,
+                                                     "shipment_group.duplicate_member",
+                                                     "Un paquete no puede estar dos veces en el mismo grupo"};
             }
             m_codes.pushBack(code);
         }
@@ -38,7 +38,7 @@ namespace hubflow::logistics::domain
 
     ShipmentGroup* ShipmentGroup::form(const ShipmentGroupState& state, const shared::domain::ActorContext& context)
     {
-        ShipmentGroup* pGroup = new ShipmentGroup {state};
+        auto* pGroup = new ShipmentGroup {state};
         pGroup->raise(new ShipmentGroupFormed {pGroup->state(), context});
         return pGroup;
     }

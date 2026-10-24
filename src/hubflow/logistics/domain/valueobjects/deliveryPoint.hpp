@@ -10,7 +10,7 @@ namespace hubflow::logistics::domain
     class DeliveryPoint final
     {
     public:
-        /// @throws business_error (Validation) si está vacío o supera 16 caracteres.
+        /// @throws BusinessError (Validation) si está vacío o supera 16 caracteres.
         explicit DeliveryPoint(const std::string& nodeId);
 
         const std::string& nodeId() const noexcept;

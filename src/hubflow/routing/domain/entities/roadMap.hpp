@@ -26,39 +26,39 @@ namespace hubflow::routing::domain
         RoadMap(const RoadMap&) = delete;
         RoadMap& operator=(const RoadMap&) = delete;
 
-        /// @throws business_error si el id está vacío o repetido.
-        std::size_t addNode(const RoadNode& node);
+        /// @throws BusinessError si el id está vacío o repetido.
+        std::size_t addNode(const RoadNode& roadNode);
 
         /**
          * @brief Da de alta un punto nuevo del mapa junto con las calles que lo unen a puntos existentes, y registra
          * RoadNodeAdded. O se agrega todo o no se agrega nada.
-         * @throws business_error Conflict (id repetido), Validation (datos inválidos, sin calles, calle duplicada o más
+         * @throws BusinessError Conflict (id repetido), Validation (datos inválidos, sin calles, calle duplicada o más
          * corta que la línea recta) o NotFound (algún extremo no existe).
          */
-        std::size_t declareNode(const RoadNode& node,
+        std::size_t declareNode(const RoadNode& roadNode,
                                 const ds::DynamicArray<RoadLink>& links,
                                 const shared::domain::ActorContext& context);
 
         /**
          * @brief Reasigna la zona de un punto y/o lo activa o desactiva, y registra RoadNodeChanged si algo cambió.
          * Repetir el mismo pedido no cambia nada.
-         * @throws business_error NotFound (punto inexistente) o Conflict (el centro de distribución no se desactiva).
+         * @throws BusinessError NotFound (punto inexistente) o Conflict (el centro de distribución no se desactiva).
          */
         void reviseNode(const std::string& id,
                         const std::optional<std::string>& zone,
                         const std::optional<bool>& active,
                         const shared::domain::ActorContext& context);
 
-        /// @throws business_error si algún extremo no existe o el costo es menor a la línea recta.
+        /// @throws BusinessError si algún extremo no existe o el costo es menor a la línea recta.
         void connect(const std::string& originId, const std::string& destinationId, double costKm);
 
         /// @brief Índice del nodo por id (búsqueda lineal O(V)).
         std::optional<std::size_t> indexOf(const std::string& id) const;
 
-        /// @throws business_error (NotFound) si el id no existe.
+        /// @throws BusinessError (NotFound) si el id no existe.
         std::size_t require(const std::string& id) const;
 
-        /// @throws business_error (InvalidState) si el mapa no tiene HUB.
+        /// @throws BusinessError (InvalidState) si el mapa no tiene HUB.
         std::size_t hub() const;
 
         /// @brief Distancia en línea recta entre dos nodos: heurística h(n) del PUM.

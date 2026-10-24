@@ -11,7 +11,7 @@
 using namespace hubflow;
 using logistics::domain::ParcelData;
 using logistics::domain::ShipmentStatus;
-using shared::domain::business_error;
+using shared::domain::BusinessError;
 using shared::domain::ErrorKind;
 
 namespace
@@ -60,7 +60,7 @@ namespace
             action();
             kind = ErrorKind::Forbidden;
         }
-        catch (const business_error& error)
+        catch (const BusinessError& error)
         {
             kind = error.errorKind();
         }

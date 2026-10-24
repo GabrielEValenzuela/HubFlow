@@ -15,7 +15,7 @@ namespace hubflow::logistics::domain
         if (contains(pShipment->code()))
         {
             delete pShipment;
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::Conflict, "shipment.duplicate", "Ya existe un envío con ese código"};
         }
         m_shipments.pushBack(pShipment);
@@ -34,7 +34,7 @@ namespace hubflow::logistics::domain
         Shipment* pShipment = m_bPlusTree.find(code).pValue;
         if (pShipment == nullptr)
         {
-            throw shared::domain::business_error {
+            throw shared::domain::BusinessError {
                 shared::domain::ErrorKind::NotFound, "shipment.not_found", "Envío no encontrado."};
         }
         return *pShipment;

@@ -27,7 +27,7 @@ namespace hubflow::logistics::adapters
     class OperationsController final : public platform::Controller
     {
     public:
-        explicit OperationsController(OperationsUseCases useCases);
+        explicit OperationsController(const OperationsUseCases& useCases);
 
     private:
         void registerRoutes(platform::ApiRouter& router) override;

@@ -17,7 +17,7 @@ namespace hubflow::platform
         constexpr double MAX_OFFSET {1e9};
         constexpr double MAX_IDENTIFIER {9e15};
 
-        const std::regex EMAIL_PATTERN {R"(^[^@\s]+@[^@\s]+\.[^@\s]+$)"};
+        const std::regex gs_emailPattern {R"(^[^@\s]+@[^@\s]+\.[^@\s]+$)"};
 
         std::optional<double> numberFrom(const Json& value)
         {
@@ -57,7 +57,7 @@ namespace hubflow::platform
         Json parsed = Json::parse(request.body.empty() ? "{}" : request.body, nullptr, false);
         if (parsed.is_discarded() || !parsed.is_object())
         {
-            throw validation_error {HttpStatus::BadRequest, {{"body", "El cuerpo debe ser un objeto JSON válido"}}};
+            throw ValidationError {HttpStatus::BadRequest, {{"body", "El cuerpo debe ser un objeto JSON válido"}}};
         }
         return InputValidator {std::move(parsed)};
     }
@@ -153,12 +153,12 @@ namespace hubflow::platform
 
     std::string InputValidator::trackingCode(const std::string& field)
     {
-        const std::string code {requiredText(field, 8, logistics::domain::TrackingCode::PUBLIC_LENGTH)};
-        if (!code.empty() && !logistics::domain::TrackingCode::isValid(code))
+        const std::string shipmentCode {requiredText(field, 8, logistics::domain::TrackingCode::PUBLIC_LENGTH)};
+        if (!shipmentCode.empty() && !logistics::domain::TrackingCode::isValid(shipmentCode))
         {
             fail(field, "No es un código de seguimiento válido: revisá que esté bien escrito");
         }
-        return code;
+        return shipmentCode;
     }
 
     std::vector<std::string>
@@ -229,7 +229,7 @@ namespace hubflow::platform
     std::string InputValidator::email(const std::string& field)
     {
         const std::string address {requiredText(field, 5, 120)};
-        if (!address.empty() && !std::regex_match(address, EMAIL_PATTERN))
+        if (!address.empty() && !std::regex_match(address, gs_emailPattern))
         {
             fail(field, "Debe ser un email válido");
         }
@@ -312,7 +312,12 @@ namespace hubflow::platform
                 const auto number = wellFormed ? *numberFrom(item.at(numberKey)) : 0.0;
                 if (!wellFormed || text.empty() || text.size() > maxText || number <= 0.0 || number > maxNumber)
                 {
-                    fail(field, "Cada elemento necesita " + textKey + " (texto) y " + numberKey + " (número positivo)");
+                    fail(field,
+                         std::string {"Cada elemento necesita "}
+                             .append(textKey)
+                             .append(" (texto) y ")
+                             .append(numberKey)
+                             .append(" (número positivo)"));
                 }
                 else
                 {
@@ -336,7 +341,7 @@ namespace hubflow::platform
     {
         if (!m_errors.empty())
         {
-            throw validation_error {HttpStatus::UnprocessableEntity, m_errors};
+            throw ValidationError {HttpStatus::UnprocessableEntity, m_errors};
         }
     }
 
