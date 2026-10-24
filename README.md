@@ -80,13 +80,12 @@ En el primer arranque se cargan además 8 paquetes de ejemplo, `PKG-1001` a `PKG
 
 ## En acción
 
-```bash
-TOKEN=$(curl -s -X POST localhost:8480/api/v1/sessions -H 'Content-Type: application/json' \
-  -d '{"email":"operador@hubflow.local","password":"hubflow123"}' \
-  | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/3a8d4e81-f8e2-48fe-b08c-2b9bdf5733f7" />
 
-curl -s localhost:8480/api/v1/pending-shipments -H "Authorization: Bearer $TOKEN"
-```
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/296def82-9640-4715-acec-cbe91cb24e49" />
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/fd8a0e56-7392-4850-8c58-d00410dd08b2" />
+
 
 Y por dentro, el grafo que recorre el agente de ruteo es una estructura propia con una API mínima:
 
