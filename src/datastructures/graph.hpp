@@ -152,14 +152,14 @@ namespace hubflow::ds
         struct Vertex
         {
             TVertexData data;
-            Edge* pHead;
-            Edge* pTail;
-            std::size_t degree;
+            Edge* pHead {nullptr};
+            Edge* pTail {nullptr};
+            std::size_t degree {0};
         };
 
         static void append(Vertex& vertex, const std::size_t destination, const double weight)
         {
-            Edge* pEdge = new Edge {destination, weight, nullptr};
+            auto* pEdge = new Edge {destination, weight, nullptr};
             if (vertex.pTail == nullptr)
             {
                 vertex.pHead = pEdge;

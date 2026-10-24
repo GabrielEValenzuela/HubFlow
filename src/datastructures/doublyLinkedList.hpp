@@ -27,9 +27,9 @@ namespace hubflow::ds
         /// @brief Nodo con enlaces al anterior y al siguiente.
         struct Node
         {
-            TElement value;
-            Node* pPrev;
-            Node* pNext;
+            TElement value {};
+            Node* pPrev {nullptr};
+            Node* pNext {nullptr};
         };
 
         DoublyLinkedList() = default;
@@ -45,7 +45,7 @@ namespace hubflow::ds
         /// @brief Agrega al final. O(1).
         void pushBack(const TElement& value)
         {
-            Node* pNode = new Node {value, m_pTail, nullptr};
+            auto* pNode = new Node {value, m_pTail, nullptr};
             if (m_pTail == nullptr)
             {
                 m_pHead = pNode;

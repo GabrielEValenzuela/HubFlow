@@ -28,8 +28,8 @@ namespace hubflow::ds
         /// @brief Nodo de la lista ordenada.
         struct Node
         {
-            TElement value;
-            Node* pNext;
+            TElement value {};
+            Node* pNext {nullptr};
         };
 
         Set() = default;

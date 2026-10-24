@@ -29,8 +29,8 @@ namespace hubflow::ds
         /// @brief Nodo: valor y enlace al siguiente.
         struct Node
         {
-            TElement value;
-            Node* pNext;
+            TElement value {};
+            Node* pNext {nullptr};
         };
 
         SinglyLinkedList() = default;
@@ -73,6 +73,7 @@ namespace hubflow::ds
         /// @brief Inserta al inicio. O(1).
         void pushFront(const TElement& value)
         {
+            // cppcheck-suppress publicAllocationError
             m_pHead = new Node {value, m_pHead};
             if (m_pTail == nullptr)
             {
@@ -84,7 +85,7 @@ namespace hubflow::ds
         /// @brief Inserta al final usando el puntero a la cola. O(1).
         void pushBack(const TElement& value)
         {
-            Node* pNode = new Node {value, nullptr};
+            auto* pNode = new Node {value, nullptr};
             if (m_pTail == nullptr)
             {
                 m_pHead = pNode;

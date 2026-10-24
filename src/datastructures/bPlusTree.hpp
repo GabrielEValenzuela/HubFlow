@@ -40,12 +40,12 @@ namespace hubflow::ds
         /// @brief Nodo interno u hoja.
         struct Node
         {
-            bool isLeaf;
-            std::size_t keyCount;
+            bool isLeaf {false};
+            std::size_t keyCount {0};
             TKey keys[ORDER];
-            Node* pChildren[ORDER + 1];
-            TValue* pValues[ORDER];
-            Node* pNext;
+            Node* pChildren[ORDER + 1] {};
+            TValue* pValues[ORDER] {};
+            Node* pNext {nullptr};
         };
 
         /// @brief Resultado de una búsqueda puntual.
@@ -196,7 +196,7 @@ namespace hubflow::ds
 
         static Node* newNode(const bool isLeaf)
         {
-            Node* pNode = new Node {};
+            auto* pNode = new Node {};
             pNode->isLeaf = isLeaf;
             pNode->keyCount = 0;
             pNode->pNext = nullptr;
@@ -243,7 +243,8 @@ namespace hubflow::ds
             return pNode;
         }
 
-        void insertInto(Node* pNode, const TKey& key, TValue* pValue, TKey& promoted, Node*& pSibling)
+        // NOLINTNEXTLINE(misc-no-recursion)
+        static void insertInto(Node* pNode, const TKey& key, TValue* pValue, TKey& promoted, Node*& pSibling)
         {
             if (pNode->isLeaf)
             {
@@ -343,7 +344,7 @@ namespace hubflow::ds
             m_pRoot = pNewRoot;
         }
 
-        static bool checkLeafDepth(const Node* pNode, const long depth, long& leafDepth)
+        static bool checkLeafDepth(const Node* pNode, const long depth, long& leafDepth) // NOLINT(misc-no-recursion)
         {
             bool consistent {true};
             if (pNode != nullptr && pNode->isLeaf)
@@ -361,7 +362,7 @@ namespace hubflow::ds
             return consistent;
         }
 
-        static void destroy(Node* pNode) noexcept
+        static void destroy(Node* pNode) noexcept // NOLINT(misc-no-recursion)
         {
             if (pNode != nullptr)
             {
