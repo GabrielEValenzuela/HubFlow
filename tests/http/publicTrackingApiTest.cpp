@@ -1,5 +1,6 @@
 #include "support/fixtures.hpp"
 #include "support/httpHarness.hpp"
+#include <algorithm>
 
 #include <gtest/gtest.h>
 #include <string>
@@ -102,10 +103,11 @@ TEST(PublicTrackingApi, BothCodeFormatsAreAcceptedInAnyCase)
     EXPECT_EQ(http.client().Get(trackingUrl("pkg-4000"))->status, 200);
     EXPECT_EQ(http.client().Get(trackingUrl(hf.code()))->status, 200);
     std::string lower {hf.code()};
-    for (auto& character : lower)
-    {
-        character = static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
-    }
+    std::transform(lower.begin(),
+                   lower.end(),
+                   lower.begin(),
+                   [](const char character)
+                   { return static_cast<char>(std::tolower(static_cast<unsigned char>(character))); });
     EXPECT_EQ(http.client().Get(trackingUrl(lower))->status, 200);
 }
 
