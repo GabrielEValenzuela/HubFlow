@@ -39,6 +39,7 @@ namespace hubflow::ds
         /// @brief Apila. O(1).
         void push(const TElement& value)
         {
+            // cppcheck-suppress publicAllocationError
             m_pTop = new Node {value, m_pTop};
             ++m_size;
         }
